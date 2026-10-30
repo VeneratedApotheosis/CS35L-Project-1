@@ -72,6 +72,9 @@ Read this file to understand why we use this process, how the pieces fit togethe
 7. You **squash merge**. GitHub closes the issue, the board moves it to **Done**, and the remote branch is deleted.
 8. You delete your **local** branch and pick the next issue.
 
+**Small changes** (typos, comments, formatting, small docs or config tweaks) don't need an issue. Skip steps 1 and 2, name the branch without a number, and write 
+one under Issues in the PR. Everything else follows the steps above.
+
 ---
 
 ## 5. The guides
