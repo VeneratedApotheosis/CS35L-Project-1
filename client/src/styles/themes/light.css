@@ -1,0 +1,37 @@
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Figma Make's light surfaces */
+  --color-app-canvas: #d9cdbb;
+  --color-background: var(--milk);
+  --color-surface: var(--milk-bright);
+  --color-surface-secondary: var(--pearl);
+  --color-surface-elevated: var(--milk-bright);
+  --color-surface-hover: #e7dfd0;
+  --color-surface-selected: var(--pearl);
+
+  --color-text: var(--ink);
+  --color-text-secondary: var(--ink-soft);
+  --color-text-muted: var(--oat-deep);
+  --color-text-inverse: var(--cream-ink);
+
+  --color-border: var(--pearl);
+  --color-border-strong: var(--oat);
+
+  --color-primary: var(--action-green);
+  --color-primary-hover: var(--action-green-selected);
+  --color-primary-selected: var(--action-green-selected);
+  --color-primary-text: var(--ink);
+
+  --color-secondary: var(--pearl);
+  --color-secondary-hover: #e7dfd0;
+  --color-secondary-text: var(--ink);
+
+  --color-danger: var(--danger-red-soft);
+  --color-danger-hover: var(--danger-red);
+  --color-danger-text: #6e211e;
+
+  --color-focus: var(--teal);
+  --color-link: var(--teal-deep);
+}

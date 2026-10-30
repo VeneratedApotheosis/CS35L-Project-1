@@ -1,0 +1,28 @@
+:root {
+  --font-family: "M PLUS Rounded 1c", "Arial Rounded MT Bold", sans-serif;
+
+  /* Type scale based on the Figma Make specimens */
+  --font-size-xs: 0.68rem;    /* eyebrow / metadata */
+  --font-size-sm: 0.76rem;    /* caption */
+  --font-size-md: 0.875rem;   /* 14px body */
+  --font-size-base: 1rem;     /* 16px body */
+  --font-size-lg: 1.25rem;    /* 20px */
+  --font-size-xl: 1.45rem;    /* ~23px */
+  --font-size-2xl: 1.7rem;    /* ~27px */
+  --font-size-3xl: 2.3rem;    /* ~37px */
+  --font-size-4xl: 3.5rem;    /* 56px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-tight: 1.05;
+  --line-height-heading: 1.2;
+  --line-height-body: 1.8;
+
+  --letter-spacing-tight: -0.05em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.1em;
+  --letter-spacing-eyebrow: 0.16em;
+}
