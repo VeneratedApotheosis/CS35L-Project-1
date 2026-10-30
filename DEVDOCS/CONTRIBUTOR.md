@@ -48,7 +48,7 @@ pick issue -> assign yourself -> branch -> work -> push -> open PR -> (review) -
 
 - Use the project board (it shows the hierarchy). Pick a **sub-task**. Epics and tasks are containers and finish when their sub-tasks do.
 - Check it's unassigned and anything it depends on is done, then **assign yourself**.
-- No issue for your work? Create one first (see [ISSUES_AND_PROJECTS.md](ISSUES_AND_PROJECTS.md)).
+- **Small changes don't need an issue.** For a typo, a comment, formatting, a small docs or config tweak, or anything that doesn't change what the app does, skip the issue and just open a PR (see 2.4). Everything else gets an issue first (see [ISSUES_AND_PROJECTS.md](ISSUES_AND_PROJECTS.md)).
 
 
 ### 2.2 Branch
@@ -60,7 +60,7 @@ git checkout -b <issue-number>-short-description    # e.g. 47-init-frontend
 ```
 
 - Always branch off an up-to-date `main`. One branch per issue, or a bundle (see 2.3).
-- Name: issue number, then a short lowercase description with hyphens.
+- Name: issue number, then a short lowercase description with hyphens. For a small change with no issue, skip the number (e.g. `fix-readme-typo`).
 
 
 ### 2.3 Do the work
@@ -96,6 +96,7 @@ gh pr create --base main --title "feat: add habit form" --body-file pr.md
 - **Title:** Conventional Commits, e.g. `feat(frontend): add habit form` (scope optional). It becomes the commit on `main`, so get it right. The PR title check is required: a bad title blocks the merge until you edit it.
 - **Description:** what changed and why, plus `Closes #n` for every issue it finishes. The PR template fills in the sections.
 - Link only the issues this PR finishes.
+- **Small change with no issue:** write `none` under Issues in the PR description. The title check, squash merge and cleanup are the same.
 - In VS Code use the GitHub Pull Requests extension. Other tools: figure out the equivalent.
 - Before asking for review, check the "Done when" items are met. Tests and lint: **TBD.**
 
@@ -135,7 +136,7 @@ git branch -D <your-branch>    # capital D, see below
 
 **Do**
 
-- Work from an issue.
+- Work from an issue, except for small changes (see 2.1).
 - Keep branches and PRs small and focused. Don't leave a branch sitting for days.
 - Pull the latest `main` before you branch.
 - Say so on the issue if you're stuck or blocked.
@@ -147,7 +148,7 @@ git branch -D <your-branch>    # capital D, see below
 - Don't commit secrets: API keys, Supabase keys, `.env` files. Share them privately, never in the repo, issues or PRs.
 - Don't put frontend code in `backend/` or the other way round.
 - Don't bundle unrelated changes into one PR.
-- One issue per PR, unless you're bundling.
+- One issue per PR, unless you're bundling. Small no-issue changes can be bundled in one PR too.
 
 ---
 

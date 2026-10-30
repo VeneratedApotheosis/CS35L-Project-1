@@ -1,11 +1,6 @@
-## What changed and why
-<!-- A short summary. -->
+## What did you do
+
 
 ## Issues
-<!-- One keyword per issue. Closes #12, closes #13 (not "Closes #12, #13"). -->
+<!-- One keyword per issue: Closes #12, closes #13. Minor change with no issue? Write "none". -->
 Closes #
-
-## Checklist
-- [ ] PR title follows Conventional Commits, e.g. `feat(frontend): add habit form`
-- [ ] The issue's "Done when" items are met
-- [ ] No secrets (keys, `.env`) in the changes

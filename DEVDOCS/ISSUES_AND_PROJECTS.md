@@ -1,4 +1,4 @@
-# Project Board and Issues
+﻿# Project Board and Issues
 
 How we track work. Part of the [Developer Guide](DEVELOPER.md).
 
@@ -240,7 +240,7 @@ The issue templates (Task and Bug report) pre-fill the headings. They don't set 
 
 - Open **Issues > New issue** and choose a template.
 - Fill in every part from 2.1. If it belongs to a bigger task, add it as a sub-issue (2.5).
-- No issue for the work you're about to do? Create one first. Every change starts from an issue.
+- No issue for the work you're about to do? Create one first, unless it's a small change (typo, comment, formatting, small docs or config tweak). Those can go straight to a PR with `none` under Issues.
 
 
 ### 2.4 Triage
