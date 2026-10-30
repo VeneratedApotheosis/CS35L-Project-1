@@ -1,0 +1,35 @@
+:root {
+  /* Core palette — taken from the Figma Make styles */
+  --milk: #f5f1e6;
+  --milk-bright: #fffdf6;
+  --pearl: #ece7da;
+  --oat: #b7a48a;
+  --oat-deep: #8f7b64;
+  --ink: #342f29;
+  --ink-soft: #6f665c;
+  --cream-ink: #fffaf0;
+  --cream-soft: #e9dfcf;
+
+  --teal: #48bda6;
+  --teal-deep: #247e70;
+  --coral: #e96f5c;
+  --coral-deep: #a33f36;
+  --yellow: #f2c84b;
+  --pink: #ee87a5;
+
+  --action-green: #83c17d;
+  --action-green-selected: #4a8c46;
+  --action-green-dark: #5c9d57;
+  --action-green-dark-selected: #83c17d;
+
+  --danger-red: #ee554f;
+  --danger-red-soft: #f58d86;
+  --danger-red-dark: #a83f3b;
+  --danger-red-dark-selected: #ed625b;
+
+  /* Semantic status colors */
+  --success: var(--action-green-selected);
+  --danger: var(--danger-red);
+  --warning: var(--yellow);
+  --info: var(--teal);
+}

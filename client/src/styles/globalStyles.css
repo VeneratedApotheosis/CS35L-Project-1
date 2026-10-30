@@ -1,0 +1,128 @@
+/* Import this file once from main.tsx. */
+@import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap");
+
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/effects.css";
+
+@import "./themes/light.css";
+@import "./themes/dark.css";
+
+@import "./components/buttons.css";
+@import "./components/inputs.css";
+@import "./components/cards.css";
+@import "./components/icons.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-family);
+  color: var(--color-text);
+  background: var(--color-app-canvas);
+  font-synthesis: none;
+}
+
+body {
+  min-width: 20rem;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Typography utility classes */
+.text-display {
+  font-size: clamp(3rem, 7vw, 6.25rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+.text-h1 {
+  font-size: clamp(2.25rem, 4vw, 4rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+}
+.text-h2 {
+  font-size: clamp(1.45rem, 2.6vw, 2.3rem);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+.text-h3 {
+  font-size: 1.7rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.25;
+}
+.text-body {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+}
+.text-body-sm {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.6;
+}
+.text-caption {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.5;
+}
+.text-eyebrow {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-eyebrow);
+  text-transform: uppercase;
+}
+.text-muted { color: var(--color-text-muted); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-brand { color: var(--color-link); }
+
+/* Common layout utilities */
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+}
+.center-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stack-sm { display: flex; flex-direction: column; gap: var(--space-2); }
+.stack-md { display: flex; flex-direction: column; gap: var(--space-4); }
+.stack-lg { display: flex; flex-direction: column; gap: var(--space-6); }
+
+.border { border: 1px solid var(--color-border); }
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }

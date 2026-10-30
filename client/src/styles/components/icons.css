@@ -1,0 +1,16 @@
+.icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: currentColor;
+  stroke-width: 2;
+}
+
+.icon--xs { width: 0.75rem; height: 0.75rem; }
+.icon--sm { width: 1rem; height: 1rem; }
+.icon--md { width: 1.25rem; height: 1.25rem; }
+.icon--lg { width: 1.5rem; height: 1.5rem; }
+.icon--xl { width: 2rem; height: 2rem; }
+.icon--muted { color: var(--color-text-muted); }
+.icon--brand { color: var(--teal-deep); }
