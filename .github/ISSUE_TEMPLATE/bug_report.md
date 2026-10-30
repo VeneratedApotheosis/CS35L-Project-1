@@ -1,20 +1,14 @@
 ---
 name: Bug report
 about: Something is broken
-title: "Fix: "
-labels: "type: bug"
-assignees: ""
+title: 'Fix: '
+labels: 'type: bug'
+assignees: ''
+
 ---
 
-## What happened
-<!-- Steps to reproduce. -->
+## What is the bug
 
-## Expected result
-
-## Bugged result / What is this bug
-<!-- Paste errors or add a screenshot. -->
-
-## Done when:
-- [ ] The bug no longer happens
+## How to fix
 
 <!-- Add an `area:` label and a milestone before you submit. -->
