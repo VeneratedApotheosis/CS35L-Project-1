@@ -58,13 +58,13 @@ Status is the column an issue sits in. It answers: **where is this in its life?*
 
 | Status | Meaning |
 |---|---|
-| Backlog | Not planned for now |
+| Backlog | Not planned for now. Move an issue here by hand |
 | Todo | Ready to be picked up |
 | In Progress | Someone is working on it |
 | In Review | PR is open and the author wants a review |
 | Done | Merged and closed |
 
-New issues arrive in **Backlog**. The author moves them to **Todo** when they're ready.
+New issues arrive in **Todo**. Move one to **Backlog** by hand if it isn't planned for now.
 Status lives on the board, **not in labels**. Don't make labels like `in-progress`.
 ### 1.3 Labels
 
@@ -193,7 +193,7 @@ Anyone can add an item: click **Add item** at the bottom of a column, type `#` a
 Project > ... > **Workflows** has simple if-this-then-that rules that update the board for you:
 
 - **Auto-add:** new repo issues are added to the project (filter `is:issue is:open`).
-- **Item added to project:** sets Status to Backlog (we changed this from the default).
+- **Item added to project:** sets Status to Todo (we changed this from the default).
 - **Item closed** and **Pull request merged:** set Status to Done.
 
 The repo rules (squash only, branch protection, auto-delete branches, Actions) are in `project/github_ticketing_system.md`.
@@ -245,7 +245,7 @@ The issue templates (Task and Bug report) pre-fill the headings. They don't set 
 
 ### 2.4 Triage
 
-- No triage meeting or routine. Whoever creates an issue triages it: sets the type, area and milestone, then moves it from Backlog to Todo when it's ready to be picked up.
+- No triage meeting or routine. Whoever creates an issue triages it: sets the type, area and milestone. New issues land in Todo, so they're ready to be picked up. Move one to Backlog if it isn't planned for now.
 
 
 ### 2.5 Adding a sub-issue
