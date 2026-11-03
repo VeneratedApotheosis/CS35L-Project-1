@@ -4,8 +4,8 @@ import cors from "cors";
 import { requireUser } from "./auth.js";
 
 const app = express();
-const port = Number(process.env.PORT);
-const frontendOrigin = process.env.FRONTEND_ORIGIN;
+const port = Number(process.env.PORT ?? 3000);
+const frontendOrigin = process.env.FRONTEND_ORIGIN ?? "http://localhost:5173";
 
 app.use(cors({ origin: frontendOrigin }));
 

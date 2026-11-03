@@ -14,6 +14,8 @@ cp .env.example .env
 The `.env` file configures:
 - `PORT`: backend port, default 3000.
 - `FRONTEND_ORIGIN`: allowed frontend origin, default http://localhost:5173.
+- `SUPABASE_URL`: your Supabase project URL (required).
+- `SUPABASE_PUBLISHABLE_KEY`: your Supabase publishable key (required). Never use the secret key here.
 
 ## Development
 
