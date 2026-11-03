@@ -1,5 +1,3 @@
--- Issue #58: create a profile row on signup, and let a user delete their own account.
-
 -- 1. Profile on signup.
 -- security definer: profiles has no insert policy, so the trigger must bypass RLS.
 -- on conflict do nothing: a duplicate trigger can never make signup fail.
