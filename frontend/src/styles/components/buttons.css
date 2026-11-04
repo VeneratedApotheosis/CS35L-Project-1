@@ -1,0 +1,88 @@
+.button {
+  display: inline-flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.05rem;
+  border: 0;
+  border-radius: 1.15rem;
+  font: 800 0.78rem/1.2 var(--font-family);
+  cursor: pointer;
+  transition:
+    transform var(--transition-normal),
+    background var(--transition-normal),
+    color var(--transition-normal),
+    opacity var(--transition-normal);
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-0.12rem);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.button:focus-visible {
+  outline: 0.2rem solid var(--color-focus);
+  outline-offset: 0.2rem;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button--primary {
+  color: var(--color-primary-text);
+  background: var(--color-primary);
+}
+.button--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.button--secondary {
+  color: var(--color-secondary-text);
+  background: var(--color-secondary);
+}
+.button--secondary:hover:not(:disabled) {
+  background: var(--color-secondary-hover);
+}
+
+.button--ghost {
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+.button--ghost:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.button--danger {
+  color: var(--color-danger-text);
+  background: var(--color-danger);
+}
+.button--danger:hover:not(:disabled) {
+  background: var(--color-danger-hover);
+}
+
+.button--sm {
+  min-height: 2.5rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.72rem;
+}
+.button--md {
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+}
+.button--lg {
+  min-height: 3.5rem;
+  padding: 0.9rem 1.2rem;
+  font-size: 0.875rem;
+}
+
+.button--full {
+  width: 100%;
+}

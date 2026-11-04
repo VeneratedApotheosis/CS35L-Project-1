@@ -1,0 +1,16 @@
+:root {
+  --shadow-card: 0 2rem 5rem rgba(79, 64, 47, 0.16);
+  --shadow-popover: 0 0.75rem 2rem rgba(52, 47, 41, 0.16);
+  --shadow-button: 0 0.25rem 0.75rem rgba(52, 47, 41, 0.12);
+
+  --transition-fast: 120ms ease;
+  --transition-normal: 160ms ease;
+  --transition-slow: 240ms ease;
+
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-tooltip: 500;
+}

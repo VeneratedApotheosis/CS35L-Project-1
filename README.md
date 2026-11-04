@@ -1,6 +1,6 @@
 # Habit Garden
 
-React frontend (`client/`), Express backend (`backend/`), Supabase for authentication and the database (`supabase/`).
+Next.js (React + TypeScript) frontend (`frontend/`), Express backend (`backend/`), Supabase for authentication and the database (`supabase/`).
 
 Contributing? Start with [docs/dev/DEVELOPER.md](docs/dev/DEVELOPER.md).
 
@@ -21,7 +21,7 @@ npm ci
 npm run dev        # http://localhost:3000 default
 
 # terminal 2
-cd client
+cd frontend
 npm install
 npm run dev        # http://localhost:5173 default
 ```
@@ -37,9 +37,9 @@ The frontend must run on port **5173**. That is the redirect address configured 
 ### How it fits together
 | Part                              | Where                                | Does                                                                                   |
 | --------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
-| Supabase client                   | `client/src/lib/supabase.ts`         | Creates a centralized Supabase client for frontend to use.                             |
-| Session and sign-in               | `client/src/auth/`                   | `AuthProvider` restores the session, handles Google sign-in and sign-out               |
-| Protected pages                   | `client/src/auth/ProtectedRoute.tsx` | Redirects signed-out users to `/login`                                                 |
+| Supabase client                   | `frontend/src/lib/supabase.ts`       | Creates a centralized Supabase client for frontend to use.                             |
+| Session and sign-in               | `frontend/src/auth/`                 | `AuthProvider` restores the session, handles Google sign-in and sign-out               |
+| Protected pages                   | `frontend/src/auth/ProtectedRoute.tsx` | Redirects signed-out users to `/login`                                                 |
 | Token check                       | `backend/src/auth.ts`                | `requireUser` verifies the `Authorization: Bearer <token>` header with Supabase        |
 | Profile on signup, delete account | `supabase/migrations/`               | A trigger creates a `profiles` row. `delete_my_account()` deletes the caller's account |
 

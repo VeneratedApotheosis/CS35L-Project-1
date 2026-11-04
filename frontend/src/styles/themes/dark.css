@@ -1,0 +1,40 @@
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /*
+   * The source defines dark button treatments, but not a complete dark
+   * application surface palette. These semantic surface values are
+   * complementary dark-mode defaults derived from its ink/oat/cream palette.
+   */
+  --color-app-canvas: #241f1a;
+  --color-background: #342f29;
+  --color-surface: #403930;
+  --color-surface-secondary: #574e45;
+  --color-surface-elevated: #4a4138;
+  --color-surface-hover: #514940;
+  --color-surface-selected: #514940;
+
+  --color-text: var(--cream-ink);
+  --color-text-secondary: var(--cream-soft);
+  --color-text-muted: #c0b19d;
+  --color-text-inverse: var(--ink);
+
+  --color-border: #665b4e;
+  --color-border-strong: var(--oat);
+
+  --color-primary: var(--action-green-dark);
+  --color-primary-hover: var(--action-green-dark-selected);
+  --color-primary-selected: var(--action-green-dark-selected);
+  --color-primary-text: var(--cream-ink);
+
+  --color-secondary: #574e45;
+  --color-secondary-hover: #665b4e;
+  --color-secondary-text: var(--cream-ink);
+
+  --color-danger: var(--danger-red-dark);
+  --color-danger-hover: var(--danger-red-dark-selected);
+  --color-danger-text: #ffd5d0;
+
+  --color-focus: var(--teal);
+  --color-link: #7bd7c4;
+}

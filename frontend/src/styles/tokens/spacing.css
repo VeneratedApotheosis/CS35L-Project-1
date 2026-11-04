@@ -1,0 +1,24 @@
+:root {
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Layout values visible in the Figma Make styles */
+  --page-padding: clamp(1rem, 4vw, 3rem);
+  --section-padding: clamp(3rem, 7vw, 6rem);
+  --card-padding: clamp(1.5rem, 3vw, 2.5rem);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3.5rem;
+  --radius-pill: 9999px;
+}
