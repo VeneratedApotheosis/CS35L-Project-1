@@ -28,6 +28,10 @@ export interface StemmedPlantProps<Spec> {
   stemStyle: StemStyle
   /** Draw one leaf with its stalk end at (0,0) and tip at (0,-length). `clipId` is unique to this leaf. */
   renderLeaf: (leaf: PlacedLeaf<Spec>, clipId: string) => ReactNode
+  /** Extra drawing between the stems and the leaves, such as flower stalks. `id` is unique to this plant. */
+  renderBehindLeaves?: (stage: PlantStage<Spec>, id: string) => ReactNode
+  /** Extra drawing on top of the leaves, such as flower heads. `id` is unique to this plant. */
+  renderAboveLeaves?: (stage: PlantStage<Spec>, id: string) => ReactNode
   className?: string
   title: string
 }
@@ -48,6 +52,8 @@ export function StemmedPlant<Spec>({
   pot,
   stemStyle,
   renderLeaf,
+  renderBehindLeaves,
+  renderAboveLeaves,
   className,
   title,
 }: StemmedPlantProps<Spec>) {
@@ -84,6 +90,8 @@ export function StemmedPlant<Spec>({
         )
       })}
 
+      {renderBehindLeaves?.(current, id)}
+
       {current.leaves.map((leaf) => (
         <g
           key={"l" + leaf.index}
@@ -95,6 +103,8 @@ export function StemmedPlant<Spec>({
           {renderLeaf(leaf, id + "-l" + leaf.index)}
         </g>
       ))}
+
+      {renderAboveLeaves?.(current, id)}
     </svg>
   )
 }
