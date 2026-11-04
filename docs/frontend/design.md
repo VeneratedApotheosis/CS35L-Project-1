@@ -1,6 +1,6 @@
 # Habit Garden: Frontend Design
 
-How the frontend looks and how it is built. For what each screen does and the rules behind the numbers, see [design.md](design.md). For how plants are generated, see [plant-generation.md](plant-generation.md). For the design guidance used when making visual decisions, see [frontend-skills.md](frontend-skills.md).
+How the frontend looks and how it is built. For what each screen does, see [screens.md](screens.md). For the rules behind the numbers, see [backend-design.md](../backend/design.md#8-calculation-rules). For how plants are generated, see [plant-generation.md](plant-generation.md). For the design guidance used when making visual decisions, see [frontend-skills.md](skills.md).
 
 ---
 
@@ -164,7 +164,7 @@ Plant types in the first version: pothos (built on the stage engine), pilea and 
 
 **Create Habit.** A single column form with inline validation, a goal sentence preview ("Go to the gym 3 times every week for 4 weeks") and a plant preview next to the plant picker.
 
-**Dashboard, Badges, Settings.** Follow the screen descriptions in [design.md section 3](design.md#3-screens). Lists use rows, not cards, because they are compared line by line.
+**Dashboard, Badges, Settings.** Follow the screen descriptions in [screens.md](screens.md). Lists use rows, not cards, because they are compared line by line.
 
 ## 8. Components
 
@@ -247,4 +247,4 @@ frontend/src/
 - **Missing components:** Modal, ProgressBar with ticks, NavBar, toast, input wrappers.
 - **Plants on dark surfaces.** Check the pot and leaf colors against the dark theme.
 - **Stage-up animation** is described in section 10 but not built.
-- **Health look.** Design.md describes a wilting plant; how the drawing changes for health is not decided yet.
+- **Health look.** The rules (backend-design.md section 8.8) describe a wilting plant; how the drawing changes for health is not decided yet.
