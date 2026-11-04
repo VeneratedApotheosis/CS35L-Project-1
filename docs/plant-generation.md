@@ -35,6 +35,14 @@ plants/
     pothosStages.ts          the pothos species: config + heart leaf, and the names tests use
     Pothos.tsx               the pothos component: stem look + heart leaf drawing
     leaf.ts / LeafShape.tsx  the heart leaf: random ranges, outline, palette, drawing style
+  peaceLily/
+    peaceLilyConfig.ts       every number behind the peace lily: leaves, flowers, hood shapes
+    peaceLilyStages.ts       the species: config + pointed leaf, plus createPeaceLily
+    PeaceLily.tsx            the component: stems, leaves, flower stalks and heads
+    leaf.ts / LilyLeafShape.tsx  the pointed leaf: ranges, outline, palette, drawing style
+    shape.ts                 the pointed blade outline shared by leaf and flower hood
+    flowers.ts               flower placement, the flower dome and the bud/bloom stages
+    Flower.tsx               draws flower stalks, buds and open flowers
   geometry.ts, rng.ts      small shared helpers
   pot/                     the pot, shared by every plant
     palettes.ts            the color palettes and the band names
@@ -135,9 +143,18 @@ Every leaf hangs from a visible stem, 2.6 units wide, that rises along its headi
 
 Code: `pileaGenome.ts` and `Pilea.tsx`. Round coin leaves on thin stalks spiral out from a short stem. Old leaves are low and large; new ones are small and upright. One to two pups (baby plants) appear beside the main plant. It still uses a continuous growth value with four anchor stages and a `size` parameter that changes leaf count. It does not yet follow the leaf cap, containment or scale rules above and is due to be ported.
 
-## 6. Peace lily (benched)
+## 6. Peace lily
 
-Code: `lily.ts` and `PeaceLily.tsx`. A dome of glossy lance-shaped leaves on short stems, with white spathe flowers on tall stalks that appear only in the later stages. Kept for reference; not shown on `/plants` and not ported.
+Code: `frontend/src/plants/peaceLily/`. It uses the stage engine for its leaves, so it has the same rules as the pothos (four stages, at most 6 leaves, scaled copies, containment, `scale` never moves anything). Its leaves are wide, pointed blades (`shape.ts`), and every number is in `peaceLilyConfig.ts`.
+
+**Flowers** are the peace lily's own, in `flowers.ts`:
+
+- A plant has 1 to 3 flowers. Each is a stalk with a white hood (spathe) and a cream spike (spadix).
+- Flowers are placed once, at full size, inside a **flower dome**: the leaf dome stretched upward (`reach.height`), so flowers stand above the leaves. Every stage scales them about the soil point with the rest of the plant, so they grow with it.
+- Heads are spread across the dome, higher in the middle, each on a stalk that rises from the pot (inside the 25% to 75% root range) and bends toward its head. A head that would leave the dome or pass the side limits is pulled in, lowered and shortened until it fits. The open hood is the widest shape, so fitting it covers the bud too.
+- **Stages:** none in stages 1 and 2, a closed green and cream **bud** in stage 3 (`budStage`) and an open white **bloom** in stage 4 (`bloomStage`). The same flowers bud and bloom, in the same places.
+
+The engine draws the plant; the lily adds flowers through two slots on `StemmedPlant`: `renderBehindLeaves` (stalks) and `renderAboveLeaves` (heads). The tests are in `peaceLily.test.tsx`.
 
 ## 7. History
 

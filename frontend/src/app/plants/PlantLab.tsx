@@ -6,6 +6,7 @@ import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { LeafShape } from "@/plants/pothos/LeafShape"
 import { Pilea } from "@/plants/Pilea"
+import { PeaceLily } from "@/plants/peaceLily"
 import { Pothos } from "@/plants/pothos/Pothos"
 import { randomLeafSpec } from "@/plants/pothos/leaf"
 import { STAGES } from "@/plants/genome"
@@ -17,6 +18,7 @@ const SHEET_SEEDS = [5, 18, 33, 64]
 const COMPARE_SCALES = [0.4, 0.6, 0.8, 1]
 const COMPARE_SIZES = [0.6, 0.8, 1, 1.3, 1.6]
 const STAGE_NUMBERS = [1, 2, 3, 4] as const
+const PEACE_LILY_STAGE_NOTES = ["Sprout", "Young", "Budding", "Blooming"] as const
 
 function Section({
   title,
@@ -153,6 +155,54 @@ export default function PlantLab() {
             {GALLERY_SEEDS.map((s) => (
               <Card key={s} className="flex flex-col items-center gap-2 !p-4">
                 <Pothos seed={s} stage={4} className="w-full" />
+                <p className="text-body-sm text-muted">Seed {s}</p>
+              </Card>
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          title="Peace lily: four stages"
+          description="Long, pointed leaves on the same stage engine as the pothos. White flowers appear as closed buds in stage 3 and open in stage 4."
+          action={shuffleButton}
+        >
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {STAGE_NUMBERS.map((n) => (
+              <Card key={n} className="flex flex-col items-center gap-2 !p-4">
+                <div className="flex w-full items-end justify-center">
+                  <PeaceLily seed={seed} stage={n} scale={scale} />
+                </div>
+                <p className="text-caption">
+                  {n}. {PEACE_LILY_STAGE_NOTES[n - 1]}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          title="Peace lily: every stage, four plants"
+          description="Each row is one seed from sprout to bloom."
+        >
+          <div className="flex flex-col gap-4">
+            {SHEET_SEEDS.map((s) => (
+              <Card key={s} className="grid grid-cols-4 gap-2 !p-3">
+                {STAGE_NUMBERS.map((n) => (
+                  <PeaceLily key={n} seed={s} stage={n} className="w-full" />
+                ))}
+              </Card>
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          title="Peace lily: different plants"
+          description="Eight seeds at the last stage. Pot, leaf shapes, and the number and position of flowers change."
+        >
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {GALLERY_SEEDS.map((s) => (
+              <Card key={s} className="flex flex-col items-center gap-2 !p-4">
+                <PeaceLily seed={s} stage={4} className="w-full" />
                 <p className="text-body-sm text-muted">Seed {s}</p>
               </Card>
             ))}

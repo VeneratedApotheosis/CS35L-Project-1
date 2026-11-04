@@ -4,8 +4,7 @@ import { clamp, lerp } from "./rng"
 /*
  * Shared pieces used by every plant: the canvas, the soil point, and small
  * helpers. The pot lives in ./pot. The pothos generator lives in pothosStages.ts. The pilea
- * and the benched peace lily still use the older continuous-growth helpers
- * below (STAGES, pointAt).
+ * still uses the older continuous-growth helpers below (STAGES, pointAt).
  */
 
 /* ------------------------------------------------------------------ */
@@ -31,7 +30,7 @@ export function subSeed(...parts: number[]) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Older continuous-growth helpers (pilea, benched peace lily)         */
+/* Older continuous-growth helpers (pilea)         */
 /* ------------------------------------------------------------------ */
 
 export interface VinePoint {
