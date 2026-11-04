@@ -2,15 +2,31 @@
 
 Plants are drawn as SVG from a **seed**. The same seed always gives the same plant, so a habit can store one integer (e.g. its id) and the plant is rebuilt on every screen.
 
-Code lives in `frontend/src/plants/`. A live prototype is at `/plants`. Run the tests with `npm test` in `frontend/`.
+Code lives in `frontend/src/plants/`. A live prototype is at `/plants`. Run the tests with `npm test` in `frontend/`. For how plants fit into the screens, see [design.md](design.md#6-illustration-plants-and-pots).
 
 Status:
 
 | Plant | Engine | State |
 | --- | --- | --- |
-| Pothos | Stage engine (this document) | Current |
+| Pothos | Stage engine | Current |
+| Peace lily | Stage engine, plus its own flowers | Current |
 | Pilea peperomioides | Older continuous-growth engine | Works; to be ported to the stage engine |
-| Peace lily | Older continuous-growth engine | Benched: code kept, not shown on `/plants` |
+
+---
+
+## Contents
+
+- [Code map](#code-map)
+- [Design rules](#design-rules)
+- [1. Style](#1-style-animal-crossing-new-horizons-icons)
+- [2. Pot](#2-pot)
+- [3. Stage engine](#3-stage-engine)
+- [4. Pothos](#4-pothos)
+- [5. Peace lily](#5-peace-lily)
+- [6. Pilea peperomioides (older engine)](#6-pilea-peperomioides-older-engine)
+- [7. Tests](#7-tests)
+- [8. Open items](#8-open-items)
+- [9. History](#9-history)
 
 ---
 
@@ -57,9 +73,30 @@ plants/
 1. Write a **config** (copy `pothos/pothosConfig.ts` and change numbers). `validateConfig` runs automatically and says what does not fit together.
 2. Write a **leaf shape model**: how to draw a random leaf, its outline as a polygon, and where its middle is. The engine only needs the outline to measure coverage and containment.
 3. Combine them into a species and call `createStagedPlant(seed, species)`.
-4. Draw it with `StemmedPlant`, passing a function that draws one leaf and a stem style.
+4. Draw it with `StemmedPlant`, passing a function that draws one leaf and a stem style. To add parts of your own (the peace lily's flowers), pass `renderBehindLeaves` and `renderAboveLeaves`.
 
 No number is hard-coded in the engine. `staged/engine.test.ts` builds a second plant with different limits to show it follows its own config.
+
+---
+
+## Design rules
+
+These are the decisions we made for every stage-engine plant. Each is enforced by the engine, and by a test.
+
+| Rule | How it is kept |
+| --- | --- |
+| **Seeded.** The same integer always gives the same plant | Every random draw comes from the seed. A leaf has its own sub-seed, so leaf identity never changes between stages |
+| **Fixed stages, none in between.** A plant is a seed plus a stage number, 1 to S (default 4) | There is no growth value. `createPothos(seed, { stages })` returns S layouts |
+| **The last stage is at least 3.6 times the first** | The envelope scales on a geometric ladder with `growthRatio` 3.6 |
+| **Growth is even in every direction** | Every stage is the same dome scaled about the soil point |
+| **At most 6 leaves per stage** | `stages.maxLeaves`. Four stages give 2, 3, 5, 6 |
+| **Leaves, stems and roots scale with the plant** | The leaf length is solved once at full size, so each stage is the full plant scaled about the soil point, showing its first n leaves |
+| **No leaf goes under the pot or far to either side** | Every leaf outline is fitted inside the dome, above the soil line, with at most 8 px of overhang past the rim |
+| **`scale` resizes the picture and moves nothing** | It is a CSS width on the SVG and never enters the generator |
+| **Stems start at different spots across the middle half of the pot** | Roots are spread between 25% and 75% of the rim width |
+| **Stems have different lengths, in layers** | Each leaf has a layer from 0 to 1, which sets its stem length |
+| **No hidden assumptions** | Every number is in a named config, and `validateConfig` checks they fit together |
+| **The pot never changes** | Pot geometry is in `pot/shape.ts`, 46 tall, and does not scale with the plant |
 
 ---
 
@@ -68,10 +105,10 @@ No number is hard-coded in the engine. `staged/engine.test.ts` builds a second p
 | Trait | How we draw it |
 | --- | --- |
 | No outlines | Flat fills. Edges come from a lighter or darker second tone, never a stroke. |
-| Two-tone shading | Each leaf has a lighter half (right of the midrib) over the base green. |
+| Two-tone shading | Each leaf has a lighter half (right of the midrib) over the base green. A flower hood has a shaded left half. |
 | Soft highlight | One small, low-opacity white oval per leaf and per pot. |
-| Round, chunky forms | Wide hearts, blunt lobes, thick pot lip. |
-| Friendly palette | Saturated but gentle: leaf green `hsl(118 46% 42%)`, golden splashes `hsl(52 78% 72%)`, terracotta `#e08a5c`. |
+| Round, chunky forms | Wide hearts, blunt lobes, thick pot lip, broad pointed lily leaves. |
+| Friendly palette | Saturated but gentle: pothos green `hsl(118 46% 42%)`, golden splashes `hsl(52 78% 72%)`, lily green around `hsl(140 38% 28%)`, flower white `#fcfaf1`, terracotta `#e08a5c`. |
 | Grounded | A soft oval shadow under the pot. |
 
 ## 2. Pot
@@ -80,21 +117,23 @@ Code: `frontend/src/plants/pot/`. A low drum pot (body 46 tall) built from a rou
 
 Every measurement is a named value in `pot/shape.ts` (`POT_SHAPE`). Two of them are used by the plants: `POT_RIM` (where stems are placed across the pot) and `POT_SOIL` (where plants meet the pot, which becomes the shared `SOIL` point). Neither number is repeated anywhere else, so changing the pot's shape moves the plants with it.
 
-## 3. Stage engine (pothos)
+The canvas is `0 0 200 235`, and the soil point is `(100, 148)`.
 
-A plant is a seed plus a **stage number** from 1 to S (default 4). There is no continuous growth value and no in-between frame. `createPothos(seed, { stages })` returns S stage layouts; `<Pothos seed stage />` draws one.
+## 3. Stage engine
+
+Code: `frontend/src/plants/staged/`. Everything in this section is shared by every stage-engine plant. The numbers quoted are the **pothos's**; the peace lily changes some of them (section 5).
 
 ### 3.1 The envelope
 
-Every stage places its leaves inside an **envelope**: a half-ellipse dome standing on the soil point `(100, 148)`.
+Every stage places its leaves inside an **envelope**: a half-ellipse dome standing on the soil point.
 
-- Final stage: 56 half-width by 101.4 high (30% taller than the original 78). The rim spans x 52 to 148, so this allows 8 px of overhang each side.
-- Stage k is the same dome **scaled about the soil point**, so the plant grows evenly in every direction. Leaves, stems and roots scale with it (see 3.3).
-- Scales form a geometric ladder ending at 1, with a last:first ratio of 3.6. For four stages: 0.28, 0.43, 0.65, 1.
+- The dome is defined at its largest, for the last stage. Stage k is the same dome **scaled about the soil point**, so the plant grows evenly in every direction. Leaves, stems and roots scale with it (see 3.3).
+- The dome must fit inside the **limits**: the rim plus 8 px on each side, and the soil line as the floor. `validateConfig` checks this. No leaf can spill under the pot or far to either side, at any stage.
+- Scales form a geometric ladder ending at 1, with a last:first ratio of `growthRatio` (3.6). For four stages: 0.28, 0.43, 0.65, 1.
 
 ### 3.2 Leaves per stage
 
-At most 6. Four stages give **2, 3, 5, 6** leaves. Both the number of leaves and the dome grow at every step, and leaves are longer at every step, so each stage visibly changes.
+At most `maxLeaves` (6). Four stages give **2, 3, 5, 6** leaves. Both the number of leaves and the dome grow at every step, and leaves are longer at every step, so each stage visibly changes. The ramp is `leafCountCurve`: 1 is a straight line, above 1 adds leaves late.
 
 ### 3.3 Placement: roots, stems and layers
 
@@ -102,62 +141,116 @@ Every leaf hangs from its own stem, and no two leaves share the same root or the
 
 1. **Genes (per seed, shared by all stages).** Leaf `i` has its own sub-seed, so its shape, length factor, jitter and curl never change between stages.
 2. **Root.** Each stem starts at its own spot across the pot, between **25% and 75%** of the way from the left rim to the right rim (so x 76 to 124 at the last stage). A golden-ratio sequence spreads the roots, so any run of leaves is spread across the pot. Roots scale in toward the center at smaller stages, like everything else.
-3. **Heading.** Stems on the left lean left and stems on the right lean right, by up to 34 degrees, so the plant fans outward a little. The leaf turns a further 10 to 28 degrees outward at the end of its stem.
-4. **Layer.** Each leaf has a layer from 0 (nearest the soil) to 1 (highest). Even-numbered leaves take the low band (0 to 0.4) and odd-numbered leaves take the high band (0.6 to 1), so even two leaves sit at clearly different distances from the origin. The layer sets the stem length: from 16% of the dome height up to however far the leaf still fits under the top of the dome, so layers keep their spacing at every stage and leaf size. Lower layers are drawn on top.
-5. **Fitting (hard guarantee).** The real leaf outline, sampled from the same Beziers that are drawn, must sit inside the dome and above the soil line. If it does not, the stem is shortened a little (down to 55% of its layer length), and if that is not enough the leaf is shortened by 10% and tried again.
-6. **Leaf length.** The solver runs **once, on the full-size plant**: it tries 14 lengths between 16% and 55% of the dome height and keeps the smallest one that covers 60% of the canopy without stacking too deep. That length, as a share of the dome height, is then used at **every** stage. Leaves therefore grow exactly as fast as the dome: leaf length, stem length, root position and leaf direction at any stage are the full-size values scaled about the soil point. A stage differs from the last only in its scale and in how many leaves it shows (the first n).
+3. **Heading.** Stems on the left lean left and stems on the right lean right (up to `headingSpread` degrees), so the plant fans outward a little. The leaf turns a further `curl` degrees outward at the end of its stem.
+4. **Layer.** Each leaf has a layer from 0 (nearest the soil) to 1 (highest). Even-numbered leaves take the low band (0 to 0.4) and odd-numbered leaves take the high band (0.6 to 1), so even two leaves sit at clearly different distances from the origin. The layer sets the stem length, from `stems.lengthRange[0]` of the dome height up to however far the leaf still fits under the top of the dome, so layers keep their spacing at every stage and leaf size. Lower layers are drawn on top.
+5. **Fitting (hard guarantee).** The real leaf outline, sampled from the same curves that are drawn, must sit inside the dome and above the soil line. If it does not, the stem is shortened a little (down to 55% of its layer length), and if that is not enough the leaf is shortened by 10% and tried again.
+6. **Leaf length.** The solver runs **once, on the full-size plant**. It tries `search.lengthSteps` (14) lengths across `leaves.lengthRange` (a share of the dome height) and keeps the smallest one that covers `coverage.target` (60%) of the canopy without stacking too deep. That length, as a share of the dome height, is then used at **every** stage. Leaves therefore grow exactly as fast as the dome: leaf length, stem length, root position and leaf direction at any stage are the full-size values scaled about the soil point. A stage differs from the last only in its scale and in how many leaves it shows (the first n).
 
 This is tested: every leaf a stage shares with the last stage must be that leaf scaled by the stage's scale.
 
-Because the dome is inside the allowed box (x 44 to 156, y at most 148), no leaf can spill under the pot or far to either side, at any stage.
-
 ### 3.4 Coverage and overlap
 
-Coverage is the share of sample points in the canopy (the dome above 20% of its height) that lie inside some leaf. The solver aims for 0.6 at the full-size stage using the smallest leaves that get there. Earlier stages show fewer leaves at the same proportions, so they cover less: measured over seeds 1 to 60 it averages about 0.28, 0.39, 0.53 and 0.59 for stages 1 to 4. It also measures **overlap**: the average number of leaves stacked at a covered point, kept at or below 1.6. Tests enforce coverage of at least 0.15 and overlap of at most 1.75.
+Coverage is the share of sample points in the canopy (the dome above `canopyFloor`, 20% of its height) that lie inside some leaf. The solver aims for 0.6 at the full-size stage using the smallest leaves that get there. Earlier stages show fewer leaves at the same proportions, so they cover less: for the pothos, over seeds 1 to 60, it averages about 0.28, 0.39, 0.53 and 0.59 for stages 1 to 4. It also measures **overlap**: the average number of leaves stacked at a covered point, kept at or below `maxOverlap` (1.6). Tests enforce coverage of at least 0.15 and overlap of at most 1.75.
 
-### 3.4a Stems
+### 3.5 Stems
 
-Every leaf hangs from a visible stem, 2.6 units wide, that rises along its heading and bends toward the leaf. A stem is never shorter than 12% of the dome height, and a test checks it.
+Every leaf hangs from a visible stem, 2.6 units wide, that rises along its heading and bends toward the leaf. A stem is never shorter than `stems.minLength` (12% of the dome height for the pothos), and a test checks it. Stem width is the same at every stage; only the length scales.
 
-### 3.5 Scale
+### 3.6 Scale
 
-`scale` resizes the **whole picture** (plant and pot together) as a share of the parent's width. It is applied as a CSS width on the SVG and never enters the generator, so leaf and stem placement is identical at every scale. A test renders the same plant at several scales and checks the markup matches apart from the width.
+`scale` resizes the **whole picture** (plant and pot together) as a share of the parent's width. It is applied as a CSS width on the SVG and never enters the generator, so leaf, stem and flower placement is identical at every scale. A test renders the same plant at several scales and checks the markup matches apart from the width.
 
-## 4. Tests
+### 3.7 Extra parts
 
-`src/plants/pothos/pothosStages.test.tsx` checks, over 60 seeds:
+`StemmedPlant` draws the pot, then the stems, then the leaves. A species can add its own parts through two optional slots: `renderBehindLeaves` (after the stems, before the leaves) and `renderAboveLeaves` (on top of everything). Both receive the stage being drawn.
+
+## 4. Pothos
+
+Code: `frontend/src/plants/pothos/`. Heart-shaped leaves with golden splashes, in the engine's defaults.
+
+| Setting | Value |
+| --- | --- |
+| Dome | 56 half-width by 101.4 high (30% taller than the original 78). The rim spans x 52 to 148, so this allows 8 px of overhang each side |
+| Leaves | 2 to 6, length 16% to 55% of the dome height |
+| Stems | 16% to 62% of the dome height, up to 34 degrees of lean |
+| Leaf turn | 10 to 28 degrees outward |
+| Look | Heart outline, lighter right half, golden splashes, a midrib, a soft highlight |
+
+Every number is in `pothosConfig.ts`, and `HEART_LEAF_RANGES` and `LEAF_STYLE` hold the leaf's look.
+
+## 5. Peace lily
+
+Code: `frontend/src/plants/peaceLily/`. It uses the stage engine for its leaves, so it follows every rule in [Design rules](#design-rules). Its own numbers are in `peaceLilyConfig.ts`.
+
+**Differences from the pothos**
+
+| Setting | Pothos | Peace lily |
+| --- | --- | --- |
+| Leaf shape | Heart | Wide pointed blade (`shape.ts`), width 46% to 60% of its length |
+| Leaf length | 16% to 55% of the dome height | 21% to 68% |
+| Dome | 56 by 101.4 | 56 by 84 |
+| Stems | 16% to 62%, 34 degrees of lean | 8% to 40%, 30 degrees of lean |
+| Leaf turn | 10 to 28 degrees | 4 to 16 degrees (leaves stand more upright) |
+| Extra parts | None | Flowers |
+
+**Flowers** are the peace lily's own, in `flowers.ts`:
+
+- A plant has 1 to 3 flowers. Each is a stalk with a white hood (spathe) and a cream spike (spadix).
+- Flowers are placed once, at full size, inside a **flower dome**: the leaf dome stretched upward by `reach.height` (1.75), so flowers stand above the leaves. Every stage scales them about the soil point with the rest of the plant, so they grow with it.
+- A flower head is half the leaf dome height long (`headLength` 0.5), and its base starts at 56% to 70% of the flower dome's height.
+- Heads are spread across the dome, higher in the middle, each on a stalk that rises from the pot (inside the 25% to 75% root range) and bends toward its head. A head that would leave the dome or pass the side limits is pulled in, lowered and then shortened until it fits. The open hood is the widest shape, so fitting it covers the bud too.
+- Flower stalks are 2.4 wide at every stage, like the leaf stems.
+- **Stages:** none in stages 1 and 2, a closed green and cream **bud** in stage 3 (`budStage`) and an open white **bloom** in stage 4 (`bloomStage`). The same flowers bud and bloom, in the same places. Later stages stay in bloom. A plant with fewer stages never reaches them.
+
+## 6. Pilea peperomioides (older engine)
+
+Code: `pileaGenome.ts` and `Pilea.tsx`. Round coin leaves on thin stalks spiral out from a short stem. Old leaves are low and large; new ones are small and upright. One to two pups (baby plants) appear beside the main plant. It still uses a continuous growth value with four anchor stages and a `size` parameter that changes leaf count. It does not yet follow the leaf cap, containment or scale rules above and is due to be ported.
+
+## 7. Tests
+
+Over 60 seeds unless noted.
+
+**Engine and pothos** (`pothos/pothosStages.test.tsx`, `staged/engine.test.ts`, `pot/pot.test.tsx`):
 
 - stage counts (2, 3, 5, 6) and never more than 6 leaves for any number of stages,
 - exactly the requested number of stages, and deterministic output,
-- last stage at least 3.5 times the first in width and height,
+- last stage at least 3.6 times the first in width and height (within rounding),
 - every step grows by at least 25%, with more and longer leaves,
 - the same width-to-height shape at every stage (even growth),
+- every leaf a stage shares with the last stage is that leaf scaled about the soil point,
 - every leaf outline above the soil and within the side limits,
 - canopy coverage at least 0.15, overlap at most 1.75, and every stem long enough to see,
 - every stem rooted between 25% and 75% across the pot, and stems not all from one point,
 - leaves at different distances from the origin (stage 3 and up),
 - leaf identity and shape unchanged across stages,
+- scale changes nothing but the picture size,
+- a second plant with different limits follows its own config.
+
+**Peace lily** (`peaceLily/peaceLily.test.tsx`):
+
+- flower stages: none, none, bud, bloom, and the right markup for each,
+- 1 to 3 flowers, deterministic,
+- every open flower inside the flower dome, above the soil and within the side limits,
+- flower stalks rooted between 25% and 75% across the pot,
+- the tallest flower clears the tallest leaf,
+- no flower head on top of another,
+- at most 6 leaves, leaves within the limits, and leaves scaled with the plant,
 - scale changes nothing but the picture size.
 
-## 5. Pilea peperomioides (older engine)
+## 8. Open items
 
-Code: `pileaGenome.ts` and `Pilea.tsx`. Round coin leaves on thin stalks spiral out from a short stem. Old leaves are low and large; new ones are small and upright. One to two pups (baby plants) appear beside the main plant. It still uses a continuous growth value with four anchor stages and a `size` parameter that changes leaf count. It does not yet follow the leaf cap, containment or scale rules above and is due to be ported.
+- **Stage count.** The backend's growth rules ([8.7](../backend/design.md#87-plant-growth)) have **five** stages (0 to 24%, 25 to 49%, 50 to 74%, 75 to 99%, 100%). The plants default to four. Either map five onto four, or set the default to five and decide when the peace lily blooms.
+- **Plant types.** The app's type list (flower, tree, shrub, vine, kelp) is not the set built so far (pothos, pilea, peace lily).
+- **Health.** The backend has three health states (healthy, slightly wilted, wilted). No plant has a wilted look yet.
+- **Pilea** is still on the older engine.
+- **Flower config** is not covered by `validateConfig`. Only the leaf config is checked; the flower numbers are protected by the tests.
+- **Dark theme.** Pot and leaf colors are not yet checked on dark surfaces.
 
-## 6. Peace lily
-
-Code: `frontend/src/plants/peaceLily/`. It uses the stage engine for its leaves, so it has the same rules as the pothos (four stages, at most 6 leaves, scaled copies, containment, `scale` never moves anything). Its leaves are wide, pointed blades (`shape.ts`), and every number is in `peaceLilyConfig.ts`.
-
-**Flowers** are the peace lily's own, in `flowers.ts`:
-
-- A plant has 1 to 3 flowers. Each is a stalk with a white hood (spathe) and a cream spike (spadix).
-- Flowers are placed once, at full size, inside a **flower dome**: the leaf dome stretched upward (`reach.height`), so flowers stand above the leaves. Every stage scales them about the soil point with the rest of the plant, so they grow with it.
-- Heads are spread across the dome, higher in the middle, each on a stalk that rises from the pot (inside the 25% to 75% root range) and bends toward its head. A head that would leave the dome or pass the side limits is pulled in, lowered and shortened until it fits. The open hood is the widest shape, so fitting it covers the bud too.
-- **Stages:** none in stages 1 and 2, a closed green and cream **bud** in stage 3 (`budStage`) and an open white **bloom** in stage 4 (`bloomStage`). The same flowers bud and bloom, in the same places.
-
-The engine draws the plant; the lily adds flowers through two slots on `StemmedPlant`: `renderBehindLeaves` (stalks) and `renderAboveLeaves` (heads). The tests are in `peaceLily.test.tsx`.
-
-## 7. History
+## 9. History
 
 - The first pothos was a trailing plant with long vines, then a compact ball built from radiating vines, both driven by a continuous growth value. These were replaced by the stage engine because the old design could not guarantee containment, a leaf cap, or even growth.
 - A later draft spread leaf centers evenly over the dome (Lloyd relaxation) and hung every leaf from a stem rising from one point. It looked like a bouquet, so placement was changed to roots spread across 25% to 75% of the pot and stems of different lengths, which puts leaves in layers at different distances from the origin.
 - An early stage-engine draft kept every leaf inside a bounding circle. That was safe but too conservative: leaves were small and coverage was 0.3 to 0.5. Fitting the real outline and relaxing leaf centers raised it to about 0.5 to 0.8.
+- Leaf length used to be solved at each stage, so leaves did not grow in step with the plant. It is now solved once at full size and reused, so every stage is an exact scaled copy of the last. This removed the per-stage search settings.
+- The pothos dome was made 30% taller (78 to 101.4).
+- The peace lily's flowers first started too high in their dome and were shortened to fit, which made them small. They now start lower, and a head that does not fit is lowered before it is shortened.
