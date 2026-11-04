@@ -1,8 +1,8 @@
 import { leafPolygon, randomLeafSpec, type LeafSpec } from "./leaf"
-import type { Pt } from "./geometry"
+import type { Pt } from "../geometry"
 import { POTHOS_CONFIG } from "./pothosConfig"
-import { createStagedPlant, leafOutline as stagedLeafOutline } from "./staged/generate"
-import { leafCountLadder, scaleLadder } from "./staged/ladder"
+import { createStagedPlant, leafOutline as stagedLeafOutline } from "../staged/generate"
+import { leafCountLadder, scaleLadder } from "../staged/ladder"
 import type {
   LeafShapeModel,
   PlacedLeaf as StagedPlacedLeaf,
@@ -10,7 +10,7 @@ import type {
   StagedPlant,
   StagedPlantOptions,
   StagedPlantSpecies,
-} from "./staged/types"
+} from "../staged/types"
 
 /*
  * The pothos: a staged plant (see ./staged) with heart-shaped leaves.

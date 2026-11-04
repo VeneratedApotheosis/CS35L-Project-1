@@ -30,10 +30,11 @@ plants/
     coverage.ts            how well leaves fill the canopy, and how deeply they stack
     generate.ts            createStagedPlant: builds every stage of a plant for a seed
     StemmedPlant.tsx       draws a staged plant; the species supplies the leaf drawing
-  pothosConfig.ts          every number behind the pothos
-  pothosStages.ts          the pothos species: config + heart leaf, and the names tests use
-  Pothos.tsx               the pothos component: stem look + heart leaf drawing
-  leaf.ts / LeafShape.tsx  the heart leaf: random ranges, outline, palette, drawing style
+  pothos/
+    pothosConfig.ts          every number behind the pothos
+    pothosStages.ts          the pothos species: config + heart leaf, and the names tests use
+    Pothos.tsx               the pothos component: stem look + heart leaf drawing
+    leaf.ts / LeafShape.tsx  the heart leaf: random ranges, outline, palette, drawing style
   geometry.ts, rng.ts      small shared helpers
   pot/                     the pot, shared by every plant
     palettes.ts            the color palettes and the band names
@@ -45,7 +46,7 @@ plants/
 
 ### Adding a plant that grows on stems
 
-1. Write a **config** (copy `pothosConfig.ts` and change numbers). `validateConfig` runs automatically and says what does not fit together.
+1. Write a **config** (copy `pothos/pothosConfig.ts` and change numbers). `validateConfig` runs automatically and says what does not fit together.
 2. Write a **leaf shape model**: how to draw a random leaf, its outline as a polygon, and where its middle is. The engine only needs the outline to measure coverage and containment.
 3. Combine them into a species and call `createStagedPlant(seed, species)`.
 4. Draw it with `StemmedPlant`, passing a function that draws one leaf and a stem style.
@@ -116,7 +117,7 @@ Every leaf hangs from a visible stem, 2.6 units wide, that rises along its headi
 
 ## 4. Tests
 
-`src/plants/pothosStages.test.tsx` checks, over 60 seeds:
+`src/plants/pothos/pothosStages.test.tsx` checks, over 60 seeds:
 
 - stage counts (2, 3, 5, 6) and never more than 6 leaves for any number of stages,
 - exactly the requested number of stages, and deterministic output,

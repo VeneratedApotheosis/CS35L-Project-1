@@ -1,6 +1,6 @@
-import { SOIL } from "./genome"
-import { POT_RIM } from "./pot/shape"
-import type { StagedPlantConfig } from "./staged/types"
+import { SOIL } from "../genome"
+import { POT_RIM } from "../pot/shape"
+import type { StagedPlantConfig } from "../staged/types"
 
 /*
  * Every number behind the pothos. To retune the plant, change it here; the
