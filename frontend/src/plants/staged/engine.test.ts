@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { leafPolygon, randomLeafSpec, type LeafSpec } from "../leaf"
-import { POTHOS_CONFIG } from "../pothosConfig"
+import { leafPolygon, randomLeafSpec, type LeafSpec } from "../pothos/leaf"
+import { POTHOS_CONFIG } from "../pothos/pothosConfig"
 import { validateConfig } from "./config"
 import { createStagedPlant, leafOutline } from "./generate"
 import { leafCountLadder, scaleLadder } from "./ladder"

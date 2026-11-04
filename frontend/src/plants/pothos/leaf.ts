@@ -1,4 +1,4 @@
-import { chance, range, type Range, type Rng } from "./rng"
+import { chance, range, type Range, type Rng } from "../rng"
 
 /*
  * The heart-shaped leaf: how one is drawn at random, how its outline is built,

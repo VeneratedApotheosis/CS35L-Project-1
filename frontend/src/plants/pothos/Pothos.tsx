@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { LeafShape } from "./LeafShape"
 import { POTHOS_CONFIG } from "./pothosConfig"
 import { createPothos, type PlacedLeaf } from "./pothosStages"
-import { StemmedPlant, type StemStyle } from "./staged/StemmedPlant"
+import { StemmedPlant, type StemStyle } from "../staged/StemmedPlant"
 
 /** How the pothos's stems look. */
 const POTHOS_STEM: StemStyle = { color: "hsl(104 40% 40%)", width: 2.6 }
