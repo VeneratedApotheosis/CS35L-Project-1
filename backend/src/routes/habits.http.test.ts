@@ -12,7 +12,7 @@ const auth = `Bearer ${GOOD_TOKEN}`;
 
 const body = {
   name: "Gym",
-  plant_type: "flower",
+  plant_type: "pothos",
   target_count: 3,
   interval_count: 1,
   interval_unit: "week",

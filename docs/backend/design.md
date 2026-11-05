@@ -129,7 +129,7 @@ Routes have no version prefix.
 | --- | --- |
 | `name` | Required, 1 to 100 characters |
 | `description` | Optional, up to 500 characters |
-| `plant_type` | One of the plant types. The list (flower, tree, shrub, vine, kelp) is pending, see section 12. Only the backend checks it |
+| `plant_type` | One of `pothos`, `peace_lily`, `pilea` (the plants the app draws; issue #155). Only the backend checks it, and the list must match the frontend's |
 | `target_count` | 1 to 50 |
 | `interval_count` | 1 to 365 |
 | `interval_unit` | `day`, `week` or `month` |
@@ -283,6 +283,5 @@ The backend is a normal Node service: `npm run build`, then `npm start`. Set the
 | Item | Notes |
 | --- | --- |
 | Hosting for the backend | Section 11 |
-| Plant type list | Pending. The frontend has built different plants so far, see its design doc |
 | Logging on a habit that has not started yet | Not decided |
 | Changing timezone mid-habit | Past `occurred_on` dates stay as stored. Not decided otherwise |
