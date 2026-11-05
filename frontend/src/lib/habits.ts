@@ -27,9 +27,10 @@ export interface CreateHabitInput {
   start_date?: string
 }
 
-/** A habit row as returned by the backend, including the computed end_date. */
+/** A habit row as returned by the backend (POST /habits). */
 export interface Habit {
   id: string
+  owner_id: string
   name: string
   description: string | null
   plant_type: string
@@ -38,7 +39,6 @@ export interface Habit {
   interval_unit: IntervalUnit
   num_periods: number | null
   start_date: string
-  end_date: string
   created_at: string
 }
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Dices } from "lucide-react"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
@@ -40,6 +40,7 @@ export default function CreateHabit() {
   const [numPeriods, setNumPeriods] = useState("")
   const [startDate, setStartDate] = useState(todayISO())
   const [plantType, setPlantType] = useState(DEFAULT_PLANT_TYPE)
+  const [seed, setSeed] = useState(randomSeed)
 
   const [step, setStep] = useState<Step>("edit")
   const [errors, setErrors] = useState<Errors>({})
@@ -407,19 +408,16 @@ export default function CreateHabit() {
                 aria-labelledby="habit-plant-label"
               >
                 {PLANT_TYPES.map((plant) => (
-                  <button
+                  <Button
                     key={plant.id}
-                    type="button"
-                    className="plant-option"
+                    variant={plant.id === plantType ? "primary" : "secondary"}
+                    size="sm"
                     aria-pressed={plant.id === plantType}
                     aria-label={`${plant.label}. ${plant.blurb}`}
                     onClick={() => setPlantType(plant.id)}
                   >
-                    <span className="plant-option__art">
-                      <plant.Preview />
-                    </span>
-                    <span className="plant-option__label">{plant.label}</span>
-                  </button>
+                    {plant.label}
+                  </Button>
                 ))}
               </div>
             </div>
@@ -427,10 +425,21 @@ export default function CreateHabit() {
             {selected && (
               <div className="plant-hero">
                 <div className="plant-hero__art">
-                  <selected.Preview />
+                  <selected.Preview seed={seed} />
                 </div>
               </div>
             )}
+
+            <div className="plant-generate">
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={Dices}
+                onClick={() => setSeed(randomSeed())}
+              >
+                Generate another
+              </Button>
+            </div>
           </aside>
           </div>
         </form>
@@ -491,4 +500,9 @@ export default function CreateHabit() {
 
 function inRange(value: number, range: { min: number; max: number }): boolean {
   return Number.isInteger(value) && value >= range.min && value <= range.max
+}
+
+/** A random seed for the plant preview, so "Generate another" shows a new one. */
+function randomSeed(): number {
+  return Math.floor(Math.random() * 100000)
 }
