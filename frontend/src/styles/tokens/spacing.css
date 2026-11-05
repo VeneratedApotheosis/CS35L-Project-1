@@ -18,6 +18,9 @@
   --plant-card-touch-target: 2.75rem;
   --plant-card-art-width: 12rem;
   --plant-card-min-width: 14rem;
+  --content-max-width: 64rem;
+  --touch-target: 2.75rem;
+  --mobile-nav-height: 5rem;
 
   --radius-sm: 0.5rem;
   --radius-md: 1rem;
