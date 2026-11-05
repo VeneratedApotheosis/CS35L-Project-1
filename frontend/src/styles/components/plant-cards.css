@@ -8,6 +8,12 @@
   gap: var(--space-4);
   height: 100%;
   padding: var(--space-5);
+  padding-bottom: calc(var(--space-5) + var(--space-2));
+}
+
+.plant-card__surface > .habit-progress {
+  /* Transfer a little space from above the progress bar to the card's foot. */
+  margin-top: calc(-1 * var(--space-2));
 }
 
 .plant-card__toolbar {
@@ -88,6 +94,9 @@
   display: block;
   width: 100%;
   max-width: var(--plant-card-art-width);
+  /* Use the SVG's headroom and leave more breathing room above the habit name.
+     Preserve the layout footprint so card heights and progress bars stay aligned. */
+  transform: translateY(calc(-1 * var(--space-6)));
 }
 
 .plant-card__illustration > svg {
