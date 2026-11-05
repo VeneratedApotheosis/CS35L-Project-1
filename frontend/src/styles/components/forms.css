@@ -1,0 +1,164 @@
+/* Data-entry forms, starting with the create-habit form. */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field__label {
+  font-weight: var(--font-weight-medium);
+}
+
+.field__optional {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
+.field__hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.field__error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger-hover);
+}
+
+/* A row of fields that wraps on narrow screens. */
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.field-row > .field {
+  flex: 1 1 8rem;
+}
+
+/* Plant picker: a radio group drawn as cards. */
+.plant-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--space-3);
+}
+
+.plant-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.plant-option:hover {
+  border-color: var(--color-border-strong);
+}
+
+.plant-option[aria-pressed="true"] {
+  border-color: var(--color-primary);
+  background: var(--color-surface-selected);
+}
+
+.plant-option:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 20%, transparent);
+}
+
+.plant-option__art {
+  width: 4.5rem;
+  height: 5rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.plant-option__art svg,
+.plant-hero__art svg {
+  width: 100%;
+  height: auto;
+}
+
+.plant-option__label {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+}
+
+/* The large preview of the chosen plant, the form's hero. */
+.plant-hero {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4) 0;
+}
+
+.plant-hero__art {
+  width: 10rem;
+}
+
+/* Goal-preview sentence. */
+.goal-preview {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-heading);
+  margin: 0;
+}
+
+.goal-preview__dates {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+
+/* Confirm step. */
+.confirm-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.confirm-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.confirm-summary dt {
+  color: var(--color-text-secondary);
+}
+
+.confirm-summary dd {
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+  text-align: right;
+}
+
+.confirm-note {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+}
+
+/* Form-level error, e.g. the save failed. */
+.form-error {
+  color: var(--color-danger-hover);
+  font-size: var(--font-size-md);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
