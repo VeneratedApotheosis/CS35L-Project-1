@@ -18,6 +18,7 @@ import { Pilea } from "./Pilea"
 
 export interface PlantPreviewProps {
   seed?: number
+  stage?: 1 | 2 | 3 | 4
 }
 
 export interface PlantType {
@@ -36,19 +37,19 @@ export const PLANT_TYPES = [
     id: "pothos",
     label: "Pothos",
     blurb: "Heart-shaped leaves that trail as it grows.",
-    Preview: ({ seed = PREVIEW_SEED }) => <Pothos seed={seed} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Pothos seed={seed} stage={stage} stages={4} />,
   },
   {
     id: "peace_lily",
     label: "Peace lily",
     blurb: "Pointed leaves with white blooms at full growth.",
-    Preview: ({ seed = PREVIEW_SEED }) => <PeaceLily seed={seed} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <PeaceLily seed={seed} stage={stage} stages={4} />,
   },
   {
     id: "pilea",
     label: "Pilea",
     blurb: "Round coin leaves on thin stalks.",
-    Preview: ({ seed = PREVIEW_SEED }) => <Pilea seed={seed} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Pilea seed={seed} stage={stage} />,
   },
 ] as const satisfies readonly PlantType[]
 

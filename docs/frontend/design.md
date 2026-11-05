@@ -179,9 +179,12 @@ Built in `frontend/src/components/`, styled by the CSS in `frontend/src/styles/c
 | `Icon` | lucide icons with a size and a tone, always `currentColor` |
 | `NavBar` / `AppShell` | responsive navigation, current route, disabled future destinations, shared signed-in layout and skip link |
 | `ProgressBar` | accessible label, activity count and target (1–50); segmented steps for targets up to 10, smooth fill above 10, capped fill and uncapped count |
+| `PlantCard` | habit name, plant type, seed, stage (1–4), health, period progress and callbacks for logging, details and editing |
 | Inputs | CSS classes in `inputs.css`; a React wrapper is not built yet |
 
 Still to build: Modal, toast (for the undo after logging).
+
+`PlantCard` uses the shared plant registry, `Card`, `Icon`, `Button` and `ProgressBar`. Its native options disclosure opens with Enter or Space; Tab reaches the action buttons, Escape closes it and restores trigger focus, and clicking outside dismisses it. Clicking the plant or habit name calls View details. Health has an icon and label plus a muted-color illustration cue; dedicated drooping leaf drawings remain tracked by #152. The style guide's Plant cards section previews all three supported plants at every stage and health state using local demo actions. The card does not fetch data or compute habit statistics.
 
 **Rules**
 - Take variants and sizes from props, not from one-off class names.
