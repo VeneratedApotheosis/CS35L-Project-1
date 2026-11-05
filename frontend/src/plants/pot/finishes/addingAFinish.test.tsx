@@ -40,7 +40,7 @@ describe("a finish added to the registry", () => {
     const shade = markup.indexOf(`opacity="${POT_SHAPE.shade.opacity}"`)
     const fake = markup.indexOf("<circle data-fake")
     const highlight = markup.indexOf(`opacity="${POT_SHAPE.highlight.opacity}"`)
-    const rim = markup.indexOf(`x="${POT_SHAPE.rim.x}"`)
+    const rim = markup.indexOf(`d="${POT_SHAPE.rim.path}"`)
     expect(clipGroup).toBeGreaterThan(-1)
     expect(fake).toBeGreaterThan(shade)
     expect(shade).toBeGreaterThan(clipGroup)
