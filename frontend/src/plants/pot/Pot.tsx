@@ -1,13 +1,6 @@
 import { POT_PALETTES, type PotBand } from "./palettes"
 import { POT_SHAPE } from "./shape"
 
-/** Evenly spaced dot centers: bigger size means fewer dots. */
-function dotXs(size: number) {
-  const d = POT_SHAPE.dots
-  const count = Math.max(d.minCount, Math.round(d.baseCount / size))
-  return Array.from({ length: count }, (_, i) => d.firstX + (i * d.span) / (count - 1))
-}
-
 /** The pot, drawn in the shared plant canvas. See POT_SHAPE for every measurement. */
 export function Pot({
   palette,
@@ -18,7 +11,7 @@ export function Pot({
   /** Index into POT_PALETTES. Values past the end wrap around. */
   palette: number
   band: PotBand
-  /** Scales decoration only (stripe, dots, highlight). The pot keeps its shape. */
+  /** Scales decoration only (stripe, highlight). The pot keeps its shape. */
   size?: number
   /** Makes the pot's clip path unique when several pots share a page. */
   id: string
@@ -45,16 +38,6 @@ export function Pot({
             fill={colors.band}
           />
         )}
-        {band === "dots" &&
-          dotXs(size).map((x, i) => (
-            <circle
-              key={x}
-              cx={x}
-              cy={S.dots.rowsY[i % S.dots.rowsY.length]}
-              r={S.dots.radius * size}
-              fill={colors.band}
-            />
-          ))}
         <rect
           x={S.highlight.x}
           y={S.highlight.y}

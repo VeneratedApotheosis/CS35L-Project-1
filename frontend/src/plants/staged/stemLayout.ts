@@ -101,6 +101,7 @@ function describePlacement<Spec>(
     spec: gene.spec,
     angle,
     length,
+    fan: gene.fan,
     baseX,
     baseY,
     centerX: baseX + Math.sin(a) * leaf.middle * length,

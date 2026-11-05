@@ -156,5 +156,5 @@ export function leafOutline<Spec>(
   species: StagedPlantSpecies<Spec>,
   perSegment: number = species.config.search.fitSegments,
 ): Pt[] {
-  return placeOutline(species.leaf.outline(leaf.spec, leaf.length, perSegment), { x: leaf.baseX, y: leaf.baseY }, leaf.angle)
+  return placeOutline(species.leaf.outline(leaf.spec, leaf.length, perSegment, leaf.fan), { x: leaf.baseX, y: leaf.baseY }, leaf.angle)
 }

@@ -21,14 +21,6 @@ export const POT_SHAPE = {
   /** The painted stripe. Thickness is per unit of `size`. */
   stripe: { x: 50, centerY: 185, width: 100, thickness: 8 },
 
-  /**
-   * The dots. Bigger `size` means fewer, bigger dots: the count is
-   * `baseCount / size`, never below `minCount`. Dots alternate between the
-   * rows in `rowsY` and are spread evenly from `firstX` across `span`.
-   * Radius is per unit of `size`.
-   */
-  dots: { baseCount: 4, minCount: 2, firstX: 74, span: 52, rowsY: [177, 190], radius: 3.6 },
-
   /** The soft vertical highlight on the left of the body. Width is per unit of `size`. */
   highlight: { x: 69, y: 168, width: 6, height: 30, color: "#fff", opacity: 0.22 },
 

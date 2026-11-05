@@ -56,6 +56,13 @@ export function validateConfig(config: StagedPlantConfig): void {
   check(ordered(leaves.curl) && ordered(leaves.jitter), "leaves.curl and leaves.jitter must run from low to high")
   check(leaves.shrinkStep > 0 && leaves.shrinkStep < 1, "leaves.shrinkStep must be in (0, 1)")
 
+  if (config.fan) {
+    check(inUnit(config.fan.outerThreshold), "fan.outerThreshold must be between 0 and 1")
+    check(ordered(config.fan.strength), "fan.strength must run from low to high")
+    check(inUnit(config.fan.strength[0]) && inUnit(config.fan.strength[1]), "fan.strength must stay between 0 and 1")
+    check(ordered(config.fan.turn), "fan.turn must run from low to high")
+  }
+
   check(inUnit(coverage.target), "coverage.target must be between 0 and 1")
   check(coverage.canopyFloor >= 0 && coverage.canopyFloor < 1, "coverage.canopyFloor must be in [0, 1)")
   check(coverage.gridX >= 1 && coverage.gridY >= 1, "coverage.gridX and coverage.gridY must be at least 1")

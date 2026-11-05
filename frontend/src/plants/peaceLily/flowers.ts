@@ -26,16 +26,26 @@ export interface FlowerConfig {
   headLength: number
   lengthFactor: Range
   widthFactor: Range
-  /** Height of the head's base as a share of the flower dome height. */
-  baseHeight: Range
-  /** How far from the middle the outermost heads sit, as a share of the dome half width. */
-  slotSpread: number
-  /** Random sideways nudge of a head, as a share of the dome half width. */
+  /**
+   * How high the top of a flower head stands above the soil, as a share of the
+   * plant's maximum height (the leaf dome height). Above 1 is taller than the
+   * tallest leaf can be.
+   */
+  height: Range
+  /**
+   * The widest a flower head may sit from the middle, in degrees. The angle is
+   * measured at the soil point, between straight up and the middle of the head,
+   * so it holds at any height. The outermost heads sit at this angle.
+   */
+  maxSpread: number
+  /** Random nudge of a head's angle from the middle, in degrees. It never takes a head past `maxSpread`. */
   slotJitter: number
   /** Share of the way to its head that a stalk's root sits from the middle of the pot. */
   rootFollow: number
   /** Where a stalk bends, as a share of its rise. */
   stalkBend: number
+  /** The most a head leans from straight up because of its stalk, in degrees. */
+  maxLean: number
   /** Random tilt added to the stalk's direction at the head, in degrees. */
   headTilt: Range
   /** Tilt of the spadix inside an open hood, in degrees. */
@@ -44,7 +54,7 @@ export interface FlowerConfig {
   fitAttempts: number
   /** Each failed try pulls the head toward the middle by this factor. */
   pullIn: number
-  /** Each failed try also lowers the head by this share of the flower dome height. */
+  /** Each failed try also lowers the head by this share of the leaf dome height. */
   lowerStep: number
   /** Each failed try finally multiplies the head length by this. */
   shrinkStep: number
@@ -89,6 +99,27 @@ export function flowerDome(leaf: StagedPlantConfig, config: FlowerConfig): Dome 
 /** Points per side when fitting a head. */
 const FIT_STEPS = 12
 
+/** How far past `maxSpread`, in degrees, a head may land because its lean moves its middle. Rounding only. */
+const SPREAD_TOLERANCE = 0.001
+
+/** Where the middle of a flower head is, at full size. */
+export function flowerCenter(flower: PlacedFlower): { x: number; y: number } {
+  const a = (flower.angle * Math.PI) / 180
+  return {
+    x: flower.baseX + Math.sin(a) * flower.length * 0.5,
+    y: flower.baseY - Math.cos(a) * flower.length * 0.5,
+  }
+}
+
+/** The angle, in degrees, between straight up from the soil point and the middle of the flower head. Always 0 or more. */
+export function flowerSpread(flower: PlacedFlower, anchor: { x: number; y: number }): number {
+  const c = flowerCenter(flower)
+  return (Math.atan2(Math.abs(c.x - anchor.x), anchor.y - c.y) * 180) / Math.PI
+}
+
+/** Times the base is shifted to bring a leaning head's top to the height wanted. */
+const TIP_REFINEMENTS = 3
+
 /**
  * Place a plant's flowers at full size. Heads are spread evenly across the
  * dome, each on a stalk that rises from the pot and bends toward its head. A
@@ -118,11 +149,13 @@ export function placeFlowers(
     const slot = count === 1 ? range(rng, -0.35, 0.35) : -1 + (2 * index) / (count - 1)
     const middleness = 1 - Math.abs(slot) * 0.7
     const heightShare = clamp(middleness + range(rng, -0.15, 0.15))
-    const lowestBase = config.baseHeight[0]
-    let baseHeight = lowestBase + (config.baseHeight[1] - lowestBase) * heightShare
+    let tipHeight = (config.height[0] + (config.height[1] - config.height[0]) * heightShare) * leaf.dome.height
 
-    let targetX =
-      anchor.x + (slot * config.slotSpread + range(rng, -config.slotJitter, config.slotJitter)) * dome.halfWidth
+    let slotAngle = clamp(
+      slot * config.maxSpread + range(rng, -config.slotJitter, config.slotJitter),
+      -config.maxSpread,
+      config.maxSpread,
+    )
     let length = baseLength * range(rng, ...config.lengthFactor)
     const widthFactor = range(rng, ...config.widthFactor)
     const spadixTilt = range(rng, ...config.spadixTilt)
@@ -131,16 +164,26 @@ export function placeFlowers(
     const shape: BladeShape = { ...bloom, aspect: bloom.aspect * widthFactor }
     const rootX = (x: number) => anchor.x + clamp((x - anchor.x) * config.rootFollow, -rootReach, rootReach)
 
-    let placed: PlacedFlower | null = null
-    for (let attempt = 0; attempt < config.fitAttempts; attempt++) {
-      const baseY = anchor.y - baseHeight * dome.height
+    /** The flower with its head attached at `baseY`, and its open hood's outline. */
+    // Where the head sits across the pot: out from the middle at the head's angle, at the height of the head's middle.
+    let targetX = anchor.x
+    const build = (baseY: number) => {
       const x0 = rootX(targetX)
       const y0 = anchor.y
-      const cx = x0
-      const cy = y0 - (y0 - baseY) * config.stalkBend
-      const angle = (Math.atan2(targetX - cx, cy - baseY) * 180) / Math.PI + tilt
-
-      placed = {
+      let cx = x0
+      let cy = y0 - (y0 - baseY) * config.stalkBend
+      // The head continues the stalk's direction, but never leans past `maxLean`. A low
+      // head has a short stalk, which would otherwise tip it sideways. When it is capped,
+      // the stalk is bent to arrive along the head's own direction instead.
+      const natural = (Math.atan2(targetX - cx, cy - baseY) * 180) / Math.PI
+      const lean = clamp(natural, -config.maxLean, config.maxLean)
+      const angle = lean + tilt
+      if (lean !== natural) {
+        const reach = Math.max(y0 - baseY, 1) * config.stalkBend
+        cx = targetX - Math.sin((lean * Math.PI) / 180) * reach
+        cy = baseY + Math.cos((lean * Math.PI) / 180) * reach
+      }
+      const flower: PlacedFlower = {
         index,
         length,
         widthFactor,
@@ -150,17 +193,42 @@ export function placeFlowers(
         baseY,
         stalk: { x0, y0, cx, cy, x1: targetX, y1: baseY },
       }
-
       const outline = placeOutline(bladeOutline(shape, length, FIT_STEPS), { x: targetX, y: baseY }, angle)
-      const fits = outline.every(
+      return { flower, outline }
+    }
+
+    let placed: PlacedFlower | null = null
+    for (let attempt = 0; attempt < config.fitAttempts; attempt++) {
+      // Put the top of the head at the height we want. The head leans, so its top is
+      // not exactly one length above its base; measure where it lands and shift the
+      // base by the difference, a few times.
+      const wantedTopY = anchor.y - tipHeight
+      targetX = anchor.x + Math.tan((slotAngle * Math.PI) / 180) * Math.max(tipHeight - length / 2, 0)
+      let built = build(wantedTopY + length)
+      for (let step = 0; step < TIP_REFINEMENTS; step++) {
+        const topY = Math.min(...built.outline.map(([, y]) => y))
+        const lift = wantedTopY - topY
+        // The head leans, so its middle is not over its base. Slide the head sideways until
+        // its middle sits on the wanted angle from the soil point.
+        const middle = flowerCenter(built.flower)
+        targetX += anchor.x + Math.tan((slotAngle * Math.PI) / 180) * (anchor.y - (middle.y + lift)) - middle.x
+        built = build(built.flower.baseY + lift)
+      }
+      placed = built.flower
+      const outline = built.outline
+      const inside = outline.every(
         ([x, y]) =>
           domeValue(dome, x, y) <= 1 && x >= leaf.limits.left && x <= leaf.limits.right && y <= leaf.limits.floor,
       )
-      if (fits) break
+      const withinSpread = flowerSpread(built.flower, anchor) <= config.maxSpread + SPREAD_TOLERANCE
+      if (inside && withinSpread) break
 
-      targetX = anchor.x + (targetX - anchor.x) * config.pullIn
-      baseHeight -= config.lowerStep
-      length *= config.shrinkStep
+      // Too wide: come in toward the middle. Out of bounds: come in, drop lower and shrink.
+      slotAngle *= config.pullIn
+      if (!inside) {
+        tipHeight -= config.lowerStep * leaf.dome.height
+        length *= config.shrinkStep
+      }
     }
     return placed as PlacedFlower
   })

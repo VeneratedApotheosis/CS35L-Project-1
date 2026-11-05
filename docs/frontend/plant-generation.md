@@ -89,7 +89,7 @@ These are the decisions we made for every stage-engine plant. Each is enforced b
 | **Fixed stages, none in between.** A plant is a seed plus a stage number, 1 to S (default 4) | There is no growth value. `createPothos(seed, { stages })` returns S layouts |
 | **The last stage is at least 3.6 times the first** | The envelope scales on a geometric ladder with `growthRatio` 3.6 |
 | **Growth is even in every direction** | Every stage is the same dome scaled about the soil point |
-| **At most 6 leaves per stage** | `stages.maxLeaves`. Four stages give 2, 3, 5, 6 |
+| **A leaf cap per stage** | `stages.maxLeaves`: 6 for the pothos (2, 3, 5, 6 over four stages) and 8 for the peace lily (2, 4, 6, 8) |
 | **Leaves, stems and roots scale with the plant** | The leaf length is solved once at full size, so each stage is the full plant scaled about the soil point, showing its first n leaves |
 | **No leaf goes under the pot or far to either side** | Every leaf outline is fitted inside the dome, above the soil line, with at most 8 px of overhang past the rim |
 | **`scale` resizes the picture and moves nothing** | It is a CSS width on the SVG and never enters the generator |
@@ -113,7 +113,7 @@ These are the decisions we made for every stage-engine plant. Each is enforced b
 
 ## 2. Pot
 
-Code: `frontend/src/plants/pot/`. A low drum pot (body 46 tall) built from a rounded **rim**, a tapered **body**, a dark **soil** oval, and a **shadow** oval. The seed picks a palette (terracotta, cream, sage, sky, blush) and a band (none, stripe, or dots). The pot never changes size with the plant.
+Code: `frontend/src/plants/pot/`. A low drum pot (body 46 tall) built from a rounded **rim**, a tapered **body**, a dark **soil** oval, and a **shadow** oval. The seed picks a palette (terracotta, cream, sage, sky, blush) and a band (none, or a stripe; the stripe is twice as likely, see `POT_BAND_ODDS`). There used to be a dotted band too; pots that would have had it now get the stripe. The pot never changes size with the plant.
 
 Every measurement is a named value in `pot/shape.ts` (`POT_SHAPE`). Two of them are used by the plants: `POT_RIM` (where stems are placed across the pot) and `POT_SOIL` (where plants meet the pot, which becomes the shared `SOIL` point). Neither number is repeated anywhere else, so changing the pot's shape moves the plants with it.
 
@@ -133,7 +133,7 @@ Every stage places its leaves inside an **envelope**: a half-ellipse dome standi
 
 ### 3.2 Leaves per stage
 
-At most `maxLeaves` (6). Four stages give **2, 3, 5, 6** leaves. Both the number of leaves and the dome grow at every step, and leaves are longer at every step, so each stage visibly changes. The ramp is `leafCountCurve`: 1 is a straight line, above 1 adds leaves late.
+At most `maxLeaves` (the pothos has 6, the peace lily 8). Four stages give **2, 3, 5, 6** leaves for the pothos and **2, 4, 6, 8** for the peace lily. Both the number of leaves and the dome grow at every step, and leaves are longer at every step, so each stage visibly changes. The ramp is `leafCountCurve`: 1 is a straight line, above 1 adds leaves late.
 
 ### 3.3 Placement: roots, stems and layers
 
@@ -160,7 +160,17 @@ Every leaf hangs from a visible stem, 2.6 units wide, that rises along its headi
 
 `scale` resizes the **whole picture** (plant and pot together) as a share of the parent's width. It is applied as a CSS width on the SVG and never enters the generator, so leaf, stem and flower placement is identical at every scale. A test renders the same plant at several scales and checks the markup matches apart from the width.
 
-### 3.7 Extra parts
+### 3.7 Fanning the outer leaves
+
+A plant can fan its outer leaves, so they look as if their face points toward the middle while the blade bends away from it. It is optional: a config with no `fan` section (the pothos) is not affected and draws exactly as before.
+
+- **Which leaves.** A leaf is *outer* when its root is at least `fan.outerThreshold` of the way from the middle of the roots to their outer edge (0.5 means the outer half). This is decided per seed from the leaf's gene, not per stage, so a leaf has the same bend at every stage and each stage stays an exact scaled copy of the last.
+- **What changes.** An outer leaf gets a `fan` from -1 to 1 (negative bends left, positive right, the same side as its stem leans), drawn from `fan.strength`. The leaf also turns a further `fan.turn` degrees outward, scaled by that strength. Other leaves have a `fan` of 0.
+- **How the species draws it.** The engine passes `fan` to the leaf's `outline` function, so the bend is part of the shape that is fitted inside the dome and measured for coverage. The same `fan` is on each placed leaf for the drawing.
+- **Random draws.** The fan draws come last in a leaf's random stream and only happen when the config has `fan`, so turning it on never changes a plant's pot, roots, layers or leaf shapes.
+- **Limit.** The side limits still apply. A leaf that bends outward reaches the limit sooner, so the fitter makes outer leaves shorter. A larger bend means shorter outer leaves, not wider plants.
+
+### 3.8 Extra parts
 
 `StemmedPlant` draws the pot, then the stems, then the leaves. A species can add its own parts through two optional slots: `renderBehindLeaves` (after the stems, before the leaves) and `renderAboveLeaves` (on top of everything). Both receive the stage being drawn.
 
@@ -189,16 +199,22 @@ Code: `frontend/src/plants/peaceLily/`. It uses the stage engine for its leaves,
 | Leaf shape | Heart | Wide pointed blade (`shape.ts`), width 46% to 60% of its length |
 | Leaf length | 16% to 55% of the dome height | 21% to 68% |
 | Dome | 56 by 101.4 | 56 by 84 |
+| Leaves | 2 to 6 | 2 to 8 |
 | Stems | 16% to 62%, 34 degrees of lean | 8% to 40%, 30 degrees of lean |
 | Leaf turn | 10 to 28 degrees | 4 to 16 degrees (leaves stand more upright) |
+| Fan | Off | On: outer half of the roots, strength 0.75 to 1, 8 to 18 extra degrees |
 | Extra parts | None | Flowers |
+
+**Fan.** The outer leaves bend outward on a curve: the blade stays upright at its base and its tip sweeps sideways by up to half its length (`LILY_LEAF_FAN.sweep` 0.5, scaled by the leaf's fan). The leaf's own random bow is eased off as it bends, so it reads as one arc. An outer leaf shows its inner face, so its lighter half is the side toward the middle (the right half on other leaves). The shape is in `leaf.ts` (`fannedShape`) and the drawing in `LilyLeafShape.tsx`.
 
 **Flowers** are the peace lily's own, in `flowers.ts`:
 
 - A plant has 1 to 3 flowers. Each is a stalk with a white hood (spathe) and a cream spike (spadix).
-- Flowers are placed once, at full size, inside a **flower dome**: the leaf dome stretched upward by `reach.height` (1.75), so flowers stand above the leaves. Every stage scales them about the soil point with the rest of the plant, so they grow with it.
-- A flower head is half the leaf dome height long (`headLength` 0.5), and its base starts at 56% to 70% of the flower dome's height.
-- Heads are spread across the dome, higher in the middle, each on a stalk that rises from the pot (inside the 25% to 75% root range) and bends toward its head. A head that would leave the dome or pass the side limits is pulled in, lowered and then shortened until it fits. The open hood is the widest shape, so fitting it covers the bud too.
+- Flowers are placed once, at full size, inside a **flower dome**: the leaf dome stretched upward by `reach.height` (1.75), which only has to hold the tallest flower. Every stage scales them about the soil point with the rest of the plant, so they grow with it.
+- A flower head is half the leaf dome height long (`headLength` 0.5). **The top of each head stands between 60% and 120% of the plant's maximum height** (`height` [0.6, 1.2], where the maximum is the leaf dome height, 84). Heads in the middle are higher. At the high end a flower stands above the tallest leaf; at the low end it sits among the leaves.
+- A head leans no more than `maxLean` (30 degrees) because of its stalk. A low head has a short stalk, so without this cap it would tip sideways; when it is capped, the stalk bends to arrive along the head's direction.
+- **Spread.** Heads fan out evenly from the center, and **no head's middle is more than 30 degrees from straight up** (`maxSpread`). The angle is measured at the soil point, so it holds at any height: a low head sits close to the middle and a high one can sit further out. The outermost heads sit at 30 degrees, with a little random nudge (`slotJitter`, 3 degrees) that never takes one past it.
+- Heads are higher in the middle, each on a stalk that rises from the pot (inside the 25% to 75% root range) and bends toward its head. A head that would leave the dome or pass the side limits is pulled in, lowered and then shortened until it fits. The open hood is the widest shape, so fitting it covers the bud too.
 - Flower stalks are 2.4 wide at every stage, like the leaf stems.
 - **Stages:** none in stages 1 and 2, a closed green and cream **bud** in stage 3 (`budStage`) and an open white **bloom** in stage 4 (`bloomStage`). The same flowers bud and bloom, in the same places. Later stages stay in bloom. A plant with fewer stages never reaches them.
 
@@ -232,9 +248,12 @@ Over 60 seeds unless noted.
 - 1 to 3 flowers, deterministic,
 - every open flower inside the flower dome, above the soil and within the side limits,
 - flower stalks rooted between 25% and 75% across the pot,
-- the tallest flower clears the tallest leaf,
+- the top of every flower between 60% and 120% of the plant's maximum height, and the range reached at both ends,
+- every flower head within 30 degrees of straight up from the soil point, and some heads reaching close to that limit,
 - no flower head on top of another,
-- at most 6 leaves, leaves within the limits, and leaves scaled with the plant,
+- 8 leaves at the last stage and never more, leaves within the limits, and leaves scaled with the plant,
+- only leaves rooted toward the outside are fanned, each bends away from the middle, and its tip swings that way,
+- other leaves are exactly as they were, a leaf's bend is the same at every stage, and the pothos does not fan,
 - scale changes nothing but the picture size.
 
 ## 8. Open items
@@ -254,3 +273,5 @@ Over 60 seeds unless noted.
 - Leaf length used to be solved at each stage, so leaves did not grow in step with the plant. It is now solved once at full size and reused, so every stage is an exact scaled copy of the last. This removed the per-stage search settings.
 - The pothos dome was made 30% taller (78 to 101.4).
 - The peace lily's flowers first started too high in their dome and were shortened to fit, which made them small. They now start lower, and a head that does not fit is lowered before it is shortened.
+- The peace lily gained up to 8 leaves (from 6), outer leaves that fan outward, flower tops placed between 60% and 120% of the plant's maximum height, and flowers kept within 30 degrees of the center. Placing a head by its middle was needed for the spread: a first version let a leaning head drift past the limit, and the retry lowered it until it sank below the soil.
+- The pot's dotted band was removed. Pots that would have had dots now get the stripe, and the choice keeps every plain pot plain.
