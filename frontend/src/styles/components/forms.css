@@ -88,6 +88,11 @@
   height: auto;
 }
 
+.plant-generate {
+  display: flex;
+  justify-content: center;
+}
+
 /* "Every" group: the interval count and unit belong together. */
 .period-group {
   display: flex;

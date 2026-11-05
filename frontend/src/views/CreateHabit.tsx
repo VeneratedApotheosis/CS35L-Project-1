@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Dices } from "lucide-react"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
@@ -53,6 +53,7 @@ export default function CreateHabit() {
   // null means the user left the start date at its default (today).
   const [startDate, setStartDate] = useState<string | null>(null)
   const [plantType, setPlantType] = useState<PlantTypeId>(DEFAULT_PLANT_TYPE)
+  const [seed, setSeed] = useState(randomSeed)
 
   const [step, setStep] = useState<Step>("edit")
   const [errors, setErrors] = useState<Errors>({})
@@ -465,11 +466,21 @@ export default function CreateHabit() {
             {selected && (
               <div className="plant-hero">
                 <div className="plant-hero__art">
-                  <selected.Preview />
+                  <selected.Preview seed={seed} />
                 </div>
               </div>
             )}
             <p className="field__hint">Example plant</p>
+            <div className="plant-generate">
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={Dices}
+                onClick={() => setSeed(randomSeed())}
+              >
+                Generate another
+              </Button>
+            </div>
           </aside>
           </div>
         </form>
@@ -528,6 +539,11 @@ export default function CreateHabit() {
       )}
     </main>
   )
+}
+
+/** A random seed for the plant preview, so "Generate another" shows a new one. */
+function randomSeed(): number {
+  return Math.floor(Math.random() * 100000)
 }
 
 function inRange(value: number, range: { min: number; max: number }): boolean {
