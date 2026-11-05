@@ -178,11 +178,8 @@ export default function CreateHabit() {
       </Button>
 
       <h1
-        style={{
-          fontSize: "var(--font-size-3xl)",
-          lineHeight: "var(--line-height-heading)",
-          margin: "var(--space-4) 0 var(--space-6)",
-        }}
+        className="text-display"
+        style={{ margin: "var(--space-4) 0 var(--space-6)" }}
       >
         Create a habit
       </h1>
