@@ -1,8 +1,10 @@
 "use client"
 
 import { useId, useMemo } from "react"
-import { Pot } from "./pot"
-import { SOIL, STAGES, VIEWBOX } from "./genome"
+import { potLookFromSeed, type PotLook } from "./pot"
+import { PottedPlant } from "./PottedPlant"
+import { SIZE_MAX, SIZE_MIN, SOIL, STAGES } from "./genome"
+import { clamp } from "./rng"
 import {
   createPilea,
   pileaColors,
@@ -73,7 +75,7 @@ function PileaLeafView({ leaf, g, id, sw }: { leaf: PileaLeaf; g: number; id: st
   )
 }
 
-export interface PileaProps {
+export interface PileaDrawingProps {
   /** Any integer, such as a habit id. Same seed, same plant. */
   seed: number
   /** Continuous growth 0..1. Overrides `stage`. */
@@ -82,21 +84,10 @@ export interface PileaProps {
   stage?: 1 | 2 | 3 | 4
   /** 0.6-1.6. Bigger means larger and fewer leaves. Default 1. */
   size?: number
-  /** Force a pot palette index instead of the seed's choice. */
-  pot?: number
-  className?: string
-  title?: string
 }
 
-export function Pilea({
-  seed,
-  growth,
-  stage = 4,
-  size = 1,
-  pot,
-  className,
-  title = "Pilea peperomioides in a pot",
-}: PileaProps) {
+/** The pilea alone, as shapes in the shared canvas. Put it in a PottedPlant to give it a pot. */
+export function PileaDrawing({ seed, growth, stage = 4, size = 1 }: PileaDrawingProps) {
   const id = useId().replace(/:/g, "")
   const genome = useMemo(() => createPilea(seed, size), [seed, size])
   const g = growth ?? STAGES[stage - 1].g
@@ -114,8 +105,7 @@ export function Pilea({
   const front = genome.leaves.map((l, i) => ({ l, i })).filter(({ l }) => !l.back)
 
   return (
-    <svg viewBox={VIEWBOX} overflow="visible" role="img" aria-label={title} className={className}>
-      <Pot palette={pot ?? genome.pot} band={genome.band} size={genome.size} id={id} />
+    <g>
       {back.map(({ l, i }) => (
         <PileaLeafView key={i} leaf={l} g={g} id={`${id}-b${i}`} sw={sw} />
       ))}
@@ -133,6 +123,35 @@ export function Pilea({
       {front.map(({ l, i }) => (
         <PileaLeafView key={i} leaf={l} g={g} id={`${id}-f${i}`} sw={sw} />
       ))}
-    </svg>
+    </g>
+  )
+}
+
+export interface PileaProps extends PileaDrawingProps {
+  /** The pot to put the plant in. Defaults to the look the seed gives. */
+  pot?: PotLook
+  className?: string
+  title?: string
+}
+
+/** A pilea in a pot. The plant's size also sets the scale of the pot's decoration. */
+export function Pilea({
+  seed,
+  growth,
+  stage,
+  size = 1,
+  pot,
+  className,
+  title = "Pilea peperomioides in a pot",
+}: PileaProps) {
+  return (
+    <PottedPlant
+      look={pot ?? potLookFromSeed(seed)}
+      potSize={clamp(size, SIZE_MIN, SIZE_MAX)}
+      className={className}
+      title={title}
+    >
+      <PileaDrawing seed={seed} growth={growth} stage={stage} size={size} />
+    </PottedPlant>
   )
 }

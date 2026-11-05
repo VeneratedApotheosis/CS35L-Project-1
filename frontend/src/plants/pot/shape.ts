@@ -8,6 +8,8 @@ export const POT_SHAPE = {
   /** The tapered body. Its outline is a path; its top edge is hidden behind the rim. */
   body: {
     path: "M58 160 L142 160 L136 200 Q135 206 128 206 L72 206 Q65 206 64 200 Z",
+    /** The smallest box around the path. Finishes use it to cover the whole body. */
+    bounds: { x: 58, y: 160, width: 84, height: 46 },
     /** Added to the pot's id to name its clip path. */
     clipIdSuffix: "-pot",
   },
@@ -36,6 +38,9 @@ export const POT_SHAPE = {
   /** The lighter patch on the soil. */
   soilHighlight: { cx: 92, cy: 147, rx: 20, ry: 3, color: "#85634c" },
 }
+
+/** The pot body: its outline path and bounding box. What a finish is drawn onto. */
+export type PotBody = typeof POT_SHAPE.body
 
 /** The pot rim, left to right. Plants place their stems as a share of this width. */
 export const POT_RIM = {

@@ -1,24 +1,31 @@
-import { POT_PALETTES, type PotBand } from "./palettes"
+import { mulberry32 } from "../rng"
+import { getFinish } from "./finishes"
+import { POT_PALETTES } from "./palettes"
 import { POT_SHAPE } from "./shape"
+import type { PotLook } from "./style"
 
 /** The pot, drawn in the shared plant canvas. See POT_SHAPE for every measurement. */
 export function Pot({
-  palette,
-  band,
+  look,
   size = 1,
   id,
 }: {
-  /** Index into POT_PALETTES. Values past the end wrap around. */
-  palette: number
-  band: PotBand
+  look: PotLook
   /** Scales decoration only (stripe, highlight). The pot keeps its shape. */
   size?: number
   /** Makes the pot's clip path unique when several pots share a page. */
   id: string
 }) {
   const S = POT_SHAPE
-  const colors = POT_PALETTES[palette % POT_PALETTES.length]
+  const colors = POT_PALETTES[look.palette % POT_PALETTES.length]
   const clip = id + S.body.clipIdSuffix
+  const finish = getFinish(look.finish).draw({
+    rng: mulberry32(look.seed),
+    body: S.body,
+    colors,
+    band: look.band,
+    size,
+  })
 
   return (
     <g>
@@ -29,15 +36,7 @@ export function Pot({
       <path d={S.body.path} fill={colors.body} />
       <g clipPath={"url(#" + clip + ")"}>
         <rect x={S.shade.x} y={S.shade.y} width={S.shade.width} height={S.shade.height} fill={colors.shade} opacity={S.shade.opacity} />
-        {band === "stripe" && (
-          <rect
-            x={S.stripe.x}
-            y={S.stripe.centerY - (S.stripe.thickness * size) / 2}
-            width={S.stripe.width}
-            height={S.stripe.thickness * size}
-            fill={colors.band}
-          />
-        )}
+        {finish}
         <rect
           x={S.highlight.x}
           y={S.highlight.y}
