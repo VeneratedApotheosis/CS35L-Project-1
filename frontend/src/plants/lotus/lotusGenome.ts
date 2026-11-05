@@ -1,5 +1,4 @@
 import { SOIL } from "../genome"
-import { POT_PALETTES, pickPotBand, type PotBand } from "../pot"
 import { int, mulberry32, range } from "../rng"
 
 /*
@@ -46,8 +45,6 @@ export interface LotusFlower {
 }
 
 export interface LotusGenome {
-  pot: number
-  band: PotBand
   pads: LotusPad[]
   leaves: LotusLeaf[]
   flowers: LotusFlower[]
@@ -56,9 +53,6 @@ export interface LotusGenome {
 /** Build a lotus from a seed. Same seed, same plant. */
 export function createLotus(seed: number): LotusGenome {
   const rng = mulberry32((seed >>> 0) ^ 0x10795)
-
-  const pot = int(rng, 0, POT_PALETTES.length - 1)
-  const band = pickPotBand(rng)
 
   const padCount = int(rng, 3, 4)
   const pads: LotusPad[] = Array.from({ length: padCount }, () => ({
@@ -99,5 +93,5 @@ export function createLotus(seed: number): LotusGenome {
     }
   })
 
-  return { pot, band, pads, leaves, flowers }
+  return { pads, leaves, flowers }
 }

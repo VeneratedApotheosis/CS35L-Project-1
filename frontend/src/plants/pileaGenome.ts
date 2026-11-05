@@ -4,7 +4,6 @@ import {
   SOIL,
   subSeed,
 } from "./genome"
-import { POT_PALETTES, pickPotBand, type PotBand } from "./pot"
 import { clamp, easeOutCubic, int, lerp, mulberry32, range } from "./rng"
 
 /* ------------------------------------------------------------------ */
@@ -82,8 +81,6 @@ export interface PileaLeaf {
 export interface PileaGenome {
   seed: number
   size: number
-  pot: number
-  band: PotBand
   /** Slight sideways lean of the central stem, in px at full height. */
   lean: number
   hMax: number
@@ -97,8 +94,6 @@ const MAX_LEAVES = 34
 export function createPilea(seed: number, size = 1): PileaGenome {
   size = clamp(size, SIZE_MIN, SIZE_MAX)
   const rng = mulberry32(seed)
-  const pot = int(rng, 0, POT_PALETTES.length - 1)
-  const band = pickPotBand(rng)
   const baseCount = int(rng, 12, 15)
   const phase = rng() * Math.PI * 2
   const lean = range(rng, -5, 5)
@@ -162,7 +157,7 @@ export function createPilea(seed: number, size = 1): PileaGenome {
   }
 
   leaves.sort((a, b) => Math.cos(a.phi) - Math.cos(b.phi))
-  return { seed, size, pot, band, lean, hMax, leaves }
+  return { seed, size, lean, hMax, leaves }
 }
 
 /* ------------------------------------------------------------------ */

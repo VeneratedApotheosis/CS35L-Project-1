@@ -11,7 +11,8 @@ This page is a guide to the folder and a record of what was built in it. For the
 | `staged/` | The shared stage engine. Places leaves on stems inside a dome, one scaled copy per growth stage. Nothing here is specific to one plant |
 | `pothos/` | The pothos: heart-shaped leaves |
 | `peaceLily/` | The peace lily: wide pointed leaves, fanned outer leaves, and flowers that bud and bloom |
-| `pot/` | The pot every plant sits in: palettes, shape, and the band (none or a stripe) |
+| `pot/` | The pot, separate from the plants: palettes, shape, the pot's look (`potLookFromSeed`) and the finish registry |
+| `PottedPlant.tsx` | The picture of a potted plant: the shared canvas, the pot, then a plant drawn on top |
 | `Pilea.tsx`, `pileaGenome.ts` | The pilea, still on the older continuous-growth engine |
 | `genome.ts`, `geometry.ts`, `rng.ts` | Shared helpers: canvas and soil point, geometry, seeded random numbers |
 
@@ -29,6 +30,8 @@ Every number is in a named config, never in the engine. The usual places:
 | Pot colors | `POT_PALETTES` in `pot/palettes.ts` |
 | How likely a pot is to have the stripe | `POT_BAND_ODDS` in `pot/palettes.ts` |
 | Pot shape and stripe | `POT_SHAPE` in `pot/shape.ts` |
+| How likely each pot finish is | `POT_FINISH_WEIGHTS` in `pot/style.ts` |
+| Add a pot finish | One file in `pot/finishes/`, one entry in `pot/finishes/index.ts`, one weight in `POT_FINISH_WEIGHTS` |
 
 A config is checked by `validateConfig` when a plant is built, and it lists everything that does not fit together.
 
@@ -48,19 +51,20 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
 
 ### The engine (`staged/`)
 
-- `StemmedPlant` has two optional drawing slots, `renderBehindLeaves` and `renderAboveLeaves`, so a plant can add its own parts. The peace lily uses them for flower stalks and heads.
+- `StemmedPlant` draws the plant only, with no pot and no `svg`. It has two optional drawing slots, `renderBehindLeaves` and `renderAboveLeaves`, so a plant can add its own parts. The peace lily uses them for flower stalks and heads.
 - The config has an optional `fan` section, and each placed leaf carries a `fan` value from -1 to 1. A species can use it to bend its outer leaves.
 - The leaf outline function takes an optional `fan` argument. The pothos ignores it.
 
 ### Pots (`pot/`)
 
-- The dotted band is gone. A pot now has either no band or the stripe.
-- Existing seeds keep their pot: a pot that was plain is still plain, and one that had a stripe or dots now shows the stripe. This is done by a weighted choice (`POT_BAND_ODDS`, none 1 part and stripe 2) using the same single random draw as before.
-- The pilea picks its band the same way, through `pickPotBand`.
-
+- The pot was split from the plants. A plant draws only its stems, leaves and flowers. A pot has its own look, `PotLook` (palette, band, finish and a pattern seed), chosen by `potLookFromSeed(seed)` from a random stream made from the seed alone. Existing seeds gave a different plant and pot once when this changed.
+- `PottedPlant` puts a pot and a plant together. Each plant has a bare drawing (`PothosDrawing`, `PeaceLilyDrawing`, `PileaDrawing`) and a composed component (`Pothos`, `PeaceLily`, `Pilea`) that takes an optional `pot` look and defaults to the one its seed gives. Any pot can go with any plant.
+- A **finish** is a way to fill the pot body, registered in `pot/finishes/index.ts`. The first is `solid`: the body color with the stripe if the look has one. To add one, write a file in `pot/finishes/`, add it to the registry, and add its weight to `POT_FINISH_WEIGHTS` in `pot/style.ts`.
+- The dotted band is gone. A pot has either no band or the stripe, chosen by weighted odds (`POT_BAND_ODDS`, none 1 part and stripe 2).
 ### The `/plants` page
 
-- One four-stages section with a plant picker (pothos, peace lily, pilea) and a Grow another button that regrows the chosen plant. Each plant keeps its own seed.
+- One four-stages section with a plant picker (pothos, peace lily, pilea) and a Grow another button that regrows the chosen plant. Each plant keeps its own seed, and arrows and a number box step through seeds.
+- A pot finish picker that overrides the finish of every pot on the page, and a row of twelve consecutive seeds' pots to compare.
 - Galleries of eight seeds for the pothos and the peace lily.
 
 ## Tests
@@ -70,7 +74,10 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
 | `pothos/pothosStages.test.tsx` | The stage rules for the pothos, over 60 seeds |
 | `staged/engine.test.ts` | The engine follows whatever config it is given |
 | `peaceLily/peaceLily.test.tsx` | Flower stages, flower height and spread, the leaf cap, the outer-leaf fan, and scale |
-| `pot/pot.test.tsx` | Pot geometry, palettes, bands (including that no dots are drawn), and the band odds |
+| `pot/pot.test.tsx` | Pot geometry, `potLookFromSeed`, palettes, bands (including that no dots are drawn), and the band odds |
+| `pot/finishes/finishes.test.tsx` | The finish registry, its weights, the weighted pick and the solid finish |
+| `pot/finishes/addingAFinish.test.tsx` | A finish that exists only in the test is drawn inside the pot's clip |
+| `PottedPlant.test.tsx` | The split: plants carry no pot, the pot is drawn before the plant, any pot with any plant, and scale |
 
 ## Known gaps
 

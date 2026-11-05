@@ -2,12 +2,26 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SOIL } from "../genome"
 import { mulberry32 } from "../rng"
-import { POT_BANDS, POT_BAND_ODDS, POT_PALETTES, POT_RIM, POT_SHAPE, POT_SOIL, Pot, pickPotBand, pickPotStyle } from "./index"
+import {
+  POT_BANDS,
+  POT_BAND_ODDS,
+  POT_FINISH_IDS,
+  POT_PALETTES,
+  POT_RIM,
+  POT_SHAPE,
+  POT_SOIL,
+  Pot,
+  pickPotBand,
+  potLookFromSeed,
+  type PotLook,
+} from "./index"
 
-const render = (band: (typeof POT_BANDS)[number], size = 1, palette = 0) =>
+const lookOf = (band: PotLook["band"], palette = 0): PotLook => ({ palette, band, finish: "solid", seed: 1 })
+
+const render = (band: PotLook["band"], size = 1, palette = 0) =>
   renderToStaticMarkup(
     <svg>
-      <Pot palette={palette} band={band} size={size} id="t" />
+      <Pot look={lookOf(band, palette)} size={size} id="t" />
     </svg>,
   )
 
@@ -23,45 +37,63 @@ describe("pot shape", () => {
   })
 })
 
-describe("pickPotStyle", () => {
-  it("is deterministic and picks a real palette and band", () => {
+describe("potLookFromSeed", () => {
+  it("is deterministic and picks a real palette, band, finish and pattern seed", () => {
     for (let seed = 1; seed <= 50; seed++) {
-      const a = pickPotStyle(mulberry32(seed))
-      expect(a).toEqual(pickPotStyle(mulberry32(seed)))
-      expect(a.pot).toBeGreaterThanOrEqual(0)
-      expect(a.pot).toBeLessThan(POT_PALETTES.length)
-      expect(POT_BANDS).toContain(a.band)
+      const look = potLookFromSeed(seed)
+      expect(look).toEqual(potLookFromSeed(seed))
+      expect(Number.isInteger(look.palette)).toBe(true)
+      expect(look.palette).toBeGreaterThanOrEqual(0)
+      expect(look.palette).toBeLessThan(POT_PALETTES.length)
+      expect(POT_BANDS).toContain(look.band)
+      expect(POT_FINISH_IDS).toContain(look.finish)
+      expect(Number.isInteger(look.seed)).toBe(true)
     }
   })
 
   it("uses every palette and band across seeds", () => {
-    const pots = new Set<number>()
+    const palettes = new Set<number>()
     const bands = new Set<string>()
     for (let seed = 1; seed <= 200; seed++) {
-      const s = pickPotStyle(mulberry32(seed))
-      pots.add(s.pot)
-      bands.add(s.band)
+      const look = potLookFromSeed(seed)
+      palettes.add(look.palette)
+      bands.add(look.band)
     }
-    expect(pots.size).toBe(POT_PALETTES.length)
+    expect(palettes.size).toBe(POT_PALETTES.length)
     expect(bands.size).toBe(POT_BANDS.length)
   })
-})
 
-describe("pickPotBand", () => {
-  it("follows the odds, so the stripe is more common than none", () => {
+  it("gives different seeds different looks", () => {
+    const looks = new Set<string>()
+    for (let seed = 1; seed <= 50; seed++) looks.add(JSON.stringify(potLookFromSeed(seed)))
+    expect(looks.size).toBe(50)
+  })
+
+  it("follows the band odds, so the stripe is more common than none", () => {
     let stripes = 0
     const seeds = 3000
-    for (let seed = 1; seed <= seeds; seed++) if (pickPotBand(mulberry32(seed)) === "stripe") stripes++
+    for (let seed = 1; seed <= seeds; seed++) if (potLookFromSeed(seed).band === "stripe") stripes++
     const expected = POT_BAND_ODDS.stripe / (POT_BAND_ODDS.stripe + POT_BAND_ODDS.none)
     expect(Math.abs(stripes / seeds - expected)).toBeLessThan(0.04)
   })
 
-  it("keeps a pot plain if it was plain before, and gives every other pot the stripe", () => {
-    // Before, a band came from floor(draw * 3): 0 none, 1 stripe, 2 dots.
-    for (let seed = 1; seed <= 200; seed++) {
-      const draw = mulberry32(seed)()
-      expect(pickPotBand(mulberry32(seed))).toBe(Math.floor(draw * 3) === 0 ? "none" : "stripe")
-    }
+  it("draws from its own stream, not the plant's", () => {
+    // The plant's stream is mulberry32(seed). A pot made from the same seed must not follow it:
+    // matching the plant's first draw by chance is about one palette in five, not most of them.
+    const matches = Array.from({ length: 200 }, (_, i) => i + 1).filter(
+      (seed) => potLookFromSeed(seed).palette === Math.floor(mulberry32(seed)() * POT_PALETTES.length),
+    )
+    expect(matches.length).toBeLessThan(100)
+  })
+})
+
+describe("pickPotBand", () => {
+  it("follows the odds it is given by the band table", () => {
+    let stripes = 0
+    const draws = 3000
+    for (let seed = 1; seed <= draws; seed++) if (pickPotBand(mulberry32(seed)) === "stripe") stripes++
+    const expected = POT_BAND_ODDS.stripe / (POT_BAND_ODDS.stripe + POT_BAND_ODDS.none)
+    expect(Math.abs(stripes / draws - expected)).toBeLessThan(0.04)
   })
 })
 
@@ -93,5 +125,13 @@ describe("Pot", () => {
   it("keeps the pot's shape the same at every size", () => {
     const body = (size: number) => render("stripe", size).match(/<path d="[^"]*"/g)
     expect(body(0.6)).toEqual(body(1.6))
+  })
+
+  it("draws the same markup every time for the same look", () => {
+    for (const seed of [1, 2, 99]) {
+      const look = potLookFromSeed(seed)
+      const draw = () => renderToStaticMarkup(<svg><Pot look={look} id="t" /></svg>)
+      expect(draw()).toBe(draw())
+    }
   })
 })
