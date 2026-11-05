@@ -40,151 +40,241 @@ function leafColors(shade: number) {
   }
 }
 
-/** The water in the pot, with a lighter top and a faint ripple. */
+/**
+ * The water in the pot, with a lighter top and a faint ripple. It is drawn a
+ * little wider and higher than the pot's soil oval so no brown soil shows behind
+ * it (the pot's soil oval is rx 40, ry 6, centered on the soil point).
+ */
 function Water() {
   return (
     <g>
-      <ellipse cx={100} cy={WATER_Y} rx={37} ry={6.5} fill={WATER_DEEP} />
-      <ellipse cx={98} cy={WATER_Y - 1} rx={30} ry={4} fill={WATER_TOP} opacity={0.75} />
-      <ellipse cx={108} cy={WATER_Y + 1.5} rx={15} ry={1.8} fill={WATER_RIPPLE} opacity={0.4} />
+      <ellipse cx={100} cy={WATER_Y - 2} rx={41} ry={7} fill={WATER_DEEP} />
+      <ellipse cx={98} cy={WATER_Y - 2.5} rx={33} ry={4.5} fill={WATER_TOP} opacity={0.8} />
+      <ellipse cx={108} cy={WATER_Y - 0.5} rx={15} ry={1.8} fill={WATER_RIPPLE} opacity={0.4} />
     </g>
   )
 }
 
-/** A lily pad: a flattened disc with a wedge notch cut toward its center. */
+/** A lily pad lying flat on the water: a thin oval disc with a wedge notch. */
 function Pad({ pad, g }: { pad: LotusPad; g: number }) {
   const r = pad.r * lerp(0.55, 1, g)
   if (r < 2) return null
-  const ry = r * 0.42
+  // Flat on the water: the disc is seen at a shallow angle, so it is a thin oval.
+  const ry = r * 0.2
   const c = padColors(pad.shade)
   const a = (pad.notch * Math.PI) / 180
-  const w = 0.24
+  const w = 0.22
   const n1x = Math.cos(a - w) * r
   const n1y = Math.sin(a - w) * ry
   const n2x = Math.cos(a + w) * r
   const n2y = Math.sin(a + w) * ry
 
   return (
-    <g transform={`translate(${f(pad.x)} ${f(pad.y)}) rotate(${f(pad.rot)})`}>
+    <g transform={`translate(${f(pad.x)} ${f(pad.y)}) rotate(${f(pad.rot * 0.4)})`}>
+      {/* A faint darker rim below gives the flat plate a little thickness. */}
+      <ellipse cx={0} cy={ry * 0.5} rx={r} ry={ry} fill={WATER_DEEP} opacity={0.35} />
       <ellipse cx={0} cy={0} rx={r} ry={ry} fill={c.base} />
-      {Array.from({ length: 7 }, (_, k) => {
-        const ang = (k / 7) * Math.PI * 2
+      {Array.from({ length: 6 }, (_, k) => {
+        const ang = (k / 6) * Math.PI * 2
         return (
           <line
             key={k}
             x1={0}
             y1={0}
-            x2={f(Math.cos(ang) * r * 0.9)}
-            y2={f(Math.sin(ang) * ry * 0.9)}
+            x2={f(Math.cos(ang) * r * 0.88)}
+            y2={f(Math.sin(ang) * ry * 0.88)}
             stroke={c.vein}
-            strokeWidth={0.5}
-            opacity={0.5}
+            strokeWidth={0.4}
+            opacity={0.45}
           />
         )
       })}
-      <ellipse cx={-r * 0.3} cy={-ry * 0.3} rx={r * 0.3} ry={ry * 0.3} fill={c.light} opacity={0.5} />
+      <ellipse cx={-r * 0.3} cy={-ry * 0.35} rx={r * 0.32} ry={ry * 0.4} fill={c.light} opacity={0.5} />
       <path d={`M0 0 L${f(n1x)} ${f(n1y)} L${f(n2x)} ${f(n2y)} Z`} fill={WATER_DEEP} />
     </g>
   )
 }
 
-/** A round leaf on a stem, cupped by a darker lower crescent. */
+/**
+ * A round coin leaf held above the water on a stem, after the water-pennywort
+ * reference. It is a full disc seen at an angle, dished like a shallow bowl: the
+ * stem joins at a central navel, veins radiate out, and a rounded highlight gives
+ * it volume so it does not read as a flat plate.
+ */
 function Leaf({ leaf, g }: { leaf: LotusLeaf; g: number }) {
   if (g < leaf.birth) return null
   const h = leaf.height * lerp(0.3, 1, g)
   const topX = leaf.baseX + leaf.tilt * (h / leaf.height)
   const topY = WATER_Y - h
   const r = leaf.r * lerp(0.4, 1, g)
-  const ry = r * 0.82
+  // An elliptical pad seen at an angle: oval, wider than it is tall.
+  const ry = r * 0.46
   const c = leafColors(leaf.shade)
 
   return (
     <g>
-      <line x1={f(leaf.baseX)} y1={WATER_Y} x2={f(topX)} y2={f(topY)} stroke={STEM} strokeWidth={2.2} strokeLinecap="round" />
+      <line x1={f(leaf.baseX)} y1={WATER_Y} x2={f(topX)} y2={f(topY)} stroke={STEM} strokeWidth={2.4} strokeLinecap="round" />
       <g transform={`translate(${f(topX)} ${f(topY)}) rotate(${f(leaf.tilt)})`}>
+        {/* The disc. */}
         <ellipse cx={0} cy={0} rx={r} ry={ry} fill={c.base} />
-        <path d={`M${-r} 0 A ${r} ${ry} 0 0 0 ${r} 0 Z`} fill={c.shadow} opacity={0.32} />
-        {Array.from({ length: 9 }, (_, k) => {
-          const ang = (k / 9) * Math.PI * 2
+        {/* The lower-front half is shaded, so the disc looks dished toward us. */}
+        <path d={`M${f(-r)} 0 A ${f(r)} ${f(ry)} 0 0 0 ${f(r)} 0 Z`} fill={c.shadow} opacity={0.55} />
+        {/* Veins radiating from the central navel. */}
+        {Array.from({ length: 11 }, (_, k) => {
+          const ang = (k / 11) * Math.PI * 2
           return (
             <line
               key={k}
               x1={0}
               y1={0}
-              x2={f(Math.cos(ang) * r * 0.85)}
-              y2={f(Math.sin(ang) * ry * 0.85)}
+              x2={f(Math.cos(ang) * r * 0.9)}
+              y2={f(Math.sin(ang) * ry * 0.9)}
               stroke={c.vein}
               strokeWidth={0.5}
-              opacity={0.4}
+              opacity={0.38}
             />
           )
         })}
-        <ellipse cx={-r * 0.3} cy={-ry * 0.35} rx={r * 0.32} ry={ry * 0.3} fill={c.light} opacity={0.5} />
-        <circle cx={0} cy={0} r={1.4} fill={c.shadow} opacity={0.7} />
+        {/* A rounded highlight on the upper-left gives the disc its volume. */}
+        <ellipse cx={-r * 0.34} cy={-ry * 0.34} rx={r * 0.42} ry={ry * 0.42} fill={c.light} opacity={0.6} />
+        {/* The central navel where the stem joins the leaf. */}
+        <ellipse cx={0} cy={0} rx={r * 0.12} ry={ry * 0.12} fill={c.shadow} opacity={0.7} />
       </g>
     </g>
   )
 }
 
-const petalPath = (len: number, w: number) =>
-  `M0 0 Q ${f(w)} ${f(-len * 0.55)} 0 ${f(-len)} Q ${f(-w)} ${f(-len * 0.55)} 0 0 Z`
+/**
+ * One lotus petal, growing from the flower center (0,0) up to a soft point. The
+ * `bend` curves it sideways: the tip and body sweep toward +x, so a fanned petal
+ * arcs outward from the root instead of being a straight teardrop.
+ */
+const petalPath = (len: number, w: number, bend = 0) =>
+  `M0 0 ` +
+  `C ${f(w)} ${f(-len * 0.3)} ${f(w * 0.5 + bend)} ${f(-len * 0.74)} ${f(bend)} ${f(-len)} ` +
+  `C ${f(-w * 0.5 + bend)} ${f(-len * 0.74)} ${f(-w)} ${f(-len * 0.3)} 0 0 Z`
 
-/** A pink flower: two fans of petals around a yellow pod. Spreads open with g. */
+/**
+ * A single curved, cupped petal in two tones: a darker rim around a lighter body.
+ * The rim showing at the edges and tip reads as a concave surface, so the petal
+ * keeps its depth with only two colors.
+ */
+function Petal({
+  len,
+  w,
+  bend,
+  body,
+  shade,
+}: {
+  len: number
+  w: number
+  bend: number
+  body: string
+  shade: string
+}) {
+  return (
+    <g>
+      <path d={petalPath(len, w, bend)} fill={shade} />
+      <path d={petalPath(len * 0.84, w * 0.58, bend * 0.9)} fill={body} />
+    </g>
+  )
+}
+
+/**
+ * A side-view lotus. It rises on a stem as a pointed bud (a tight cup of petals
+ * with a green calyx) and opens into a wide cup of layered pink petals around a
+ * flat-topped yellow-green seed pod (the lotus receptacle).
+ */
 function Flower({ flower, g }: { flower: LotusFlower; g: number }) {
   if (g < flower.birth) return null
-  const open = clamp((g - flower.birth) / (0.95 - flower.birth))
+  // Stay a bud until growth passes the bloom point, then open fully by g = 1.
+  const bloomStart = Math.min(0.9, flower.birth + 0.35)
+  const open = clamp((g - bloomStart) / (1 - bloomStart))
   const h = flower.height * lerp(0.35, 1, g)
   const cx = flower.baseX
   const cy = WATER_Y - h
   const s = flower.size * lerp(0.5, 1, g)
 
-  const petalOuter = `hsl(${f(flower.hue)} 70% 82%)`
-  const petalInner = `hsl(${f(flower.hue + 2)} 72% 74%)`
-  const petalTip = `hsl(${f(flower.hue - 4)} 62% 68%)`
-  const outerN = 7
-  const innerN = 5
-  const outerSpread = lerp(8, 74, open)
-  const innerSpread = lerp(4, 42, open)
+  // Two pink tones for every petal: a lighter body and one darker shade (reused
+  // for the cup's interior). Buds add a single green.
+  const petalBody = `hsl(${f(flower.hue)} 66% 80%)`
+  const petalShade = `hsl(${f(flower.hue + 4)} 52% 64%)`
+  const throat = petalShade
+  const calyx = "hsl(130 34% 48%)"
+  const calyxShade = "hsl(130 32% 38%)"
+
+  const backN = 5
+  const frontN = 4
+  // Capped so the outermost petal, with its width and curve, stays above the
+  // flower's horizontal line.
+  const backSpread = lerp(9, 68, open)
+  const frontSpread = lerp(4, 38, open)
+  const podR = s * 0.52 * open
 
   return (
     <g>
-      <line x1={f(flower.baseX)} y1={WATER_Y} x2={f(cx)} y2={f(cy)} stroke={STEM} strokeWidth={2.2} strokeLinecap="round" />
+      <line x1={f(flower.baseX)} y1={WATER_Y} x2={f(cx)} y2={f(cy)} stroke={STEM} strokeWidth={2.4} strokeLinecap="round" />
       <g transform={`translate(${f(cx)} ${f(cy)})`}>
-        {Array.from({ length: outerN }, (_, i) => {
-          const frac = (i / (outerN - 1)) * 2 - 1
+        {/* Green calyx hugging the base of the bud, fading as the flower opens. */}
+        {open < 0.6 && (
+          <g opacity={f(1 - open / 0.6)}>
+            {[-1, 1].map((d) => (
+              <g key={d} transform={`rotate(${f(d * 18)})`}>
+                <Petal len={s * 1.1} w={s * 0.42} bend={d * s * 0.22} body={calyx} shade={calyxShade} />
+              </g>
+            ))}
+          </g>
+        )}
+
+        {/* Back row of petals: longer, a touch deeper, behind the pod. Each one
+            curves outward from the root, so the fan reads as a rounded cup. */}
+        {Array.from({ length: backN }, (_, i) => {
+          const frac = (i / (backN - 1)) * 2 - 1
           return (
-            <path
-              key={`o${i}`}
-              d={petalPath(s * 1.9, s * 0.62)}
-              transform={`rotate(${f(frac * outerSpread)})`}
-              fill={petalOuter}
-              stroke={petalTip}
-              strokeWidth={0.4}
-            />
+            <g key={`b${i}`} transform={`rotate(${f(frac * backSpread)})`}>
+              <Petal len={s * 2} w={s * 0.6} bend={frac * s * 0.5} body={petalBody} shade={petalShade} />
+            </g>
           )
         })}
-        {Array.from({ length: innerN }, (_, i) => {
-          const frac = (i / (innerN - 1)) * 2 - 1
-          return (
+
+        {/* The cup's interior, in shadow behind the front petals, for depth.
+            Held back until the flower is clearly opening so buds stay clean. */}
+        {open > 0.3 && (
+          <ellipse cx={0} cy={-s * 0.55} rx={s * 0.95} ry={s * 0.78} fill={throat} opacity={f((open - 0.3) * 0.9)} />
+        )}
+
+        {/* The receptacle: a flat-topped yellow-green pod that appears as it opens. */}
+        {podR > 0.6 && (
+          <g>
             <path
-              key={`i${i}`}
-              d={petalPath(s * 1.25, s * 0.5)}
-              transform={`rotate(${f(frac * innerSpread)})`}
-              fill={petalInner}
+              d={`M${f(-podR)} 0 Q ${f(-podR)} ${f(-podR * 1.1)} 0 ${f(-podR * 1.1)} ` +
+                `Q ${f(podR)} ${f(-podR * 1.1)} ${f(podR)} 0 Z`}
+              fill="hsl(74 48% 60%)"
             />
-          )
-        })}
-        <ellipse cx={0} cy={-s * 0.3} rx={s * 0.4} ry={s * 0.3} fill="hsl(48 78% 60%)" />
-        {Array.from({ length: 6 }, (_, k) => {
-          const a = (k / 6) * Math.PI * 2
+            <ellipse cx={0} cy={-podR * 1.1} rx={podR} ry={podR * 0.32} fill="hsl(70 42% 52%)" />
+            {Array.from({ length: 5 }, (_, k) => {
+              const t = (k / 4) * 2 - 1
+              return (
+                <circle
+                  key={`seed${k}`}
+                  cx={f(t * podR * 0.6)}
+                  cy={f(-podR * 1.1)}
+                  r={0.9}
+                  fill="hsl(66 38% 40%)"
+                />
+              )
+            })}
+          </g>
+        )}
+
+        {/* Front row of petals: shorter, lighter, closing the cup over the pod,
+            each curved outward like the back row. */}
+        {Array.from({ length: frontN }, (_, i) => {
+          const frac = (i / (frontN - 1)) * 2 - 1
           return (
-            <circle
-              key={`s${k}`}
-              cx={f(Math.cos(a) * s * 0.28)}
-              cy={f(-s * 0.3 + Math.sin(a) * s * 0.2)}
-              r={0.9}
-              fill="hsl(45 70% 48%)"
-            />
+            <g key={`fr${i}`} transform={`rotate(${f(frac * frontSpread)})`}>
+              <Petal len={s * 1.5} w={s * 0.52} bend={frac * s * 0.42} body={petalBody} shade={petalShade} />
+            </g>
           )
         })}
       </g>

@@ -70,25 +70,34 @@ export function createLotus(seed: number): LotusGenome {
     notch: range(rng, -40, 40),
   }))
 
-  // Very few leaves above the pot: one or two.
-  const leafCount = int(rng, 1, 2)
+  // Large, flat plates held at a modest height so the big discs stay in canvas.
+  // Two or three at full growth; the later ones arrive at later stages. Births
+  // are spread so the final stage shows every leaf.
+  const leafCount = int(rng, 2, 3)
+  const leafBirths = leafCount === 3 ? [0.1, 0.4, 0.72] : [0.1, 0.5]
   const leaves: LotusLeaf[] = Array.from({ length: leafCount }, (_, i) => ({
     baseX: 100 + range(rng, -16, 16),
-    height: range(rng, 38, 56),
-    r: range(rng, 11, 15),
-    tilt: range(rng, -12, 12),
+    height: range(rng, 28, 44) - i * 2,
+    r: range(rng, 16, 22),
+    tilt: range(rng, -8, 8),
     shade: rng(),
-    birth: i === 0 ? 0.1 : 0.5,
+    birth: leafBirths[i],
   }))
 
+  // Flowers are spread across the pot and staggered in height so their wide
+  // heads never overlap by more than about half. The first (central, tallest)
+  // appears earliest; a second sits off to one side, shorter and later.
   const flowerCount = int(rng, 1, 2)
-  const flowers: LotusFlower[] = Array.from({ length: flowerCount }, (_, i) => ({
-    baseX: 100 + range(rng, -18, 18),
-    height: range(rng, 52, 72),
-    size: range(rng, 10, 14),
-    hue: 338 + range(rng, -6, 9),
-    birth: i === 0 ? 0.3 : 0.62,
-  }))
+  const flowers: LotusFlower[] = Array.from({ length: flowerCount }, (_, i) => {
+    const slot = flowerCount === 1 ? 0 : i === 0 ? -0.35 : 1
+    return {
+      baseX: 100 + slot * 22 + range(rng, -3, 3),
+      height: i === 0 ? range(rng, 64, 74) : range(rng, 48, 56),
+      size: range(rng, 10, 13),
+      hue: 338 + range(rng, -6, 9),
+      birth: i === 0 ? 0.3 : 0.62,
+    }
+  })
 
   return { pot, band, pads, leaves, flowers }
 }
