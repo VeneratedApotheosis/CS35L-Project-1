@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isBeforeDate, todayInZone } from "../domain/dates.js";
 import type { PlantType } from "../domain/plants.js";
-import { AppError, validationFailed } from "../lib/errors.js";
+import { AppError, notFound, validationFailed } from "../lib/errors.js";
 import { logger } from "../lib/logger.js";
+import type { Page, Pagination } from "../lib/pagination.js";
 import { getProfile } from "./profile.js";
 
 export type CreateHabitInput = {
@@ -68,6 +69,57 @@ export async function createHabit(
   if (error || !data) {
     logger.error({ err: error, userId }, "could not create habit");
     throw new AppError(500, "internal_error", "Could not create habit");
+  }
+  return data as Habit;
+}
+
+// [PLACEHOLDER] The list returns raw rows with no computed stats yet. Progress,
+// streak and health come in Week 3. Newest first is a provisional sort order.
+// The owner_id filter is a second layer on top of row level security.
+export async function listHabits(
+  supabase: SupabaseClient,
+  userId: string,
+  page: Pagination,
+): Promise<Page<Habit>> {
+  const { data, error, count } = await supabase
+    .from("habits")
+    .select(HABIT_COLUMNS, { count: "exact" })
+    .eq("owner_id", userId)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(page.offset, page.offset + page.limit - 1);
+
+  if (error) {
+    logger.error({ err: error, userId }, "could not list habits");
+    throw new AppError(500, "internal_error", "Could not list habits");
+  }
+  return {
+    items: (data ?? []) as Habit[],
+    total: count ?? 0,
+    limit: page.limit,
+    offset: page.offset,
+  };
+}
+
+// Another user's habit looks the same as a missing one.
+export async function getHabit(
+  supabase: SupabaseClient,
+  userId: string,
+  id: string,
+): Promise<Habit> {
+  const { data, error } = await supabase
+    .from("habits")
+    .select(HABIT_COLUMNS)
+    .eq("id", id)
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    logger.error({ err: error, userId, habitId: id }, "could not load habit");
+    throw new AppError(500, "internal_error", "Could not load habit");
+  }
+  if (!data) {
+    throw notFound("Habit not found");
   }
   return data as Habit;
 }

@@ -28,6 +28,9 @@ const profile = {
 
 const createdHabit = { id: "22222222-2222-2222-2222-222222222222", ...body };
 
+// zod only accepts real uuids, so the variant digit must be 8, 9, a or b.
+const habitId = "7d3f9c1e-5b2a-4c8e-9f41-2a6b8d0e1c33";
+
 const post = (payload: unknown) =>
   request(app)
     .post("/habits")
@@ -108,5 +111,181 @@ describe("POST /habits", () => {
     expect(res.body).toEqual({
       error: { code: "internal_error", message: "Could not create habit" },
     });
+  });
+});
+
+describe("GET /habits", () => {
+  const get = (path = "/habits") =>
+    request(app).get(path).set("Authorization", auth);
+
+  const rows = [
+    { ...createdHabit, owner_id: TEST_USER.id },
+    {
+      ...createdHabit,
+      id: "33333333-3333-3333-3333-333333333333",
+      owner_id: TEST_USER.id,
+    },
+  ];
+
+  it("returns an empty page when the user has no habits", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: [],
+      error: null,
+      count: 0,
+    });
+
+    const res = await get();
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ habits: [], total: 0, limit: 50, offset: 0 });
+  });
+
+  it("returns the rows and the total", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: rows,
+      error: null,
+      count: 7,
+    });
+
+    const res = await get();
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ habits: rows, total: 7, limit: 50, offset: 0 });
+  });
+
+  it("filters by owner, sorts newest first and asks for the first 50", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: rows,
+      error: null,
+      count: 2,
+    });
+
+    await get();
+
+    const selects = fakeSupabase.callsFor("habits", "select");
+    expect(selects).toHaveLength(1);
+    expect(selects[0]?.count).toBe("exact");
+    expect(selects[0]?.filter).toEqual({
+      column: "owner_id",
+      value: TEST_USER.id,
+    });
+    expect(selects[0]?.moreFilters).toBeUndefined();
+    expect(selects[0]?.orders).toEqual([
+      { column: "created_at", ascending: false },
+      { column: "id", ascending: false },
+    ]);
+    expect(selects[0]?.range).toEqual({ from: 0, to: 49 });
+  });
+
+  it("turns limit and offset from the query string into a range", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: [],
+      error: null,
+      count: 0,
+    });
+
+    const res = await get("/habits?limit=10&offset=20");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ limit: 10, offset: 20 });
+    expect(fakeSupabase.callsFor("habits", "select")[0]?.range).toEqual({
+      from: 20,
+      to: 29,
+    });
+  });
+
+  it.each(["limit=0", "limit=101", "limit=abc", "offset=-1", "limt=10"])(
+    "rejects the query %s",
+    async (query) => {
+      const res = await get(`/habits?${query}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("validation_failed");
+      expect(fakeSupabase.callsFor("habits", "select")).toHaveLength(0);
+    },
+  );
+
+  it("returns 500 when the query fails", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: null,
+      error: { message: "boom" },
+    });
+
+    const res = await get();
+
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({
+      error: { code: "internal_error", message: "Could not list habits" },
+    });
+  });
+
+  it("returns 401 without a token", async () => {
+    const res = await request(app).get("/habits");
+
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe("unauthorized");
+    expect(fakeSupabase.callsFor("habits", "select")).toHaveLength(0);
+  });
+});
+
+describe("GET /habits/:id", () => {
+  const get = (id: string) =>
+    request(app).get(`/habits/${id}`).set("Authorization", auth);
+
+  const habit = { ...createdHabit, id: habitId, owner_id: TEST_USER.id };
+
+  it("returns the habit and filters by id and owner", async () => {
+    fakeSupabase.setResult("habits", "select", { data: habit, error: null });
+
+    const res = await get(habitId);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(habit);
+    const selects = fakeSupabase.callsFor("habits", "select");
+    expect(selects).toHaveLength(1);
+    expect(selects[0]?.filter).toEqual({ column: "id", value: habitId });
+    expect(selects[0]?.moreFilters).toEqual([
+      { column: "owner_id", value: TEST_USER.id },
+    ]);
+  });
+
+  it("returns 404 when there is no such habit for this user", async () => {
+    fakeSupabase.setResult("habits", "select", { data: null, error: null });
+
+    const res = await get(habitId);
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({
+      error: { code: "not_found", message: "Habit not found" },
+    });
+  });
+
+  it("returns 400 for an id that is not a uuid", async () => {
+    const res = await get("not-a-uuid");
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("validation_failed");
+    expect(fakeSupabase.callsFor("habits", "select")).toHaveLength(0);
+  });
+
+  it("returns 500 when the query fails", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: null,
+      error: { message: "boom" },
+    });
+
+    const res = await get(habitId);
+
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({
+      error: { code: "internal_error", message: "Could not load habit" },
+    });
+  });
+
+  it("returns 401 without a token", async () => {
+    const res = await request(app).get(`/habits/${habitId}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe("unauthorized");
   });
 });

@@ -2,9 +2,15 @@ import { Router } from "express";
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { PLANT_TYPES } from "../domain/plants.js";
+import { paginationQuery, type Pagination } from "../lib/pagination.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
-import { createHabit, type CreateHabitInput } from "../services/habits.js";
+import {
+  createHabit,
+  getHabit,
+  listHabits,
+  type CreateHabitInput,
+} from "../services/habits.js";
 
 export const habitsRouter = Router();
 
@@ -32,6 +38,8 @@ export const createHabitBody = z.strictObject({
     .optional(),
 });
 
+export const habitParams = z.strictObject({ id: z.string().uuid() });
+
 habitsRouter.post(
   "/habits",
   requireAuth,
@@ -41,5 +49,32 @@ habitsRouter.post(
     const input = valid.body as CreateHabitInput;
     const habit = await createHabit(supabase, user.id, input);
     res.status(201).json(habit);
+  },
+);
+
+habitsRouter.get(
+  "/habits",
+  requireAuth,
+  validate({ query: paginationQuery }),
+  async (_req, res) => {
+    const { user, supabase, valid } = res.locals;
+    const page = await listHabits(supabase, user.id, valid.query as Pagination);
+    res.json({
+      habits: page.items,
+      total: page.total,
+      limit: page.limit,
+      offset: page.offset,
+    });
+  },
+);
+
+habitsRouter.get(
+  "/habits/:id",
+  requireAuth,
+  validate({ params: habitParams }),
+  async (_req, res) => {
+    const { user, supabase, valid } = res.locals;
+    const { id } = valid.params as z.infer<typeof habitParams>;
+    res.json(await getHabit(supabase, user.id, id));
   },
 );
