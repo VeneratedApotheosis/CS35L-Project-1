@@ -287,11 +287,11 @@ export default function StyleGuide() {
         >
           <Card className="grid gap-5 sm:grid-cols-2">
             <label className="flex flex-col gap-2">
-              <span className="text-caption">Habit name</span>
+              <span className="text-h3">Habit name</span>
               <input className="input" placeholder="Go to the gym" />
             </label>
             <label className="flex flex-col gap-2">
-              <span className="text-caption">Plant type</span>
+              <span className="text-h3">Plant type</span>
               <select className="select" defaultValue="sprout">
                 <option value="sprout">Sprout</option>
                 <option value="fern">Fern</option>
@@ -299,7 +299,7 @@ export default function StyleGuide() {
               </select>
             </label>
             <label className="flex flex-col gap-2 sm:col-span-2">
-              <span className="text-caption">Description</span>
+              <span className="text-h3">Description</span>
               <textarea
                 className="textarea"
                 rows={3}
@@ -307,7 +307,7 @@ export default function StyleGuide() {
               />
             </label>
             <label className="flex flex-col gap-2">
-              <span className="text-caption">Invalid field</span>
+              <span className="text-h3">Invalid field</span>
               <input
                 className="input"
                 aria-invalid="true"
@@ -315,7 +315,7 @@ export default function StyleGuide() {
               />
             </label>
             <label className="flex flex-col gap-2">
-              <span className="text-caption">Disabled field</span>
+              <span className="text-h3">Disabled field</span>
               <input className="input" disabled value="Locked after creation" />
             </label>
           </Card>
