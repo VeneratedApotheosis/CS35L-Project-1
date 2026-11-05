@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SOIL } from "../genome"
 import { mulberry32 } from "../rng"
+import { pathPoints } from "./pathPoints"
 import {
   POT_BANDS,
   POT_BAND_ODDS,
@@ -34,6 +35,48 @@ describe("pot shape", () => {
   it("makes the plants' soil point the center of the pot's soil", () => {
     expect(POT_SOIL).toEqual({ x: POT_SHAPE.soil.cx, y: POT_SHAPE.soil.cy })
     expect(SOIL).toEqual(POT_SOIL)
+  })
+})
+
+describe("the rim's outline", () => {
+  const { rim } = POT_SHAPE
+  const points = pathPoints(rim.path, 1000)
+  /** The lowest point of the rim: the bottom of its box. */
+  const bottom = rim.y + rim.height
+
+  it("fills the rim's box, so plants find its left and right edges where they expect", () => {
+    const xs = points.map(([px]) => px)
+    const ys = points.map(([, py]) => py)
+    expect(Math.min(...xs)).toBeCloseTo(rim.x, 1)
+    expect(Math.max(...xs)).toBeCloseTo(rim.x + rim.width, 1)
+    expect(Math.min(...ys)).toBeCloseTo(rim.y, 1)
+    expect(Math.max(...ys)).toBeCloseTo(bottom, 1)
+    expect(Math.min(...xs)).toBeCloseTo(POT_RIM.left, 1)
+    expect(Math.max(...xs)).toBeCloseTo(POT_RIM.right, 1)
+  })
+
+  it("has a base that is lowest in the middle and curves up toward the sides", () => {
+    const middle = rim.x + rim.width / 2
+    const lowAt = (px: number) => Math.max(...points.filter(([x, y]) => Math.abs(x - px) < 0.6 && y > rim.y + rim.height / 2).map(([, y]) => y))
+    expect(lowAt(middle)).toBeCloseTo(bottom, 1)
+    expect(lowAt(middle)).toBeGreaterThan(lowAt(rim.x + rim.width - rim.baseCorner - 2) + 1)
+    expect(lowAt(rim.x + rim.width - rim.baseCorner - 2)).toBeCloseTo(lowAt(rim.x + rim.baseCorner + 2), 1)
+  })
+
+  it("never turns sharply: its direction changes smoothly all the way around", () => {
+    const direction = (a: [number, number], b: [number, number]) => Math.atan2(b[1] - a[1], b[0] - a[0])
+    const steps = points.slice(1).filter((p, i) => p[0] !== points[i][0] || p[1] !== points[i][1])
+    let sharpest = 0
+    for (let i = 1; i < steps.length - 1; i++) {
+      const before = direction(steps[i - 1], steps[i])
+      const after = direction(steps[i], steps[i + 1])
+      let turn = Math.abs(after - before)
+      if (turn > Math.PI) turn = 2 * Math.PI - turn
+      sharpest = Math.max(sharpest, turn)
+    }
+    // Under 1 degree between neighbouring samples (1000 per curve). An earlier
+    // version with a sharp join turned 1.4 degrees; this one turns well under 0.5.
+    expect(sharpest).toBeLessThan((1 * Math.PI) / 180)
   })
 })
 

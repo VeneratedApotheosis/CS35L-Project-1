@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { mulberry32 } from "../../rng"
+import { pathPoints } from "../pathPoints"
 import {
   Pot,
   POT_FINISH_IDS,
@@ -99,14 +100,22 @@ describe("the solid finish", () => {
 })
 
 describe("POT_SHAPE.body.bounds", () => {
-  it("is the smallest box around the body path", () => {
-    const numbers = POT_SHAPE.body.path.match(/-?\d+(\.\d+)?/g)!.map(Number)
-    const xs = numbers.filter((_, i) => i % 2 === 0)
-    const ys = numbers.filter((_, i) => i % 2 === 1)
+  it("is the smallest box around the body path, curve included", () => {
+    const points = pathPoints(POT_SHAPE.body.path)
+    const xs = points.map(([px]) => px)
+    const ys = points.map(([, py]) => py)
     const { x, y, width, height } = POT_SHAPE.body.bounds
-    expect(Math.min(...xs)).toBe(x)
-    expect(Math.max(...xs)).toBe(x + width)
-    expect(Math.min(...ys)).toBe(y)
-    expect(Math.max(...ys)).toBe(y + height)
+    expect(Math.min(...xs)).toBeCloseTo(x, 1)
+    expect(Math.max(...xs)).toBeCloseTo(x + width, 1)
+    expect(Math.min(...ys)).toBeCloseTo(y, 1)
+    expect(Math.max(...ys)).toBeCloseTo(y + height, 1)
+  })
+
+  it("has a base that curves down from the wall's lowest corners instead of running flat", () => {
+    const points = pathPoints(POT_SHAPE.body.path)
+    const lowest = Math.max(...points.map(([, py]) => py))
+    const corners = POT_SHAPE.body.path.match(/L[\d.]+ ([\d.]+)/g)!.map((m) => Number(m.split(" ")[1]))
+    expect(lowest).toBeGreaterThan(Math.max(...corners) + 4)
+    expect(POT_SHAPE.body.path).toContain("C")
   })
 })
