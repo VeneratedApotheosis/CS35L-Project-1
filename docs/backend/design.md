@@ -25,15 +25,15 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 
 | Item | State |
 | --- | --- |
-| Express app with `/health` and CORS | Built |
-| Token check (`requireUser`) and `/me` | Built |
-| Habit and profile endpoints | Planned: #129, #130, #131 |
+| Project layout, per-request Supabase client, `requireAuth`, `validate`, error handler | Built (#143) |
+| `GET` and `PATCH /me` | Built (#131) |
+| `POST /habits` | Built (#129) |
+| `GET /habits` and `GET /habits/:id` | Planned (#130) |
 | Log endpoints and calculations | Planned: Week 3 |
+| Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
-Current files: `backend/src/server.ts`, `auth.ts`, `supabase.ts`. The layout in section 4 is the target, and files move into it as they are touched.
-
-**This document describes the target.** Today the code uses one shared Supabase client, the middleware is called `requireUser`, and errors look like `{"error":"Missing token"}`. The per-request client, `requireAuth` and the error shape in section 7 are not built yet.
+The code follows the layout in section 4. Spots that are still provisional are marked `[PLACEHOLDER]` in the code.
 
 ---
 
@@ -107,9 +107,9 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | Route | Purpose | Issue |
 | --- | --- | --- |
 | `GET /health` | Liveness check | Built |
-| `GET /me` | Signed-in user, display name and timezone | #131 |
-| `PATCH /me` | Update display name and timezone | #131 |
-| `POST /habits` | Create a habit | #129 |
+| `GET /me` | Signed-in user, display name and timezone | Built (#131) |
+| `PATCH /me` | Update display name and timezone | Built (#131) |
+| `POST /habits` | Create a habit | Built (#129) |
 | `GET /habits` | List own habits | #130 |
 | `GET /habits/:id` | Get one habit | #130 |
 | `PATCH /habits/:id` | Edit name, description, plant type | #124 (backlog) |
@@ -129,7 +129,7 @@ Routes have no version prefix.
 | --- | --- |
 | `name` | Required, 1 to 100 characters |
 | `description` | Optional, up to 500 characters |
-| `plant_type` | One of the plant types. The list (flower, tree, shrub, vine, kelp) is pending, see section 12. Only the backend checks it |
+| `plant_type` | One of `pothos`, `peace_lily`, `pilea` (the plants the app draws; issue #155). Only the backend checks it, and the list must match the frontend's |
 | `target_count` | 1 to 50 |
 | `interval_count` | 1 to 365 |
 | `interval_unit` | `day`, `week` or `month` |
@@ -283,6 +283,5 @@ The backend is a normal Node service: `npm run build`, then `npm start`. Set the
 | Item | Notes |
 | --- | --- |
 | Hosting for the backend | Section 11 |
-| Plant type list | Pending. The frontend has built different plants so far, see its design doc |
 | Logging on a habit that has not started yet | Not decided |
 | Changing timezone mid-habit | Past `occurred_on` dates stay as stored. Not decided otherwise |

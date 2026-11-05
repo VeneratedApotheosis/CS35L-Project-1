@@ -4,7 +4,7 @@ import { createHabitBody } from "./habits.js";
 
 const valid = {
   name: "Gym",
-  plant_type: "flower",
+  plant_type: "pothos",
   target_count: 3,
   interval_count: 1,
   interval_unit: "week",
@@ -84,9 +84,7 @@ describe("createHabitBody", () => {
 });
 
 describe("PLANT_TYPES", () => {
-  // [PLACEHOLDER] The list is pending a team decision. Update this test when
-  // it changes.
-  it("lists the five provisional types", () => {
-    expect(PLANT_TYPES).toEqual(["flower", "tree", "shrub", "vine", "kelp"]);
+  it("lists the plants the app draws", () => {
+    expect(PLANT_TYPES).toEqual(["pothos", "peace_lily", "pilea"]);
   });
 });
