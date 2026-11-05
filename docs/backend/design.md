@@ -119,7 +119,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `GET /habits/:id/progress`, `/streak`, `/summary` | Calculations | Week 3 |
 | Delete account | Calls `delete_my_account` | No issue yet |
 
-Whether to add an `/api/v1` prefix is open.
+Routes have no version prefix.
 
 ### 6.1 Create a habit
 
@@ -151,13 +151,13 @@ Whether to add an `/api/v1` prefix is open.
 - **Validation.** zod schemas, one per request, applied by the `validate` middleware.
 - **Error shape.** Every error is `{ "error": { "code": "...", "message": "..." } }`. Codes are short strings such as `unauthorized`, `validation_failed`, `not_found`.
 - **Status codes.** 400 bad input, 401 no valid token, 404 not found or not yours, 500 unexpected. Another user's habit returns 404, the same as a missing one.
-- **Logging.** Each request is logged. The `authorization` header and tokens are never logged. The logging library is open (pino is the proposal).
+- **Logging.** Each request is logged. The `authorization` header and tokens are never logged. The logger is pino.
 
 ---
 
 ## 8. Calculation rules
 
-All calculations live in the backend, in `domain/`. Only habits and activity logs are stored. Progress, consistency, streaks, health, growth and badges are calculated from them whenever they are shown, so they can't go out of sync.
+All calculations live in the backend, in `domain/`. Dates use Luxon, which handles IANA timezones. Only habits and activity logs are stored. Progress, consistency, streaks, health, growth and badges are calculated from them whenever they are shown, so they can't go out of sync.
 
 ### 8.1 Periods and logging
 
@@ -211,10 +211,9 @@ The average of each active habit's consistency, leaving out habits with no compl
 | 1 | 0 to 24% |
 | 2 | 25 to 49% |
 | 3 | 50 to 74% |
-| 4 | 75 to 99% |
-| 5 | 100% |
+| 4 | 75 to 100% |
 
-Growth never reverses. A plant can reach stage 5 before the end date.
+There are four stages, the same as the frontend plant engine. Growth never reverses. A plant can reach stage 4 before the end date.
 
 ### 8.8 Plant health
 
@@ -283,9 +282,6 @@ The backend is a normal Node service: `npm run build`, then `npm start`. Set the
 | Item | Notes |
 | --- | --- |
 | Hosting for the backend | Section 11 |
-| `/api/v1` prefix or none | Section 6 |
-| Logging library | Section 7 |
-| Date library | Luxon is the proposal |
 | Test runner and start | Section 10 |
 | Plant type list | Pending. The frontend has built different plants so far, see its design doc |
 | Logging on a habit that has not started yet | Not decided |

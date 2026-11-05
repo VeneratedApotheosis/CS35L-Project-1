@@ -1,24 +1,7 @@
-import "dotenv/config";
-import express from "express";
-import cors from "cors";
-import { requireUser } from "./auth.js";
+import { app } from "./app.js";
+import { env } from "./config/env.js";
+import { logger } from "./lib/logger.js";
 
-const app = express();
-const port = Number(process.env.PORT ?? 3000);
-const frontendOrigin = process.env.FRONTEND_ORIGIN ?? "http://localhost:5173";
-
-app.use(cors({ origin: frontendOrigin }));
-
-app.get("/health", (_req, res) => {
-  res.status(200).json({ status: "ok" });
-});
-
-app.get("/me", requireUser, (_req, res) => {
-  res
-    .status(200)
-    .json({ id: res.locals.user.id, email: res.locals.user.email });
-});
-
-app.listen(port, () => {
-  console.log(`Backend running at http://localhost:${port}`);
+app.listen(env.PORT, () => {
+  logger.info(`Backend running at http://localhost:${env.PORT}`);
 });
