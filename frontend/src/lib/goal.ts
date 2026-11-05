@@ -34,7 +34,12 @@ export function computeEndDate(
   } else if (intervalUnit === "week") {
     date.setDate(date.getDate() + total * 7)
   } else {
+    // Move to the 1st first so a long day-of-month cannot overflow into the
+    // next month (Jan 31 + 1 month is Feb 28, not Mar 3).
+    date.setDate(1)
     date.setMonth(date.getMonth() + total)
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+    date.setDate(Math.min(d, lastDay.getDate()))
   }
 
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
