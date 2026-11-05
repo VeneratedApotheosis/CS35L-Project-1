@@ -101,13 +101,13 @@ A summary of activity across all active habits.
 | Description | Optional, up to 500 characters |
 | Goal | Target count per period (1–50) + recurring period: interval (1–365) and unit (days, weeks, or months). E.g., 3 times every 1 week. |
 | Duration | Number of periods (1–52, required). The calculated end date is shown. |
-| Start date | Today or later. Defaults to today in the user's timezone. A past date is rejected. |
+| Start date | Today or later. Left at the default, it is omitted from the request and the backend uses today in the user's profile timezone (the confirm step shows "Today"). A past date is rejected. |
 | Plant | Choose one of three plant types (pothos, peace lily, pilea), with a preview. Plants start at stage 1. |
 
 - **Goal preview:** a sentence summarizing the setup, e.g., "Go to the gym 3 times every week for 4 weeks."
 - **Confirm step:** before saving, a summary of the goal that says it can't be edited later. To fix a mistake, delete the habit and create it again.
 - **Validation errors** are shown inline. If saving fails, an error message is shown.
-- **After creation:** redirect to the new habit's Details page. **Cancel** returns to the Garden.
+- **After creation:** redirect to the Garden until the Details page exists, then to the new habit's Details page. **Cancel** returns to the Garden.
 
 ### 6 Badges and Habit History
 
