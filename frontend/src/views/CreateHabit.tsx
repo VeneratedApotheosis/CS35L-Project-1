@@ -203,13 +203,7 @@ export default function CreateHabit() {
   }
 
   return (
-    <main
-      style={{
-        maxWidth: "64rem",
-        margin: "0 auto",
-        padding: "var(--page-padding)",
-      }}
-    >
+    <main>
       <Button
         variant="ghost"
         size="sm"

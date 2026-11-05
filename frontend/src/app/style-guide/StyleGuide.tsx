@@ -16,6 +16,7 @@ import {
 import { Button, type ButtonVariant } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { Icon } from "@/components/Icon"
+import { NavBar } from "@/components/NavBar"
 import { ProgressBar } from "@/components/ProgressBar"
 import { useTheme } from "@/styles/ThemeProvider"
 
@@ -389,6 +390,28 @@ export default function StyleGuide() {
 
         <Section
           index="07"
+          eyebrow="Navigation"
+          title="Navigation and page shell"
+          description="A top bar on wide screens and a bottom bar on phones. My Garden and Add Habit open the existing pages; the other destinations are not available yet. Both previews follow the theme switch above."
+        >
+          <div className="navbar-preview">
+            <NavBar currentPath="/" preview />
+            <div className="navbar-preview__content stack-sm">
+              <h3 className="text-h3">My Garden</h3>
+              <p className="text-body-sm text-secondary">Page content sits in a centered column beneath the desktop navigation.</p>
+            </div>
+          </div>
+          <div className="navbar-preview navbar-preview--mobile">
+            <div className="navbar-preview__content stack-sm">
+              <h3 className="text-h3">Create habit</h3>
+              <p className="text-body-sm text-secondary">On phones the navigation sits below the content, with room for the device’s safe area.</p>
+            </div>
+            <NavBar currentPath="/create" preview />
+          </div>
+        </Section>
+
+        <Section
+          index="08"
           eyebrow="Habit progress"
           title="Progress bars"
           description="Goals up to 10 show one step per activity. Larger goals use a smooth bar to avoid crowded ticks. Logging beyond the goal keeps the bar full and shows the actual count. Use the theme switch above to compare both themes."
