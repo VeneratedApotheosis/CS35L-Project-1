@@ -3,6 +3,8 @@ import { z } from "zod";
 
 const schema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
+  // [PLACEHOLDER] Local dev default. Set to the deployed frontend address once
+  // hosting is decided.
   FRONTEND_ORIGIN: z.string().min(1).default("http://localhost:5173"),
   SUPABASE_URL: z.string().min(1, "is required"),
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1, "is required"),
