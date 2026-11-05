@@ -9,7 +9,11 @@ export const TEST_USER = {
 export const GOOD_TOKEN = "good-token";
 
 export type FakeError = { message: string; code?: string };
-export type FakeResult = { data: unknown; error: FakeError | null };
+export type FakeResult = {
+  data: unknown;
+  error: FakeError | null;
+  count?: number | null;
+};
 export type Operation = "select" | "insert" | "update";
 
 export type RecordedCall = {
@@ -17,7 +21,12 @@ export type RecordedCall = {
   operation: Operation;
   columns?: string;
   payload?: unknown;
+  // The first eq() filter, and any later eq() filters in call order.
   filter?: { column: string; value: unknown };
+  moreFilters?: { column: string; value: unknown }[];
+  count?: "exact";
+  orders?: { column: string; ascending: boolean }[];
+  range?: { from: number; to: number };
 };
 
 // A tiny stand-in for the Supabase client used by the services. It supports
@@ -56,10 +65,11 @@ export class FakeSupabase {
     const call: Partial<RecordedCall> = { table };
 
     const query = {
-      select: (columns: string) => {
+      select: (columns: string, options?: { count?: "exact" }) => {
         // After insert or update, select only chooses the returned columns.
         call.operation ??= "select";
         call.columns = columns;
+        if (options?.count) call.count = options.count;
         return query;
       },
       insert: (row: unknown) => {
@@ -73,19 +83,42 @@ export class FakeSupabase {
         return query;
       },
       eq: (column: string, value: unknown) => {
-        call.filter = { column, value };
+        if (call.filter) {
+          call.moreFilters = [...(call.moreFilters ?? []), { column, value }];
+        } else {
+          call.filter = { column, value };
+        }
         return query;
       },
-      single: async (): Promise<FakeResult> => {
-        const operation = call.operation as Operation;
-        this.calls.push({ ...call, table, operation });
-        return (
-          this.results.get(`${table}.${operation}`) ?? {
-            data: null,
-            error: { message: `No fake result for ${table}.${operation}` },
-          }
-        );
+      order: (column: string, options?: { ascending?: boolean }) => {
+        call.orders = [
+          ...(call.orders ?? []),
+          { column, ascending: options?.ascending ?? true },
+        ];
+        return query;
       },
+      range: (from: number, to: number) => {
+        call.range = { from, to };
+        return query;
+      },
+      single: async (): Promise<FakeResult> => finish(),
+      maybeSingle: async (): Promise<FakeResult> => finish(),
+      // Awaiting a query without single() or maybeSingle() returns a list.
+      then: (
+        resolve: (result: FakeResult) => unknown,
+        reject: (reason: unknown) => unknown,
+      ) => Promise.resolve(finish()).then(resolve, reject),
+    };
+
+    const finish = (): FakeResult => {
+      const operation = call.operation as Operation;
+      this.calls.push({ ...call, table, operation });
+      return (
+        this.results.get(`${table}.${operation}`) ?? {
+          data: null,
+          error: { message: `No fake result for ${table}.${operation}` },
+        }
+      );
     };
 
     return query;
