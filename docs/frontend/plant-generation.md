@@ -77,6 +77,8 @@ plants/
 
 ### Adding a plant that grows on stems
 
+For a precise, copy-pasteable runbook (every file, every edit, the tests, and the optional fan / flowers / soil planting), see [creating-a-plant.md](creating-a-plant.md). The outline below is the short version.
+
 1. Write a **config** (copy `pothos/pothosConfig.ts` and change numbers). `validateConfig` runs automatically and says what does not fit together.
 2. Write a **leaf shape model**: how to draw a random leaf, its outline as a polygon, and where its middle is. The engine only needs the outline to measure coverage and containment.
 3. Combine them into a species and call `createStagedPlant(seed, species)`.

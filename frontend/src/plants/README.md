@@ -2,7 +2,7 @@
 
 Seeded, procedurally drawn plants in pots. The same seed always gives the same plant, so a habit stores one integer and its plant is rebuilt anywhere.
 
-This page is a guide to the folder and a record of what was built in it. For the full algorithm and every rule, read [docs/frontend/plant-generation.md](../../../docs/frontend/plant-generation.md). A live page is at `/plants` (`src/app/plants/PlantLab.tsx`). Run the tests with `npm test` in `frontend/`.
+This page is a guide to the folder and a record of what was built in it. For the full algorithm and every rule, read [docs/frontend/plant-generation.md](../../../docs/frontend/plant-generation.md). To add a plant, follow the step-by-step [docs/frontend/creating-a-plant.md](../../../docs/frontend/creating-a-plant.md). A live page is at `/plants` (`src/app/plants/PlantLab.tsx`). Run the tests with `npm test` in `frontend/`.
 
 ## Folders
 
