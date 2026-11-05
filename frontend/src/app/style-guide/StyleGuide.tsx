@@ -18,6 +18,7 @@ import { Card } from "@/components/Card"
 import { Icon } from "@/components/Icon"
 import { ProgressBar } from "@/components/ProgressBar"
 import { useTheme } from "@/styles/ThemeProvider"
+import { PlantCardExamples } from "./PlantCardExamples"
 
 /* ------------------------------------------------------------------ */
 /* Showcase data                                                       */
@@ -394,6 +395,15 @@ export default function StyleGuide() {
           description="Goals up to 10 show one step per activity. Larger goals use a smooth bar to avoid crowded ticks. Logging beyond the goal keeps the bar full and shows the actual count. Use the theme switch above to compare both themes."
         >
           <ProgressExamples />
+        </Section>
+
+        <Section
+          index="08"
+          eyebrow="Garden"
+          title="Plant cards"
+          description="Each habit has a stable plant, a health label and current-period progress. Try every stage and health state, use the options with the keyboard, and switch themes above. All actions here use local demo data."
+        >
+          <PlantCardExamples />
         </Section>
 
         <footer className="flex items-center justify-between border-t border-[var(--color-border)] pt-6">
