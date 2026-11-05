@@ -126,6 +126,8 @@ Code: `frontend/src/plants/pot/`. A low drum pot (body 46 tall) built from a rou
 
 A pot's **look** is `PotLook`: a `palette` (an index into the five palettes: terracotta, cream, sage, sky, blush), a `band` (none, or a stripe; the stripe is twice as likely, see `POT_BAND_ODDS`), a `finish` and a `seed` for the finish's pattern. `potLookFromSeed(seed)` in `pot/style.ts` makes one. There used to be a dotted band too; pots that would have had it now get the stripe.
 
+The pot's base is one curve instead of a flat line, and so is the underside of the rim. The rim's top corners are quarter circles, and its sides run straight down into smaller rounded corners that join one gentle arc, lowest in the middle. The corners meet the arc exactly, so the outline never turns sharply. The rim is drawn from a few numbers in `RIM` (`height` for its overall height, `baseCorner` for how round the lower corners are; a smaller `baseCorner` gives a deeper curve), and the body's base is a single curve in `POT_SHAPE.body.path`.
+
 Every measurement is a named value in `pot/shape.ts` (`POT_SHAPE`). Two of them are used by the plants: `POT_RIM` (where stems are placed across the pot) and `POT_SOIL` (where plants meet the pot, which becomes the shared `SOIL` point). Neither number is repeated anywhere else, so changing the pot's shape moves the plants with it. This is all a plant knows about its pot.
 
 The canvas is `0 0 200 235`, and the soil point is `(100, 148)`.
