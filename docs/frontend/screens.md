@@ -102,7 +102,7 @@ A summary of activity across all active habits.
 | Goal | Target count per period (1–50) + recurring period: interval (1–365) and unit (days, weeks, or months). E.g., 3 times every 1 week. |
 | Duration | Number of periods (1–52, required). The calculated end date is shown. |
 | Start date | Today or later. Defaults to today in the user's timezone. A past date is rejected. |
-| Plant | Choose one of five plant types (flower, tree, shrub, vine, kelp), with a preview. Plants start at stage 1. |
+| Plant | Choose one of three plant types (pothos, peace lily, pilea), with a preview. Plants start at stage 1. |
 
 - **Goal preview:** a sentence summarizing the setup, e.g., "Go to the gym 3 times every week for 4 weeks."
 - **Confirm step:** before saving, a summary of the goal that says it can't be edited later. To fix a mistake, delete the habit and create it again.

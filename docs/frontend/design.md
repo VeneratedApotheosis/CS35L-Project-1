@@ -114,7 +114,7 @@ The plant is the main visual. Style reference: the icons in Animal Crossing: New
 - **Size.** The `scale` prop resizes the whole picture (plant and pot). It never changes where leaves or stems sit.
 - **Containment.** Leaves stay above the soil line and within the pot's width (8px overhang allowed), so plants never overlap neighbors in the grid.
 
-Plant types in the first version: pothos (built on the stage engine), pilea and peace lily (older engine, not yet moved over). The type list in the app is still open; see [section 13](#13-status-and-open-items).
+Plant types in the first version: **pothos**, **peace lily** and **pilea** — ids `pothos`, `peace_lily`, `pilea`. This is the final list (issue #155), and the backend validates `plant_type` against the same three. Pothos and peace lily use the stage engine; pilea is still on the older engine.
 
 ## 7. Layout
 
@@ -242,8 +242,7 @@ frontend/src/
 
 **Open**
 - **Login and Garden pages** are placeholders and are not yet on the design system.
-- **Plant type list.** Issue #109 names five types (flower, tree, shrub, vine, kelp) but the plants built so far are pothos, pilea and peace lily. Decide which list wins.
-- **Pilea and peace lily** are on the older engine and do not follow the stage rules.
+- **Pilea** is on the older engine and does not follow the stage rules.
 - **Missing components:** Modal, ProgressBar with ticks, NavBar, toast, input wrappers.
 - **Plants on dark surfaces.** Check the pot and leaf colors against the dark theme.
 - **Stage-up animation** is described in section 10 but not built.
