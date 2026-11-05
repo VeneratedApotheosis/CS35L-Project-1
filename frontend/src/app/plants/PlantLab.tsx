@@ -7,6 +7,7 @@ import { Card } from "@/components/Card"
 import { LeafShape } from "@/plants/pothos/LeafShape"
 import { Pilea } from "@/plants/Pilea"
 import { PeaceLily } from "@/plants/peaceLily"
+import { Lotus } from "@/plants/lotus"
 import { Pothos } from "@/plants/pothos/Pothos"
 import { randomLeafSpec } from "@/plants/pothos/leaf"
 import { STAGES } from "@/plants/genome"
@@ -40,6 +41,13 @@ const PLANTS = [
     description:
       "Still on the older continuous-growth engine; it will move to the stage engine later. Round coin leaves on thin stalks, with baby plants beside the main one.",
     stageNames: STAGES.map((s) => s.name),
+  },
+  {
+    id: "lotus",
+    label: "Lotus",
+    description:
+      "A water plant: the pot holds water with lily pads floating on it, and a few round leaves and pink flowers are held above on thin stems. Buds appear in stage 3 and open by stage 4.",
+    stageNames: ["Sprout", "Pads", "Budding", "Blooming"],
   },
 ] as const
 type PlantId = (typeof PLANTS)[number]["id"]
@@ -110,6 +118,7 @@ export default function PlantLab() {
     pothos: FIRST_SEED,
     peaceLily: FIRST_SEED,
     pilea: FIRST_SEED,
+    lotus: FIRST_SEED,
   })
   const [chosen, setChosen] = useState<PlantId>("pothos")
   const [scale, setScale] = useState(1)
@@ -147,6 +156,7 @@ export default function PlantLab() {
   const renderChosen = (stage: (typeof STAGE_NUMBERS)[number]) => {
     if (chosen === "pothos") return <Pothos seed={seeds.pothos} stage={stage} scale={scale} pot={potFor(seeds.pothos)} />
     if (chosen === "peaceLily") return <PeaceLily seed={seeds.peaceLily} stage={stage} scale={scale} pot={potFor(seeds.peaceLily)} />
+    if (chosen === "lotus") return <Lotus seed={seeds.lotus} stage={stage} pot={potFor(seeds.lotus)} className="w-full" />
     return <Pilea seed={seeds.pilea} stage={stage} pot={potFor(seeds.pilea)} className="w-full" />
   }
 
