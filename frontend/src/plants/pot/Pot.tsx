@@ -47,7 +47,7 @@ export function Pot({
           opacity={S.highlight.opacity}
         />
       </g>
-      <rect x={S.rim.x} y={S.rim.y} width={S.rim.width} height={S.rim.height} rx={S.rim.cornerRadius} fill={colors.rim} />
+      <path d={S.rim.path} fill={colors.rim} />
       <rect
         x={S.rimHighlight.x}
         y={S.rimHighlight.y}
