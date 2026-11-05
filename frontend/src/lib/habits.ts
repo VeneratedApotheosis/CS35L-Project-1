@@ -1,3 +1,4 @@
+import type { PlantTypeId } from "@/plants/plantTypes"
 import { api } from "./api"
 
 export type IntervalUnit = "day" | "week" | "month"
@@ -18,7 +19,7 @@ export const HABIT_LIMITS = {
 export interface CreateHabitInput {
   name: string
   description?: string
-  plant_type: string
+  plant_type: PlantTypeId
   target_count: number
   interval_count: number
   interval_unit: IntervalUnit
@@ -27,13 +28,56 @@ export interface CreateHabitInput {
   start_date?: string
 }
 
+/** What the create-habit form collects, after the numbers are parsed. */
+export interface CreateHabitForm {
+  name: string
+  description: string
+  plantType: PlantTypeId
+  targetCount: number
+  intervalCount: number
+  intervalUnit: IntervalUnit
+  numPeriods: number
+  /** YYYY-MM-DD the user picked. Leave undefined for the default (today). */
+  startDate?: string
+}
+
+/**
+ * Builds the POST /habits body. The backend rejects unknown keys, so every key
+ * here must exist in its schema. Empty optional fields are left out, not sent
+ * as empty strings.
+ */
+export function buildCreateHabitPayload(
+  form: CreateHabitForm,
+): CreateHabitInput {
+  const description = form.description.trim()
+  return {
+    name: form.name.trim(),
+    ...(description ? { description } : {}),
+    plant_type: form.plantType,
+    target_count: form.targetCount,
+    interval_count: form.intervalCount,
+    interval_unit: form.intervalUnit,
+    num_periods: form.numPeriods,
+    ...(form.startDate ? { start_date: form.startDate } : {}),
+  }
+}
+
+/**
+ * Parses a whole-number field. Returns NaN for anything that is not plain
+ * digits (empty, "3.5", "1e1", "-2"), so bad input is reported, not altered.
+ */
+export function parseWholeNumber(value: string): number {
+  const trimmed = value.trim()
+  return /^\d+$/.test(trimmed) ? Number(trimmed) : Number.NaN
+}
+
 /** A habit row as returned by the backend (POST /habits). */
 export interface Habit {
   id: string
   owner_id: string
   name: string
   description: string | null
-  plant_type: string
+  plant_type: PlantTypeId
   target_count: number
   interval_count: number
   interval_unit: IntervalUnit
