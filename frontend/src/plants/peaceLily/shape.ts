@@ -19,6 +19,12 @@ export interface BladeShape {
   bow: number
   /** How much wider the right half is than the left, as a share of the average width. */
   asym: number
+  /**
+   * How far the tip swings sideways, as a share of length. The blade stays
+   * upright at its base and curves more toward the tip, so the tip moves
+   * sideways by this much. Positive swings right. Left out means 0.
+   */
+  sweep?: number
 }
 
 export interface BladeSides {
@@ -44,7 +50,7 @@ export function bladeSides(shape: BladeShape, length: number, steps: number): Bl
     const swell = Math.sin(Math.PI * u)
     const fullness = Math.pow(swell, u <= 0.5 ? shape.baseTaper : shape.tipTaper)
     const half = (shape.aspect * length * fullness) / 2
-    const x = shape.bow * length * Math.sin(Math.PI * t)
+    const x = shape.bow * length * Math.sin(Math.PI * t) + (shape.sweep ?? 0) * length * t * t
     const y = -t * length
     left.push([x - half * (1 - shape.asym / 2), y])
     right.push([x + half * (1 + shape.asym / 2), y])

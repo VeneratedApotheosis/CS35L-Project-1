@@ -54,7 +54,7 @@ export function PeaceLily({
         )
       }
       renderLeaf={(leaf: PlacedLilyLeaf, clipId) => (
-        <LilyLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} />
+        <LilyLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} fan={leaf.fan} />
       )}
       renderAboveLeaves={(current, id) => {
         const state = flowerState(current.stage, FLOWER_CONFIG)

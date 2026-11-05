@@ -24,6 +24,8 @@ export interface Gene<Spec> {
   jitter: number
   /** Drawing order, low first. */
   drawOrder: number
+  /** How far the leaf bends outward, -1 to 1. 0 for every leaf that is not an outer leaf. */
+  fan: number
   /** Outline at length 1, for measuring coverage. */
   measureOutline: Pt[]
   /** Outline at length 1, for fitting the leaf inside the dome. */
@@ -66,11 +68,24 @@ export function makeGene<Spec>(
     ((rootShare - roots.middle) / rootHalfWidth) * stems.headingSpread +
     range(lr, stems.headingJitter[0], stems.headingJitter[1])
   const side = heading >= 0 ? 1 : -1
-  const curl = side * range(lr, config.leaves.curl[0], config.leaves.curl[1])
+  let curl = side * range(lr, config.leaves.curl[0], config.leaves.curl[1])
   const jitter = range(lr, config.leaves.jitter[0], config.leaves.jitter[1])
 
   // Lower layers are drawn on top; a little noise stops equal layers tying.
   const drawOrder = 1 - layer + lr() * config.leaves.drawOrderNoise
+
+  // Outer leaves fan outward. These draws come last, and only when the plant
+  // fans, so a plant without `fan` is exactly as it was before.
+  let fan = 0
+  if (config.fan) {
+    const strength = range(lr, config.fan.strength[0], config.fan.strength[1])
+    const turn = range(lr, config.fan.turn[0], config.fan.turn[1])
+    const outward = Math.abs((rootShare - roots.middle) / rootHalfWidth)
+    if (outward >= config.fan.outerThreshold) {
+      fan = side * strength
+      curl += side * turn * strength
+    }
+  }
 
   return {
     index,
@@ -82,7 +97,8 @@ export function makeGene<Spec>(
     curl,
     jitter,
     drawOrder,
-    measureOutline: leaf.outline(spec, 1, search.measureSegments),
-    fitOutline: leaf.outline(spec, 1, search.fitSegments),
+    fan,
+    measureOutline: leaf.outline(spec, 1, search.measureSegments, fan),
+    fitOutline: leaf.outline(spec, 1, search.fitSegments, fan),
   }
 }

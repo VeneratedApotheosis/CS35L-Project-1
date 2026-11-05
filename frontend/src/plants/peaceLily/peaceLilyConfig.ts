@@ -21,7 +21,7 @@ export const PEACE_LILY_CONFIG: StagedPlantConfig = {
     default: 4,
     max: 9,
     minLeaves: 2,
-    maxLeaves: 6,
+    maxLeaves: 8,
     leafCountCurve: 1.15,
     growthRatio: 3.6,
   },
@@ -93,6 +93,13 @@ export const PEACE_LILY_CONFIG: StagedPlantConfig = {
     stemSteps: 40,
   },
 
+  // The outer leaves fan outward: they bend away from the middle and show their inner face.
+  fan: {
+    outerThreshold: 0.5,
+    strength: [0.75, 1],
+    turn: [8, 18],
+  },
+
   rngStreams: { leaf: 61 },
 }
 
@@ -123,7 +130,7 @@ export const FLOWER_CONFIG: FlowerConfig = {
 
   count: [1, 3],
 
-  // The flower dome is the leaf dome stretched upward, so flowers stand above the leaves.
+  // The flower dome is the leaf dome stretched upward. It only needs to hold the tallest flower (`height` below).
   reach: { width: 1, height: 1.75 },
 
   // Length of the flower head as a share of the leaf dome height, and each flower's own factor.
@@ -132,16 +139,20 @@ export const FLOWER_CONFIG: FlowerConfig = {
   // How much wider or slimmer a flower's hood is than the base shape.
   widthFactor: [0.92, 1.08],
 
-  // Height of the head's base as a share of the flower dome height.
-  baseHeight: [0.56, 0.7],
-  // How far from the middle the outermost heads sit, as a share of the dome half width.
-  slotSpread: 0.52,
-  // Random sideways nudge of a head, as a share of the dome half width.
-  slotJitter: 0.06,
+  // How high the top of a flower head stands, as a share of the plant's maximum height (the leaf dome height).
+  // 1.2 is a fifth taller than the tallest leaf can be; 0.6 is lower, among the leaves.
+  height: [0.6, 1.2],
+  // The widest a head may sit from the middle, in degrees: the angle at the soil point between
+  // straight up and the middle of the head. The outermost heads sit at this angle.
+  maxSpread: 30,
+  // Random nudge of a head's angle, in degrees. It never takes a head past maxSpread.
+  slotJitter: 3,
   // Share of the way to its head that a stalk's root sits from the middle of the pot.
   rootFollow: 0.5,
   // Where a stalk bends, as a share of its rise.
   stalkBend: 0.72,
+  // The most a head leans from straight up because of its stalk, in degrees.
+  maxLean: 30,
   // Random tilt added to the stalk's direction at the head, in degrees.
   headTilt: [-10, 10],
   // Tilt of the spadix inside an open hood, in degrees.

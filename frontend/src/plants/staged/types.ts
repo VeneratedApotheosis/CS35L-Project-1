@@ -144,6 +144,24 @@ export interface StagedPlantConfig {
     stemSteps: number
   }
 
+  /**
+   * Optional. Fans the outer leaves outward, so they look as if their face
+   * points toward the middle while the blade bends away from it. Leaves in the
+   * middle are untouched. Leave this out for a plant that should not fan.
+   */
+  fan?: {
+    /**
+     * A leaf is outer when its root is at least this share of the way from the
+     * middle of the roots to their outer edge: 0 makes every leaf outer, 1 only
+     * a leaf rooted at the very edge.
+     */
+    outerThreshold: number
+    /** How strongly an outer leaf bends, from 0 (not at all) to 1 (fully). Drawn per leaf. */
+    strength: Range
+    /** Extra outward turn of an outer leaf at full strength, in degrees. Drawn per leaf. */
+    turn: Range
+  }
+
   /** Names of the random streams, so two plants never share draws. */
   rngStreams: { leaf: number }
 }
@@ -159,8 +177,12 @@ export interface LeafShapeModel<Spec> {
   /**
    * The outline as a closed polygon: stalk end at (0,0), tip at (0,-length),
    * with `perSegment` points per curve.
+   *
+   * `fan` is how far the leaf bends outward, from -1 (fully, to the left) to 1
+   * (fully, to the right). 0 or left out means no bend. A species that does not
+   * fan can ignore it.
    */
-  outline(spec: Spec, length: number, perSegment: number): Pt[]
+  outline(spec: Spec, length: number, perSegment: number, fan?: number): Pt[]
   /** Where the leaf's middle sits along its length, as a share measured from the stalk end. */
   middle: number
 }
@@ -179,6 +201,8 @@ export interface PlacedLeaf<Spec> {
   angle: number
   /** Leaf length in canvas units. */
   length: number
+  /** How far the leaf bends outward, -1 to 1: negative bends left, positive right, 0 is straight. */
+  fan: number
   /** Stalk end, where the leaf is drawn from. */
   baseX: number
   baseY: number
