@@ -16,6 +16,7 @@ import {
 import { Button, type ButtonVariant } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { Icon } from "@/components/Icon"
+import { ProgressBar } from "@/components/ProgressBar"
 import { useTheme } from "@/styles/ThemeProvider"
 
 /* ------------------------------------------------------------------ */
@@ -122,6 +123,34 @@ function Section({
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
+
+function ProgressExamples() {
+  const [count, setCount] = useState(2)
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Card className="flex min-w-0 flex-col gap-6">
+        <ProgressBar label="Reading this week" count={count} target={3} />
+        <div className="flex flex-wrap gap-3">
+          <Button icon={Plus} onClick={() => setCount((value) => value + 1)}>
+            Log activity
+          </Button>
+          <Button variant="secondary" onClick={() => setCount(0)}>
+            Reset
+          </Button>
+        </div>
+      </Card>
+      <Card className="flex min-w-0 flex-col gap-6">
+        <ProgressBar label="Getting started" count={0} target={1} />
+        <ProgressBar label="Goal met" count={1} target={1} />
+        <ProgressBar label="Above the goal" count={4} target={3} />
+        <ProgressBar label="Ten-step goal" count={6} target={10} />
+        <ProgressBar label="Larger goals use a smooth bar" count={6} target={11} />
+        <ProgressBar label="A larger goal" count={27} target={50} />
+      </Card>
+    </div>
+  )
+}
 
 export default function StyleGuide() {
   const { theme, toggleTheme } = useTheme()
@@ -356,6 +385,15 @@ export default function StyleGuide() {
               </div>
             </Card>
           </div>
+        </Section>
+
+        <Section
+          index="07"
+          eyebrow="Habit progress"
+          title="Progress bars"
+          description="Goals up to 10 show one step per activity. Larger goals use a smooth bar to avoid crowded ticks. Logging beyond the goal keeps the bar full and shows the actual count. Use the theme switch above to compare both themes."
+        >
+          <ProgressExamples />
         </Section>
 
         <footer className="flex items-center justify-between border-t border-[var(--color-border)] pt-6">
