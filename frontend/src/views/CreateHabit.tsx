@@ -163,7 +163,7 @@ export default function CreateHabit() {
   return (
     <main
       style={{
-        maxWidth: "42rem",
+        maxWidth: "64rem",
         margin: "0 auto",
         padding: "var(--page-padding)",
       }}
@@ -184,16 +184,10 @@ export default function CreateHabit() {
         Create a habit
       </h1>
 
-      {selected && (
-        <div className="plant-hero">
-          <div className="plant-hero__art">
-            <selected.Preview />
-          </div>
-        </div>
-      )}
-
       {step === "edit" ? (
         <form className="form" onSubmit={handleReview} noValidate>
+          <div className="create-grid">
+          <div className="create-grid__fields">
           <div className="field">
             <label className="field__label" htmlFor="habit-name">
               Name
@@ -371,33 +365,6 @@ export default function CreateHabit() {
             </div>
           </div>
 
-          <div className="field">
-            <span className="field__label" id="habit-plant-label">
-              Plant
-            </span>
-            <div
-              className="plant-picker"
-              role="group"
-              aria-labelledby="habit-plant-label"
-            >
-              {PLANT_TYPES.map((plant) => (
-                <button
-                  key={plant.id}
-                  type="button"
-                  className="plant-option"
-                  aria-pressed={plant.id === plantType}
-                  aria-label={`${plant.label}. ${plant.blurb}`}
-                  onClick={() => setPlantType(plant.id)}
-                >
-                  <span className="plant-option__art">
-                    <plant.Preview />
-                  </span>
-                  <span className="plant-option__label">{plant.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {sentence && (
             <Card variant="muted">
               <p className="goal-preview">{sentence}</p>
@@ -427,9 +394,48 @@ export default function CreateHabit() {
               Cancel
             </Button>
           </div>
+          </div>
+
+          <aside className="create-grid__plant">
+            <div className="field">
+              <span className="field__label" id="habit-plant-label">
+                Plant
+              </span>
+              <div
+                className="plant-picker"
+                role="group"
+                aria-labelledby="habit-plant-label"
+              >
+                {PLANT_TYPES.map((plant) => (
+                  <button
+                    key={plant.id}
+                    type="button"
+                    className="plant-option"
+                    aria-pressed={plant.id === plantType}
+                    aria-label={`${plant.label}. ${plant.blurb}`}
+                    onClick={() => setPlantType(plant.id)}
+                  >
+                    <span className="plant-option__art">
+                      <plant.Preview />
+                    </span>
+                    <span className="plant-option__label">{plant.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {selected && (
+              <div className="plant-hero">
+                <div className="plant-hero__art">
+                  <selected.Preview />
+                </div>
+              </div>
+            )}
+          </aside>
+          </div>
         </form>
       ) : (
-        <div className="form">
+        <div className="form" style={{ maxWidth: "42rem" }}>
           <Card>
             <p className="goal-preview">{sentence}</p>
             <dl className="confirm-summary" style={{ marginTop: "var(--space-4)" }}>

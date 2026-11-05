@@ -6,6 +6,37 @@
   gap: var(--space-6);
 }
 
+/* Two columns on wide screens: the form values on the left, the plant on the right. */
+.create-grid {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.create-grid__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.create-grid__plant {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (min-width: 52rem) {
+  .create-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 20rem);
+    align-items: start;
+  }
+
+  .create-grid__plant {
+    position: sticky;
+    top: var(--space-6);
+  }
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -128,7 +159,7 @@
 .plant-hero {
   display: flex;
   justify-content: center;
-  padding: var(--space-4) 0;
+  padding: var(--space-1) 0 var(--space-4);
 }
 
 .plant-hero__art {
