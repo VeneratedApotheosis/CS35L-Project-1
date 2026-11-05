@@ -241,41 +241,46 @@ export default function CreateHabit() {
             )}
           </div>
 
-          <div className="field-row">
-            <div className="field">
-              <label className="field__label" htmlFor="habit-target">
-                Target per period
-              </label>
-              <input
-                id="habit-target"
-                className="input"
-                type="number"
-                inputMode="numeric"
-                min={HABIT_LIMITS.targetCount.min}
-                max={HABIT_LIMITS.targetCount.max}
-                value={targetCount}
-                onChange={(e) => setTargetCount(e.target.value)}
-                aria-invalid={Boolean(errors.targetCount)}
-                aria-describedby={
-                  errors.targetCount ? "habit-target-error" : undefined
-                }
-              />
-              {errors.targetCount && (
-                <p className="field__error" id="habit-target-error">
-                  {errors.targetCount}
-                </p>
-              )}
-            </div>
+          <div className="field">
+            <label className="field__label" htmlFor="habit-target">
+              Target per period
+            </label>
+            <input
+              id="habit-target"
+              className="input"
+              type="number"
+              inputMode="numeric"
+              min={HABIT_LIMITS.targetCount.min}
+              max={HABIT_LIMITS.targetCount.max}
+              value={targetCount}
+              onChange={(e) => setTargetCount(e.target.value)}
+              aria-invalid={Boolean(errors.targetCount)}
+              aria-describedby={
+                errors.targetCount ? "habit-target-error" : undefined
+              }
+            />
+            {errors.targetCount && (
+              <p className="field__error" id="habit-target-error">
+                {errors.targetCount}
+              </p>
+            )}
+          </div>
 
-            <div className="field">
-              <label className="field__label" htmlFor="habit-interval">
-                Every
-              </label>
+          <div className="field">
+            <span className="field__label" id="habit-period-label">
+              Every
+            </span>
+            <div
+              className="period-group"
+              role="group"
+              aria-labelledby="habit-period-label"
+            >
               <input
                 id="habit-interval"
-                className="input"
+                className="input period-group__count"
                 type="number"
                 inputMode="numeric"
+                aria-label="Interval count"
                 min={HABIT_LIMITS.intervalCount.min}
                 max={HABIT_LIMITS.intervalCount.max}
                 value={intervalCount}
@@ -285,20 +290,10 @@ export default function CreateHabit() {
                   errors.intervalCount ? "habit-interval-error" : undefined
                 }
               />
-              {errors.intervalCount && (
-                <p className="field__error" id="habit-interval-error">
-                  {errors.intervalCount}
-                </p>
-              )}
-            </div>
-
-            <div className="field">
-              <label className="field__label" htmlFor="habit-unit">
-                Unit
-              </label>
               <select
                 id="habit-unit"
                 className="select"
+                aria-label="Interval unit"
                 value={intervalUnit}
                 onChange={(e) =>
                   setIntervalUnit(e.target.value as IntervalUnit)
@@ -311,6 +306,11 @@ export default function CreateHabit() {
                 ))}
               </select>
             </div>
+            {errors.intervalCount && (
+              <p className="field__error" id="habit-interval-error">
+                {errors.intervalCount}
+              </p>
+            )}
           </div>
 
           <div className="field-row">

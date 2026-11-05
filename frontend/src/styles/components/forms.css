@@ -95,7 +95,30 @@
 
 .plant-option__label {
   font-size: var(--font-size-md);
+  /* Unselected options read as quiet and italic; the chosen one is solid. */
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-weight: var(--font-weight-regular);
+}
+
+.plant-option[aria-pressed="true"] .plant-option__label {
+  color: var(--color-text);
+  font-style: normal;
   font-weight: var(--font-weight-medium);
+}
+
+/* "Every" group: the interval count and unit belong together. */
+.period-group {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.period-group__count {
+  flex: 0 0 6rem;
+}
+
+.period-group .select {
+  flex: 1 1 auto;
 }
 
 /* The large preview of the chosen plant, the form's hero. */
@@ -106,7 +129,8 @@
 }
 
 .plant-hero__art {
-  width: 10rem;
+  width: 30rem;
+  max-width: 100%;
 }
 
 /* Goal-preview sentence. */
