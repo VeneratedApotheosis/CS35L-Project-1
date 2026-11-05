@@ -15,6 +15,7 @@
 @import "./components/cards.css";
 @import "./components/icons.css";
 @import "./components/navigation.css";
+@import "./components/progress.css";
 
 * {
   box-sizing: border-box;

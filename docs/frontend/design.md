@@ -178,9 +178,10 @@ Built in `frontend/src/components/`, styled by the CSS in `frontend/src/styles/c
 | `Card` | variant (`default` and others), padding from `--card-padding` |
 | `Icon` | lucide icons with a size and a tone, always `currentColor` |
 | `NavBar` / `AppShell` | responsive navigation, current route, disabled future destinations, shared signed-in layout and skip link |
+| `ProgressBar` | accessible label, activity count and target (1–50); segmented steps for targets up to 10, smooth fill above 10, capped fill and uncapped count |
 | Inputs | CSS classes in `inputs.css`; a React wrapper is not built yet |
 
-Still to build: Modal, ProgressBar with tick marks, toast (for the undo after logging).
+Still to build: Modal, toast (for the undo after logging).
 
 **Rules**
 - Take variants and sizes from props, not from one-off class names.
@@ -246,7 +247,7 @@ frontend/src/
 **Open**
 - **Login and Garden pages** are placeholders and are not yet on the design system.
 - **Pilea** is on the older engine and does not follow the stage rules.
-- **Missing components:** Modal, ProgressBar with ticks, toast, input wrappers.
+- **Missing components:** Modal, toast, input wrappers.
 - **Plants on dark surfaces.** Check the pot and leaf colors against the dark theme.
 - **Stage-up animation** is described in section 10 but not built.
 - **Health look.** The rules (backend-design.md section 8.8) describe a wilting plant; how the drawing changes for health is not decided yet.
