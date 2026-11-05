@@ -259,7 +259,6 @@ Over 60 seeds unless noted.
 ## 8. Open items
 
 - **Stage count.** The backend's growth rules ([8.7](../backend/design.md#87-plant-growth)) have **five** stages (0 to 24%, 25 to 49%, 50 to 74%, 75 to 99%, 100%). The plants default to four. Either map five onto four, or set the default to five and decide when the peace lily blooms.
-- **Plant types.** The app's type list (flower, tree, shrub, vine, kelp) is not the set built so far (pothos, pilea, peace lily).
 - **Health.** The backend has three health states (healthy, slightly wilted, wilted). No plant has a wilted look yet.
 - **Pilea** is still on the older engine.
 - **Flower config** is not covered by `validateConfig`. Only the leaf config is checked; the flower numbers are protected by the tests.
