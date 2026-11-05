@@ -1,12 +1,18 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Dices } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
-import { createHabit, HABIT_LIMITS, type IntervalUnit } from "@/lib/habits"
+import {
+  buildCreateHabitPayload,
+  createHabit,
+  HABIT_LIMITS,
+  parseWholeNumber,
+  type IntervalUnit,
+} from "@/lib/habits"
 import {
   computeEndDate,
   durationPhrase,
@@ -18,6 +24,7 @@ import {
   DEFAULT_PLANT_TYPE,
   PLANT_TYPES,
   plantTypeById,
+  type PlantTypeId,
 } from "@/plants/plantTypes"
 
 type Step = "edit" | "confirm"
@@ -29,6 +36,11 @@ const INTERVAL_UNITS: { value: IntervalUnit; label: string }[] = [
   { value: "month", label: "months" },
 ]
 
+// todayISO never changes in a way React needs to subscribe to.
+function subscribeNever() {
+  return () => {}
+}
+
 export default function CreateHabit() {
   const router = useRouter()
 
@@ -38,28 +50,38 @@ export default function CreateHabit() {
   const [intervalCount, setIntervalCount] = useState("1")
   const [intervalUnit, setIntervalUnit] = useState<IntervalUnit>("week")
   const [numPeriods, setNumPeriods] = useState("")
-  const [startDate, setStartDate] = useState(todayISO())
-  const [plantType, setPlantType] = useState(DEFAULT_PLANT_TYPE)
-  const [seed, setSeed] = useState(randomSeed)
+  // null means the user left the start date at its default (today).
+  const [startDate, setStartDate] = useState<string | null>(null)
+  const [plantType, setPlantType] = useState<PlantTypeId>(DEFAULT_PLANT_TYPE)
 
   const [step, setStep] = useState<Step>("edit")
   const [errors, setErrors] = useState<Errors>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  // Set synchronously, so two clicks in the same tick cannot both submit.
+  const submittingRef = useRef(false)
 
-  const today = todayISO()
+  // The browser's date, or "" on the server and while hydrating, so the server
+  // and client markup match.
+  const today = useSyncExternalStore(subscribeNever, todayISO, () => "")
 
-  // Parsed numbers, used for the live preview. NaN when the field is empty.
+  // Only a date other than today is sent. Otherwise the backend picks today in
+  // the profile timezone, which can differ from the browser's date.
+  const chosenStartDate =
+    startDate && startDate !== today ? startDate : undefined
+
+  // Parsed numbers, used for the live preview. NaN when the field is not a
+  // whole number.
   const nums = {
-    targetCount: Number.parseInt(targetCount, 10),
-    intervalCount: Number.parseInt(intervalCount, 10),
-    numPeriods: Number.parseInt(numPeriods, 10),
+    targetCount: parseWholeNumber(targetCount),
+    intervalCount: parseWholeNumber(intervalCount),
+    numPeriods: parseWholeNumber(numPeriods),
   }
 
   const previewReady =
-    Number.isFinite(nums.targetCount) &&
-    Number.isFinite(nums.intervalCount) &&
-    Number.isFinite(nums.numPeriods) &&
+    Number.isInteger(nums.targetCount) &&
+    Number.isInteger(nums.intervalCount) &&
+    Number.isInteger(nums.numPeriods) &&
     nums.numPeriods > 0
 
   const sentence = useMemo(() => {
@@ -80,9 +102,15 @@ export default function CreateHabit() {
     intervalUnit,
   ])
 
+  const previewStart = chosenStartDate ?? today
   const endDate =
-    previewReady && startDate
-      ? computeEndDate(startDate, intervalUnit, nums.intervalCount, nums.numPeriods)
+    previewReady && previewStart
+      ? computeEndDate(
+          previewStart,
+          intervalUnit,
+          nums.intervalCount,
+          nums.numPeriods,
+        )
       : ""
 
   const selected = plantTypeById(plantType)
@@ -115,9 +143,9 @@ export default function CreateHabit() {
       next.numPeriods = `Enter a number from ${HABIT_LIMITS.numPeriods.min} to ${HABIT_LIMITS.numPeriods.max}.`
     }
 
-    if (!startDate) {
+    if (startDate === "") {
       next.startDate = "Start date is required."
-    } else if (startDate < today) {
+    } else if (startDate !== null && today && startDate < today) {
       next.startDate = "Start date can't be in the past."
     }
 
@@ -135,28 +163,40 @@ export default function CreateHabit() {
   }
 
   async function handleCreate() {
+    if (submittingRef.current) return
+    submittingRef.current = true
     setSubmitting(true)
     setSubmitError("")
     try {
-      await createHabit({
-        name: name.trim(),
-        description: description.trim() || undefined,
-        plant_type: plantType,
-        target_count: nums.targetCount,
-        interval_count: nums.intervalCount,
-        interval_unit: intervalUnit,
-        num_periods: nums.numPeriods,
-        start_date: startDate,
-      })
-      router.push("/dashboard")
+      await createHabit(
+        buildCreateHabitPayload({
+          name,
+          description,
+          plantType,
+          targetCount: nums.targetCount,
+          intervalCount: nums.intervalCount,
+          intervalUnit,
+          numPeriods: nums.numPeriods,
+          startDate: chosenStartDate,
+        }),
+      )
+      // [PLACEHOLDER] use the returned habit and go to /habits/${habit.id} once
+      // the habit details page exists
+      // Stay in the submitting state: the page is being replaced.
+      router.replace("/")
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        // Signed out or token expired. Same redirect as ProtectedRoute.
+        router.replace("/login")
+        return
+      }
       const message =
         err instanceof ApiError
           ? err.message
           : "Couldn't save the habit. Try again."
       setSubmitError(message)
       setStep("edit")
-    } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }
@@ -350,8 +390,8 @@ export default function CreateHabit() {
                 id="habit-start"
                 className="input"
                 type="date"
-                min={today}
-                value={startDate}
+                min={today || undefined}
+                value={startDate ?? today}
                 onChange={(e) => setStartDate(e.target.value)}
                 aria-invalid={Boolean(errors.startDate)}
                 aria-describedby={
@@ -425,21 +465,11 @@ export default function CreateHabit() {
             {selected && (
               <div className="plant-hero">
                 <div className="plant-hero__art">
-                  <selected.Preview seed={seed} />
+                  <selected.Preview />
                 </div>
               </div>
             )}
-
-            <div className="plant-generate">
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={Dices}
-                onClick={() => setSeed(randomSeed())}
-              >
-                Generate another
-              </Button>
-            </div>
+            <p className="field__hint">Example plant</p>
           </aside>
           </div>
         </form>
@@ -454,7 +484,9 @@ export default function CreateHabit() {
               </div>
               <div>
                 <dt>Starts</dt>
-                <dd>{formatDate(startDate)}</dd>
+                <dd>
+                  {chosenStartDate ? formatDate(chosenStartDate) : "Today"}
+                </dd>
               </div>
               <div>
                 <dt>Ends</dt>
@@ -500,9 +532,4 @@ export default function CreateHabit() {
 
 function inRange(value: number, range: { min: number; max: number }): boolean {
   return Number.isInteger(value) && value >= range.min && value <= range.max
-}
-
-/** A random seed for the plant preview, so "Generate another" shows a new one. */
-function randomSeed(): number {
-  return Math.floor(Math.random() * 100000)
 }
