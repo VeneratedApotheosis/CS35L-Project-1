@@ -264,10 +264,11 @@ With 4 periods, 80% consistency means no misses (3/4 = 75%).
 
 ## 10. Testing
 
-- We add tests. The runner and start date are decided in Week 6 (vitest is the proposal).
-- Start with `domain/`. Periods, streaks and progress are pure functions and need no database.
-- Routes can be tested with supertest and a mocked service.
-- There is no CI. Run the checks before opening a PR.
+- Tests use vitest and supertest. Run them with `npm test` in `backend/`.
+- They use a fake Supabase client (`src/test/fakeSupabase.ts`) and never touch the network or the real database.
+- Pure rules in `domain/` are tested directly.
+- RLS, column grants and the timezone trigger are not covered by these tests. They need a live database and are checked by hand.
+- There is no CI, so run `npm test` before opening a PR.
 
 ---
 
@@ -282,7 +283,6 @@ The backend is a normal Node service: `npm run build`, then `npm start`. Set the
 | Item | Notes |
 | --- | --- |
 | Hosting for the backend | Section 11 |
-| Test runner and start | Section 10 |
 | Plant type list | Pending. The frontend has built different plants so far, see its design doc |
 | Logging on a habit that has not started yet | Not decided |
 | Changing timezone mid-habit | Past `occurred_on` dates stay as stored. Not decided otherwise |
