@@ -9,8 +9,11 @@
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
-  /* Match the button typography, at a lighter weight. */
-  font: 500 0.78rem/1.2 var(--font-family);
+  /* Input text reads at body size. */
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.4;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -37,5 +40,28 @@
 .textarea:disabled,
 .select:disabled {
   opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* The dropdown: drop the native chrome and draw our own chevron. */
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 2.5rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 1rem;
+}
+
+/* The expanded option list can only be themed where the browser allows it. */
+.select option {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.select:disabled {
   cursor: not-allowed;
 }
