@@ -11,8 +11,15 @@ This page is a guide to the folder and a record of what was built in it. For the
 | `staged/` | The shared stage engine. Places leaves on stems inside a dome, one scaled copy per growth stage. Nothing here is specific to one plant |
 | `pothos/` | The pothos: heart-shaped leaves |
 | `peaceLily/` | The peace lily: wide pointed leaves, fanned outer leaves, and flowers that bud and bloom |
+| `snakePlant/` | The snake plant: tall, upright sword blades with pale-yellow margins and cross-banding (no flowers) |
+| `kimberlyQueen/` | The Kimberly Queen fern: an upright crown of tall, gently arching sword fronds, each a slim lance of small rounded pinnae alternating up a central rachis (no flowers) |
+| `dracaena/` | The Dracaena 'Golden Heart': a tall crown of long, strappy leaves that arch outward, each with a golden-yellow midrib stripe (no flowers) |
+| `lily/` | The lily: lance leaves that fan, with six-petalled stargazer flowers that bud and bloom |
+| `rose/` | The rose: rounded veined leaves with layered red blooms (rings of petals) that bud and bloom |
+| `monstera/` | The Monstera deliciosa: a few large, broad, glossy heart leaves with fenestrations (holes near the midrib and splits cut in from the edge; no flowers) |
+| `pilea/` | The pilea (Pilea peperomioides): round, flat coin leaves on thin stalks that radiate from the base, with baby "pups" beside the main plant (no flowers) |
+| `philodendron/` | The Philodendron 'Sun Red' / Rojo Congo: broad, rounded paddle leaves in an upright crown on thick reddish-maroon petioles; the newest, most upright leaves are deep burgundy-red, the older outer ones glossy green and arching (no flowers) |
 | `pot/` | The pot every plant sits in: palettes, shape, and the band (none or a stripe) |
-| `Pilea.tsx`, `pileaGenome.ts` | The pilea, still on the older continuous-growth engine |
 | `genome.ts`, `geometry.ts`, `rng.ts` | Shared helpers: canvas and soil point, geometry, seeded random numbers |
 
 ## How to change a plant
@@ -46,6 +53,20 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
   - Flowers grow with the plant: they are placed once at full size and scaled with each stage.
 - It replaced an older, unused peace lily (`PeaceLily.tsx` and `lily.ts`), which was removed.
 
+### Pilea (`pilea/`)
+
+- Ported from the older continuous-growth engine onto the stage engine, like the pothos and snake plant: four stages, scaled copies, containment, a leaf cap, and `scale` never moves anything.
+- Leaves are round, flat **coins** held face-on (`pileaLeaf.ts`, `PileaLeafShape.tsx`): a near-circular blade with a lighter right half, fine veins radiating from a central dimple, and one soft white highlight. Up to 6 coins per plant (2, 3, 5, 6 over four stages) on thin stalks that radiate from the base.
+- **Pups** (`pileaPups` in `pileaStages.ts`): 1 to 2 baby clusters of small coins beside the main plant. They appear from stage 2 and scale with each stage, drawn through the engine's `renderBehindLeaves` slot, from their own seed streams so they never move the main coins.
+- It replaced the older `Pilea.tsx` and `pileaGenome.ts`, which were removed along with the now-unused continuous-growth helpers (`SIZE_MIN`, `SIZE_MAX`, `VinePoint`, `pointAt`) in `genome.ts`.
+
+### Dracaena 'Golden Heart' (`dracaena/`)
+
+- Built on the stage engine like the snake plant, so it follows the same rules: four stages, scaled copies, containment, and `scale` never moves anything.
+- Leaves are long, strappy swords (`dracaenaLeaf.ts`, `DracaenaLeafShape.tsx`), up to 6 per plant, that radiate from a central base.
+- **Every leaf arches outward.** It uses the engine's `fan` section with `outerThreshold` 0, so all leaves bend away from the middle and droop at the tips, showing their inner (lighter) face.
+- Each blade is deep green with a tapering golden-yellow stripe drawn up its midrib (the "golden heart"), plus the lighter half and one soft white highlight. No flowers.
+
 ### The engine (`staged/`)
 
 - `StemmedPlant` has two optional drawing slots, `renderBehindLeaves` and `renderAboveLeaves`, so a plant can add its own parts. The peace lily uses them for flower stalks and heads.
@@ -56,11 +77,11 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
 
 - The dotted band is gone. A pot now has either no band or the stripe.
 - Existing seeds keep their pot: a pot that was plain is still plain, and one that had a stripe or dots now shows the stripe. This is done by a weighted choice (`POT_BAND_ODDS`, none 1 part and stripe 2) using the same single random draw as before.
-- The pilea picks its band the same way, through `pickPotBand`.
 
 ### The `/plants` page
 
-- One four-stages section with a plant picker (pothos, peace lily, pilea) and a Grow another button that regrows the chosen plant. Each plant keeps its own seed.
+- One four-stages section with a plant picker (pothos, peace lily, pilea, and the rest) and a Grow another button that regrows the chosen plant. Each plant keeps its own seed.
+- A gallery of eight seeds for the pilea at the last stage.
 - Galleries of eight seeds for the pothos and the peace lily.
 
 ## Tests
@@ -70,11 +91,15 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
 | `pothos/pothosStages.test.tsx` | The stage rules for the pothos, over 60 seeds |
 | `staged/engine.test.ts` | The engine follows whatever config it is given |
 | `peaceLily/peaceLily.test.tsx` | Flower stages, flower height and spread, the leaf cap, the outer-leaf fan, and scale |
+| `dracaena/dracaena.test.tsx` | The stage rules for the dracaena: stage counts, containment, the outward arch, scaling, and scale-invariance |
+| `kimberlyQueen/kimberlyQueen.test.tsx` | The stage rules for the Kimberly Queen fern: stage counts, containment, coverage, roots, frond identity, scaling, and scale-invariance |
+| `monstera/monstera.test.tsx` | The stage rules for the monstera: stage counts, containment, coverage, roots, leaf identity, scaling, and scale-invariance |
+| `pilea/pilea.test.tsx` | The stage rules for the pilea: stage counts, containment, coverage, roots, leaf identity, scaling, scale-invariance, and that pups appear from stage 2 |
+| `philodendron/philodendron.test.tsx` | The stage rules for the philodendron: stage counts, containment, coverage, roots, leaf identity, scaling, scale-invariance, red stems, and that the newest upright leaves are burgundy |
 | `pot/pot.test.tsx` | Pot geometry, palettes, bands (including that no dots are drawn), and the band odds |
 
 ## Known gaps
 
-- The pilea is on the older engine and does not follow the stage rules yet.
 - The backend counts five growth stages, but the plants default to four.
 - No plant has a wilted look yet.
 - Flower settings are not covered by `validateConfig`, only by the tests.

@@ -5,9 +5,15 @@ import { Dices } from "lucide-react"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { LeafShape } from "@/plants/pothos/LeafShape"
-import { Pilea } from "@/plants/Pilea"
+import { Pilea } from "@/plants/pilea"
 import { PeaceLily } from "@/plants/peaceLily"
 import { Lotus } from "@/plants/lotus"
+import { SnakePlant } from "@/plants/snakePlant"
+import { KimberlyQueen } from "@/plants/kimberlyQueen"
+import { Lily } from "@/plants/lily"
+import { Rose } from "@/plants/rose"
+import { Monstera } from "@/plants/monstera"
+import { Philodendron } from "@/plants/philodendron"
 import { Pothos } from "@/plants/pothos/Pothos"
 import { randomLeafSpec } from "@/plants/pothos/leaf"
 import { STAGES } from "@/plants/genome"
@@ -16,7 +22,6 @@ import { mulberry32 } from "@/plants/rng"
 
 const GALLERY_SEEDS = [3, 11, 24, 42, 57, 86, 101, 2025]
 const COMPARE_SCALES = [0.4, 0.6, 0.8, 1]
-const COMPARE_SIZES = [0.6, 0.8, 1, 1.3, 1.6]
 const STAGE_NUMBERS = [1, 2, 3, 4] as const
 
 /** The plants the four-stages section can show and grow another of. Each keeps its own seed. */
@@ -39,8 +44,8 @@ const PLANTS = [
     id: "pilea",
     label: "Pilea",
     description:
-      "Still on the older continuous-growth engine; it will move to the stage engine later. Round coin leaves on thin stalks, with baby plants beside the main one.",
-    stageNames: STAGES.map((s) => s.name),
+      "Round, flat coin leaves on thin stalks that radiate from the base, on the same stage engine as the pothos. Baby pup plants appear beside the main one from stage 2. No flowers.",
+    stageNames: ["Sprout", "Young", "Fuller", "Full cluster"],
   },
   {
     id: "lotus",
@@ -48,6 +53,55 @@ const PLANTS = [
     description:
       "A water plant: the pot holds water with lily pads floating on it, and a few round leaves and pink flowers are held above on thin stems. Buds appear in stage 3 and open by stage 4.",
     stageNames: ["Sprout", "Pads", "Budding", "Blooming"],
+  },
+  {
+    id: "snakePlant",
+    label: "Snake plant",
+    description:
+      "Tall, stiff swords on the same stage engine as the pothos. Each blade has a pale-yellow margin and faint cross-banding, and stands nearly upright with little lean. No flowers.",
+    stageNames: ["Sprout", "Young", "Fuller", "Full height"],
+  },
+  {
+    id: "kimberlyQueen",
+    label: "Kimberly Queen",
+    description:
+      "An upright crown of tall, gently arching sword fronds on the same stage engine as the snake plant. Each frond is a slim lance of many small rounded pinnae alternating up a central rachis, fresh medium-green and lighter on one side. No flowers.",
+    stageNames: ["Sprout", "Young", "Fuller", "Full crown"],
+  },
+  // {
+  //   id: "dracaena",
+  //   label: "Dracaena",
+  //   description:
+  //     "A tall crown of long, strappy sword leaves on the same stage engine as the snake plant. Each blade arches outward and droops at the tip, deep green with a bright golden-yellow stripe up its midrib. No flowers.",
+  //   stageNames: ["Sprout", "Young", "Fuller", "Full crown"],
+  // },
+  {
+    id: "lily",
+    label: "Lily",
+    description:
+      "Lance-shaped leaves that fan outward, with showy six-petalled stargazer flowers: white-edged pink tepals around dark-tipped stamens. Buds appear in stage 3 and open in stage 4.",
+    stageNames: ["Sprout", "Young", "Budding", "Blooming"],
+  },
+  {
+    id: "rose",
+    label: "Rose",
+    description:
+      "A bushy plant of rounded, veined leaves with layered red blooms: rings of petals around a tight centre. Buds wrapped in green sepals appear in stage 3 and open in stage 4.",
+    stageNames: ["Sprout", "Young", "Budding", "Blooming"],
+  },
+  {
+    id: "monstera",
+    label: "Monstera",
+    description:
+      "A few large, broad, glossy heart-shaped leaves on the same stage engine as the pothos, each cut with the signature Monstera fenestrations: rounded holes near the midrib and splits in from the edge. No flowers.",
+    stageNames: ["Sprout", "Young", "Splitting", "Full leaves"],
+  },
+  {
+    id: "philodendron",
+    label: "Philodendron",
+    description:
+      "Broad, rounded paddle leaves in an upright crown on the same stage engine as the pothos, on thick reddish-maroon petioles. The newest, most upright leaves are deep burgundy-red; the older outer leaves are glossy green and arch outward. No flowers.",
+    stageNames: ["Sprout", "Young", "Fuller", "Full crown"],
   },
 ] as const
 type PlantId = (typeof PLANTS)[number]["id"]
@@ -103,6 +157,13 @@ export default function PlantLab() {
     peaceLily: FIRST_SEED,
     pilea: FIRST_SEED,
     lotus: FIRST_SEED,
+    snakePlant: FIRST_SEED,
+    kimberlyQueen: FIRST_SEED,
+    // dracaena: FIRST_SEED,
+    lily: FIRST_SEED,
+    rose: FIRST_SEED,
+    monstera: FIRST_SEED,
+    philodendron: FIRST_SEED,
   })
   const [chosen, setChosen] = useState<PlantId>("pothos")
   const [scale, setScale] = useState(1)
@@ -134,7 +195,15 @@ export default function PlantLab() {
     if (chosen === "pothos") return <Pothos seed={seeds.pothos} stage={stage} scale={scale} />
     if (chosen === "peaceLily") return <PeaceLily seed={seeds.peaceLily} stage={stage} scale={scale} />
     if (chosen === "lotus") return <Lotus seed={seeds.lotus} stage={stage} className="w-full" />
-    return <Pilea seed={seeds.pilea} stage={stage} className="w-full" />
+    if (chosen === "snakePlant") return <SnakePlant seed={seeds.snakePlant} stage={stage} scale={scale} />
+    if (chosen === "kimberlyQueen")
+      return <KimberlyQueen seed={seeds.kimberlyQueen} stage={stage} scale={scale} />
+    if (chosen === "lily") return <Lily seed={seeds.lily} stage={stage} scale={scale} />
+    if (chosen === "rose") return <Rose seed={seeds.rose} stage={stage} scale={scale} />
+    if (chosen === "monstera") return <Monstera seed={seeds.monstera} stage={stage} scale={scale} />
+    if (chosen === "philodendron")
+      return <Philodendron seed={seeds.philodendron} stage={stage} scale={scale} />
+    return <Pilea seed={seeds.pilea} stage={stage} scale={scale} />
   }
 
   return (
@@ -218,14 +287,56 @@ export default function PlantLab() {
         </Section>
 
         <Section
-          title="Pilea: same seed, five sizes"
-          description="On the older engine, size still changes the leaf count."
+          title="Snake plant: different plants"
+          description="Eight seeds at the last stage. Pot, blade count, variegation, and cross-banding change."
         >
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-            {COMPARE_SIZES.map((sz) => (
-              <Card key={sz} className="flex flex-col items-center gap-2 !p-4">
-                <Pilea seed={seeds.pilea} size={sz} stage={4} className="w-full" />
-                <p className="text-caption">Size {sz}</p>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {GALLERY_SEEDS.map((s) => (
+              <Card key={s} className="flex flex-col items-center gap-2 !p-4">
+                <SnakePlant seed={s} stage={4} className="w-full" />
+                <p className="text-body-sm text-muted">Seed {s}</p>
+              </Card>
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          title="Lily: different plants"
+          description="Eight seeds at the last stage. Pot, leaf shapes, and the number and position of flowers change."
+        >
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {GALLERY_SEEDS.map((s) => (
+              <Card key={s} className="flex flex-col items-center gap-2 !p-4">
+                <Lily seed={s} stage={4} className="w-full" />
+                <p className="text-body-sm text-muted">Seed {s}</p>
+              </Card>
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          title="Rose: different plants"
+          description="Eight seeds at the last stage. Pot, leaf shapes, and the number and position of blooms change."
+        >
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {GALLERY_SEEDS.map((s) => (
+              <Card key={s} className="flex flex-col items-center gap-2 !p-4">
+                <Rose seed={s} stage={4} className="w-full" />
+                <p className="text-body-sm text-muted">Seed {s}</p>
+              </Card>
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          title="Pilea: different plants"
+          description="Eight seeds at the last stage. Pot, coin count and shapes, and the pups beside the plant change."
+        >
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {GALLERY_SEEDS.map((s) => (
+              <Card key={s} className="flex flex-col items-center gap-2 !p-4">
+                <Pilea seed={s} stage={4} className="w-full" />
+                <p className="text-body-sm text-muted">Seed {s}</p>
               </Card>
             ))}
           </div>
