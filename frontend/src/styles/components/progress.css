@@ -1,0 +1,50 @@
+.habit-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  width: 100%;
+}
+
+.habit-progress__caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  overflow-wrap: anywhere;
+}
+
+.habit-progress__count {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-bold);
+}
+
+.habit-progress__track {
+  height: var(--space-4);
+  overflow: hidden;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-secondary);
+}
+
+.habit-progress__track--segmented {
+  display: grid;
+  gap: 1px;
+  background: var(--color-surface);
+}
+
+.habit-progress__step {
+  min-width: 0;
+  background: var(--color-surface-secondary);
+}
+
+.habit-progress__step--complete,
+.habit-progress__fill {
+  background: var(--color-link);
+}
+
+.habit-progress__fill {
+  display: block;
+  height: 100%;
+}

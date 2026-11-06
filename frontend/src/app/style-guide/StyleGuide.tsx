@@ -16,7 +16,10 @@ import {
 import { Button, type ButtonVariant } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { Icon } from "@/components/Icon"
+import { NavBar } from "@/components/NavBar"
+import { ProgressBar } from "@/components/ProgressBar"
 import { useTheme } from "@/styles/ThemeProvider"
+import { PlantCardExamples } from "./PlantCardExamples"
 
 /* ------------------------------------------------------------------ */
 /* Showcase data                                                       */
@@ -122,6 +125,34 @@ function Section({
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
+
+function ProgressExamples() {
+  const [count, setCount] = useState(2)
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Card className="flex min-w-0 flex-col gap-6">
+        <ProgressBar label="Reading this week" count={count} target={3} />
+        <div className="flex flex-wrap gap-3">
+          <Button icon={Plus} onClick={() => setCount((value) => value + 1)}>
+            Log activity
+          </Button>
+          <Button variant="secondary" onClick={() => setCount(0)}>
+            Reset
+          </Button>
+        </div>
+      </Card>
+      <Card className="flex min-w-0 flex-col gap-6">
+        <ProgressBar label="Getting started" count={0} target={1} />
+        <ProgressBar label="Goal met" count={1} target={1} />
+        <ProgressBar label="Above the goal" count={4} target={3} />
+        <ProgressBar label="Ten-step goal" count={6} target={10} />
+        <ProgressBar label="Larger goals use a smooth bar" count={6} target={11} />
+        <ProgressBar label="A larger goal" count={27} target={50} />
+      </Card>
+    </div>
+  )
+}
 
 export default function StyleGuide() {
   const { theme, toggleTheme } = useTheme()
@@ -356,6 +387,46 @@ export default function StyleGuide() {
               </div>
             </Card>
           </div>
+        </Section>
+
+        <Section
+          index="07"
+          eyebrow="Navigation"
+          title="Navigation and page shell"
+          description="A top bar on wide screens and a bottom bar on phones. My Garden and Add Habit open the existing pages; the other destinations are not available yet. Both previews follow the theme switch above."
+        >
+          <div className="navbar-preview">
+            <NavBar currentPath="/" preview />
+            <div className="navbar-preview__content stack-sm">
+              <h3 className="text-h3">My Garden</h3>
+              <p className="text-body-sm text-secondary">Page content sits in a centered column beneath the desktop navigation.</p>
+            </div>
+          </div>
+          <div className="navbar-preview navbar-preview--mobile">
+            <div className="navbar-preview__content stack-sm">
+              <h3 className="text-h3">Create habit</h3>
+              <p className="text-body-sm text-secondary">On phones the navigation sits below the content, with room for the device’s safe area.</p>
+            </div>
+            <NavBar currentPath="/create" preview />
+          </div>
+        </Section>
+
+        <Section
+          index="08"
+          eyebrow="Habit progress"
+          title="Progress bars"
+          description="Goals up to 10 show one step per activity. Larger goals use a smooth bar to avoid crowded ticks. Logging beyond the goal keeps the bar full and shows the actual count. Use the theme switch above to compare both themes."
+        >
+          <ProgressExamples />
+        </Section>
+
+        <Section
+          index="08"
+          eyebrow="Garden"
+          title="Plant cards"
+          description="Each habit has a stable plant, a health label and current-period progress. Try every stage and health state, use the options with the keyboard, and switch themes above. All actions here use local demo data."
+        >
+          <PlantCardExamples />
         </Section>
 
         <footer className="flex items-center justify-between border-t border-[var(--color-border)] pt-6">

@@ -470,7 +470,6 @@ export default function CreateHabit() {
                 </div>
               </div>
             )}
-            <p className="field__hint">Example plant</p>
             <div className="plant-generate">
               <Button
                 variant="ghost"
