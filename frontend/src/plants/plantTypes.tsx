@@ -4,6 +4,13 @@ import type { ComponentType } from "react"
 import { Pothos } from "./pothos/Pothos"
 import { PeaceLily } from "./peaceLily"
 import { Pilea } from "./pilea"
+import { SnakePlant } from "./snakePlant"
+import { KimberlyQueen } from "./kimberlyQueen"
+import { Lily } from "./lily"
+import { Rose } from "./rose"
+import { Monstera } from "./monstera"
+import { Philodendron } from "./philodendron"
+import { Lotus } from "./lotus"
 
 /**
  * The plant types the create-habit form offers. This is the single source of
@@ -12,8 +19,7 @@ import { Pilea } from "./pilea"
  *
  * The `id` is sent to the backend as `plant_type` and the backend validates it,
  * so this list must match the backend's accepted list exactly. The source of
- * truth is `PLANT_TYPES` in backend/src/domain/plants.ts. Only the pothos,
- * peace lily and pilea are drawn today; the final list is issue #155.
+ * truth is `PLANT_TYPES` in backend/src/domain/plants.ts.
  */
 
 export interface PlantPreviewProps {
@@ -51,9 +57,51 @@ export const PLANT_TYPES = [
     blurb: "Round coin leaves on thin stalks.",
     Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Pilea seed={seed} stage={stage} />,
   },
+  {
+    id: "snake_plant",
+    label: "Snake plant",
+    blurb: "Tall, upright sword leaves with pale edges.",
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <SnakePlant seed={seed} stage={stage} stages={4} />,
+  },
+  {
+    id: "kimberly_queen",
+    label: "Kimberly Queen",
+    blurb: "Arching fern fronds in an upright crown.",
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <KimberlyQueen seed={seed} stage={stage} stages={4} />,
+  },
+  {
+    id: "lily",
+    label: "Lily",
+    blurb: "Fanned leaves with star-shaped blooms.",
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Lily seed={seed} stage={stage} stages={4} />,
+  },
+  {
+    id: "rose",
+    label: "Rose",
+    blurb: "Rounded leaves with layered red blooms.",
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Rose seed={seed} stage={stage} stages={4} />,
+  },
+  {
+    id: "monstera",
+    label: "Monstera",
+    blurb: "Big, glossy leaves with natural holes.",
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Monstera seed={seed} stage={stage} stages={4} />,
+  },
+  {
+    id: "philodendron",
+    label: "Philodendron",
+    blurb: "Broad paddle leaves on red stems.",
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Philodendron seed={seed} stage={stage} stages={4} />,
+  },
+  {
+    id: "lotus",
+    label: "Lotus",
+    blurb: "Floating pads and pink flowers on water.",
+    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Lotus seed={seed} stage={stage} />,
+  },
 ] as const satisfies readonly PlantType[]
 
-/** "pothos" | "peace_lily" | "pilea", derived from the list above. */
+/** Every plant id, derived from the list above. */
 export type PlantTypeId = (typeof PLANT_TYPES)[number]["id"]
 
 export const DEFAULT_PLANT_TYPE: PlantTypeId = PLANT_TYPES[0].id

@@ -203,7 +203,13 @@ export default function CreateHabit() {
   }
 
   return (
-    <main>
+    <main
+      style={{
+        maxWidth: "64rem",
+        margin: "0 auto",
+        padding: "var(--page-padding)",
+      }}
+    >
       <Button
         variant="ghost"
         size="sm"
@@ -464,7 +470,6 @@ export default function CreateHabit() {
                 </div>
               </div>
             )}
-            <p className="field__hint">Example plant</p>
             <div className="plant-generate">
               <Button
                 variant="ghost"

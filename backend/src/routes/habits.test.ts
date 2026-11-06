@@ -85,6 +85,17 @@ describe("createHabitBody", () => {
 
 describe("PLANT_TYPES", () => {
   it("lists the plants the app draws", () => {
-    expect(PLANT_TYPES).toEqual(["pothos", "peace_lily", "pilea"]);
+    expect(PLANT_TYPES).toEqual([
+      "pothos",
+      "peace_lily",
+      "pilea",
+      "snake_plant",
+      "kimberly_queen",
+      "lily",
+      "rose",
+      "monstera",
+      "philodendron",
+      "lotus",
+    ]);
   });
 });
