@@ -1,8 +1,6 @@
 "use client"
 
 import { useId, type ReactNode } from "react"
-import { VIEWBOX } from "../genome"
-import { Pot } from "../pot"
 import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
 
 /** Decimal places kept when writing coordinates into the SVG. */
@@ -32,13 +30,6 @@ export interface StemmedPlantProps<Spec> {
   plant: StagedPlant<Spec>
   /** 1 to the number of stages. Values outside that range are clamped. */
   stage: number
-  /**
-   * Size of the whole picture (plant and pot together) as a share of the
-   * parent's width. Purely visual: leaf and stem placement never changes.
-   */
-  scale?: number
-  /** Force a pot palette index instead of the plant's own. */
-  pot?: number
   stemStyle: StemStyle
   /** Opt-in: plant the blades in the soil (hidden stems, buried bases). Leave undefined for normal stems. */
   planting?: SoilPlanting
@@ -48,8 +39,6 @@ export interface StemmedPlantProps<Spec> {
   renderBehindLeaves?: (stage: PlantStage<Spec>, id: string) => ReactNode
   /** Extra drawing on top of the leaves, such as flower heads. `id` is unique to this plant. */
   renderAboveLeaves?: (stage: PlantStage<Spec>, id: string) => ReactNode
-  className?: string
-  title: string
 }
 
 /** The stage a caller asked for, kept inside the plant's range. */
@@ -60,35 +49,26 @@ export function stageOf<Spec>(plant: StagedPlant<Spec>, stage: number): PlantSta
 
 const fixed = (n: number) => n.toFixed(COORDINATE_DECIMALS)
 
-/** Draws a staged plant: pot, then every stem, then every leaf on top. */
+/**
+ * Draws a staged plant, without its pot: every stem, then every leaf on top.
+ * It is a group of shapes for the shared canvas. PottedPlant supplies the
+ * picture and the pot.
+ */
 export function StemmedPlant<Spec>({
   plant,
   stage,
-  scale,
-  pot,
   stemStyle,
   planting,
   renderLeaf,
   renderBehindLeaves,
   renderAboveLeaves,
-  className,
-  title,
 }: StemmedPlantProps<Spec>) {
   const id = useId().replace(/:/g, "")
   const current = stageOf(plant, stage)
   const soilClipId = id + "-soil"
 
   return (
-    <svg
-      viewBox={VIEWBOX}
-      overflow="visible"
-      role="img"
-      aria-label={title}
-      className={className}
-      style={scale === undefined ? undefined : { width: scale * 100 + "%" }}
-    >
-      <Pot palette={pot ?? plant.pot} band={plant.band} id={id} />
-
+    <g>
       {/* A planted species clips its buried bases away at the soil line. */}
       {planting && (
         <clipPath id={soilClipId} clipPathUnits="userSpaceOnUse">
@@ -140,6 +120,6 @@ export function StemmedPlant<Spec>({
       })}
 
       {renderAboveLeaves?.(current, id)}
-    </svg>
+    </g>
   )
 }

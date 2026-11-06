@@ -1,6 +1,8 @@
 "use client"
 
 import { useMemo } from "react"
+import { potLookFromSeed, type PotLook } from "../pot"
+import { PottedPlant } from "../PottedPlant"
 import { StemmedPlant, type StemStyle } from "../staged/StemmedPlant"
 import { MonsteraLeafShape } from "./MonsteraLeafShape"
 import { MONSTERA_CONFIG } from "./monsteraConfig"
@@ -21,8 +23,8 @@ export interface MonsteraProps {
    * parent's width. Purely visual: leaf and stem placement never changes.
    */
   scale?: number
-  /** Force a pot palette index instead of the seed's choice. */
-  pot?: number
+  /** The pot to put the plant in. Defaults to the look the seed gives. */
+  pot?: PotLook
   className?: string
   title?: string
 }
@@ -39,17 +41,15 @@ export function Monstera({
   const plant = useMemo(() => createMonstera(seed, { stages }), [seed, stages])
 
   return (
-    <StemmedPlant
-      plant={plant}
-      stage={stage}
-      scale={scale}
-      pot={pot}
-      stemStyle={MONSTERA_STEM}
-      renderLeaf={(leaf: PlacedMonsteraLeaf, clipId) => (
-        <MonsteraLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} fan={leaf.fan} />
-      )}
-      className={className}
-      title={title}
-    />
+    <PottedPlant look={pot ?? potLookFromSeed(seed)} scale={scale} className={className} title={title}>
+      <StemmedPlant
+        plant={plant}
+        stage={stage}
+        stemStyle={MONSTERA_STEM}
+        renderLeaf={(leaf: PlacedMonsteraLeaf, clipId) => (
+          <MonsteraLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} fan={leaf.fan} />
+        )}
+      />
+    </PottedPlant>
   )
 }

@@ -120,6 +120,8 @@ Plant types in the first version: **pothos**, **peace lily** and **pilea** — i
 
 **App shell.** A top navigation bar with My Garden, Dashboard, Badges, Settings and an Add Habit button. On small screens it becomes a bottom bar.
 
+`AppShell` is shared by routes in `app/(signed-in)/`, behind the layout's auth guard. It supplies centered content, a skip link and space for the mobile bar and safe area. `NavBar` marks the current route with `aria-current` and a thin outline around the item. My Garden (`/`) and Add Habit (`/create`) are available; Dashboard, Badges and Settings are disabled until those pages exist. Navigation switches to a top bar at 52rem; compact labels (Garden and Add) give the mobile items more room, with full accessible names. The style guide includes contained desktop and phone previews.
+
 **Alignment.** Page content is left aligned in a centered column with a maximum width. Only the login screen and empty states are center aligned, because they hold a single message.
 
 **Garden.** An auto-fill grid of plant cards. Each card is a pot, the plant, the habit name and a progress bar.
@@ -175,9 +177,14 @@ Built in `frontend/src/components/`, styled by the CSS in `frontend/src/styles/c
 | `Button` | variant (`primary`, `secondary`, `ghost`, `danger`), size (`sm`, `md`, `lg`), optional icon, full width |
 | `Card` | variant (`default` and others), padding from `--card-padding` |
 | `Icon` | lucide icons with a size and a tone, always `currentColor` |
+| `NavBar` / `AppShell` | responsive navigation, current route, disabled future destinations, shared signed-in layout and skip link |
+| `ProgressBar` | accessible label, activity count and target (1–50); segmented steps for targets up to 10, smooth fill above 10, capped fill and uncapped count |
+| `PlantCard` | habit name, plant type, seed, stage (1–4), health, period progress and callbacks for logging, details and editing |
 | Inputs | CSS classes in `inputs.css`; a React wrapper is not built yet |
 
-Still to build: Modal, ProgressBar with tick marks, NavBar, toast (for the undo after logging).
+Still to build: Modal, toast (for the undo after logging).
+
+`PlantCard` uses the shared plant registry, `Card`, `Icon`, `Button` and `ProgressBar`. Its native options disclosure opens with Enter or Space; Tab reaches the action buttons, Escape closes it and restores trigger focus, and clicking outside dismisses it. Clicking the plant or habit name calls View details. Health has an icon and label plus a muted-color illustration cue; dedicated drooping leaf drawings remain tracked by #152. The style guide's Plant cards section previews all three supported plants at every stage and health state using local demo actions. The card does not fetch data or compute habit statistics.
 
 **Rules**
 - Take variants and sizes from props, not from one-off class names.
@@ -243,7 +250,7 @@ frontend/src/
 **Open**
 - **Login and Garden pages** are placeholders and are not yet on the design system.
 - **Pilea** is on the older engine and does not follow the stage rules.
-- **Missing components:** Modal, ProgressBar with ticks, NavBar, toast, input wrappers.
+- **Missing components:** Modal, toast, input wrappers.
 - **Plants on dark surfaces.** Check the pot and leaf colors against the dark theme.
 - **Stage-up animation** is described in section 10 but not built.
 - **Health look.** The rules (backend-design.md section 8.8) describe a wilting plant; how the drawing changes for health is not decided yet.

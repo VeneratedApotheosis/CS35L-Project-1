@@ -1,6 +1,8 @@
 "use client"
 
 import { useMemo } from "react"
+import { potLookFromSeed, type PotLook } from "../pot"
+import { PottedPlant } from "../PottedPlant"
 import { StemmedPlant, type StemStyle } from "../staged/StemmedPlant"
 import { KimberlyFrondShape } from "./KimberlyFrondShape"
 import { KIMBERLY_QUEEN_CONFIG } from "./kimberlyQueenConfig"
@@ -21,8 +23,8 @@ export interface KimberlyQueenProps {
    * parent's width. Purely visual: frond and stem placement never changes.
    */
   scale?: number
-  /** Force a pot palette index instead of the seed's choice. */
-  pot?: number
+  /** The pot to put the plant in. Defaults to the look the seed gives. */
+  pot?: PotLook
   className?: string
   title?: string
 }
@@ -39,17 +41,15 @@ export function KimberlyQueen({
   const plant = useMemo(() => createKimberlyQueen(seed, { stages }), [seed, stages])
 
   return (
-    <StemmedPlant
-      plant={plant}
-      stage={stage}
-      scale={scale}
-      pot={pot}
-      stemStyle={KIMBERLY_STEM}
-      renderLeaf={(leaf: PlacedKimberlyFrond, clipId) => (
-        <KimberlyFrondShape spec={leaf.spec} length={leaf.length} clipId={clipId} fan={leaf.fan} />
-      )}
-      className={className}
-      title={title}
-    />
+    <PottedPlant look={pot ?? potLookFromSeed(seed)} scale={scale} className={className} title={title}>
+      <StemmedPlant
+        plant={plant}
+        stage={stage}
+        stemStyle={KIMBERLY_STEM}
+        renderLeaf={(leaf: PlacedKimberlyFrond, clipId) => (
+          <KimberlyFrondShape spec={leaf.spec} length={leaf.length} clipId={clipId} fan={leaf.fan} />
+        )}
+      />
+    </PottedPlant>
   )
 }

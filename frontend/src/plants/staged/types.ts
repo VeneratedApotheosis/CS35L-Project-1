@@ -1,4 +1,3 @@
-import type { PotBand } from "../pot"
 import type { Pt } from "../geometry"
 import type { Range, Rng } from "../rng"
 
@@ -232,9 +231,6 @@ export interface PlantStage<Spec> {
 
 export interface StagedPlant<Spec> {
   seed: number
-  /** Index into POT_PALETTES. */
-  pot: number
-  band: PotBand
   stages: PlantStage<Spec>[]
 }
 

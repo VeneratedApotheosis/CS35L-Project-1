@@ -1,6 +1,8 @@
 "use client"
 
 import { useMemo } from "react"
+import { potLookFromSeed, type PotLook } from "../pot"
+import { PottedPlant } from "../PottedPlant"
 import { StemmedPlant, type StemStyle } from "../staged/StemmedPlant"
 import { PhilodendronLeafShape } from "./PhilodendronLeafShape"
 import { PHILODENDRON_CONFIG } from "./philodendronConfig"
@@ -24,8 +26,8 @@ export interface PhilodendronProps {
    * parent's width. Purely visual: leaf and stem placement never changes.
    */
   scale?: number
-  /** Force a pot palette index instead of the seed's choice. */
-  pot?: number
+  /** The pot to put the plant in. Defaults to the look the seed gives. */
+  pot?: PotLook
   className?: string
   title?: string
 }
@@ -45,23 +47,21 @@ export function Philodendron({
   const red = useMemo(() => redLeafIndices(plant), [plant])
 
   return (
-    <StemmedPlant
-      plant={plant}
-      stage={stage}
-      scale={scale}
-      pot={pot}
-      stemStyle={PHILODENDRON_STEM}
-      renderLeaf={(leaf: PlacedPhilodendronLeaf, clipId) => (
-        <PhilodendronLeafShape
-          spec={leaf.spec}
-          length={leaf.length}
-          clipId={clipId}
-          fan={leaf.fan}
-          red={red.has(leaf.index)}
-        />
-      )}
-      className={className}
-      title={title}
-    />
+    <PottedPlant look={pot ?? potLookFromSeed(seed)} scale={scale} className={className} title={title}>
+      <StemmedPlant
+        plant={plant}
+        stage={stage}
+        stemStyle={PHILODENDRON_STEM}
+        renderLeaf={(leaf: PlacedPhilodendronLeaf, clipId) => (
+          <PhilodendronLeafShape
+            spec={leaf.spec}
+            length={leaf.length}
+            clipId={clipId}
+            fan={leaf.fan}
+            red={red.has(leaf.index)}
+          />
+        )}
+      />
+    </PottedPlant>
   )
 }

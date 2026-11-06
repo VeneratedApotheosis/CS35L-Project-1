@@ -1,8 +1,9 @@
 "use client"
 
-import { useId, useMemo } from "react"
-import { STAGES, VIEWBOX } from "../genome"
-import { Pot } from "../pot"
+import { useMemo } from "react"
+import { STAGES } from "../genome"
+import { potLookFromSeed, type PotLook } from "../pot"
+import { PottedPlant } from "../PottedPlant"
 import { clamp, lerp } from "../rng"
 import {
   createLotus,
@@ -282,37 +283,22 @@ function Flower({ flower, g }: { flower: LotusFlower; g: number }) {
   )
 }
 
-export interface LotusProps {
+export interface LotusDrawingProps {
   /** Any integer, such as a habit id. Same seed, same plant. */
   seed: number
   /** Continuous growth 0..1. Overrides `stage`. */
   growth?: number
   /** 1-4. */
   stage?: 1 | 2 | 3 | 4
-  /** Scales pot decoration only. Default 1. */
-  size?: number
-  /** Force a pot palette index instead of the seed's choice. */
-  pot?: number
-  className?: string
-  title?: string
 }
 
-export function Lotus({
-  seed,
-  growth,
-  stage = 4,
-  size = 1,
-  pot,
-  className,
-  title = "Lotus growing in water",
-}: LotusProps) {
-  const id = useId().replace(/:/g, "")
+/** The lotus alone, as shapes in the shared canvas: water, pads, leaves and flowers. Put it in a PottedPlant to give it a pot. */
+export function LotusDrawing({ seed, growth, stage = 4 }: LotusDrawingProps) {
   const genome = useMemo(() => createLotus(seed), [seed])
   const g = growth ?? STAGES[stage - 1].g
 
   return (
-    <svg viewBox={VIEWBOX} overflow="visible" role="img" aria-label={title} className={className}>
-      <Pot palette={pot ?? genome.pot} band={genome.band} size={size} id={id} />
+    <g>
       <Water />
       {genome.pads.map((pad, i) => (
         <Pad key={`pad${i}`} pad={pad} g={g} />
@@ -323,6 +309,32 @@ export function Lotus({
       {genome.flowers.map((flower, i) => (
         <Flower key={`flower${i}`} flower={flower} g={g} />
       ))}
-    </svg>
+    </g>
+  )
+}
+
+export interface LotusProps extends LotusDrawingProps {
+  /** Scales pot decoration only. Default 1. */
+  size?: number
+  /** The pot to put the plant in. Defaults to the look the seed gives. */
+  pot?: PotLook
+  className?: string
+  title?: string
+}
+
+/** A lotus in a pot of water. */
+export function Lotus({
+  seed,
+  growth,
+  stage,
+  size = 1,
+  pot,
+  className,
+  title = "Lotus growing in water",
+}: LotusProps) {
+  return (
+    <PottedPlant look={pot ?? potLookFromSeed(seed)} potSize={size} className={className} title={title}>
+      <LotusDrawing seed={seed} growth={growth} stage={stage} />
+    </PottedPlant>
   )
 }

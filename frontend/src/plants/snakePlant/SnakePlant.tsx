@@ -2,6 +2,8 @@
 
 import { useMemo } from "react"
 import { SOIL } from "../genome"
+import { potLookFromSeed, type PotLook } from "../pot"
+import { PottedPlant } from "../PottedPlant"
 import { StemmedPlant, type SoilPlanting, type StemStyle } from "../staged/StemmedPlant"
 import { SnakeLeafShape } from "./SnakeLeafShape"
 import { SNAKE_PLANT_CONFIG, SNAKE_PLANTING } from "./snakePlantConfig"
@@ -25,8 +27,8 @@ export interface SnakePlantProps {
    * parent's width. Purely visual: leaf and stem placement never changes.
    */
   scale?: number
-  /** Force a pot palette index instead of the seed's choice. */
-  pot?: number
+  /** The pot to put the plant in. Defaults to the look the seed gives. */
+  pot?: PotLook
   className?: string
   title?: string
 }
@@ -43,18 +45,16 @@ export function SnakePlant({
   const plant = useMemo(() => createSnakePlant(seed, { stages }), [seed, stages])
 
   return (
-    <StemmedPlant
-      plant={plant}
-      stage={stage}
-      scale={scale}
-      pot={pot}
-      stemStyle={SNAKE_STEM}
-      planting={SNAKE_PLANTING_STYLE}
-      renderLeaf={(leaf: PlacedSnakeLeaf, clipId) => (
-        <SnakeLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} />
-      )}
-      className={className}
-      title={title}
-    />
+    <PottedPlant look={pot ?? potLookFromSeed(seed)} scale={scale} className={className} title={title}>
+      <StemmedPlant
+        plant={plant}
+        stage={stage}
+        stemStyle={SNAKE_STEM}
+        planting={SNAKE_PLANTING_STYLE}
+        renderLeaf={(leaf: PlacedSnakeLeaf, clipId) => (
+          <SnakeLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} />
+        )}
+      />
+    </PottedPlant>
   )
 }

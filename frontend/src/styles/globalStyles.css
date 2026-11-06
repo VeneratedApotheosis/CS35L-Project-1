@@ -11,8 +11,12 @@
 
 @import "./components/buttons.css";
 @import "./components/inputs.css";
+@import "./components/forms.css";
 @import "./components/cards.css";
 @import "./components/icons.css";
+@import "./components/navigation.css";
+@import "./components/progress.css";
+@import "./components/plant-cards.css";
 
 * {
   box-sizing: border-box;
@@ -68,7 +72,7 @@ button:disabled {
   letter-spacing: -0.025em;
 }
 .text-h3 {
-  font-size: 1.7rem;
+  font-size: var(--font-size-h3);
   font-weight: var(--font-weight-bold);
   line-height: 1.25;
 }

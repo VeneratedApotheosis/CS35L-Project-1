@@ -13,13 +13,14 @@ This page is a guide to the folder and a record of what was built in it. For the
 | `peaceLily/` | The peace lily: wide pointed leaves, fanned outer leaves, and flowers that bud and bloom |
 | `snakePlant/` | The snake plant: tall, upright sword blades with pale-yellow margins and cross-banding (no flowers) |
 | `kimberlyQueen/` | The Kimberly Queen fern: an upright crown of tall, gently arching sword fronds, each a slim lance of small rounded pinnae alternating up a central rachis (no flowers) |
-| `dracaena/` | The Dracaena 'Golden Heart': a tall crown of long, strappy leaves that arch outward, each with a golden-yellow midrib stripe (no flowers) |
 | `lily/` | The lily: lance leaves that fan, with six-petalled stargazer flowers that bud and bloom |
 | `rose/` | The rose: rounded veined leaves with layered red blooms (rings of petals) that bud and bloom |
 | `monstera/` | The Monstera deliciosa: a few large, broad, glossy heart leaves with fenestrations (holes near the midrib and splits cut in from the edge; no flowers) |
-| `pilea/` | The pilea (Pilea peperomioides): round, flat coin leaves on thin stalks that radiate from the base, with baby "pups" beside the main plant (no flowers) |
 | `philodendron/` | The Philodendron 'Sun Red' / Rojo Congo: broad, rounded paddle leaves in an upright crown on thick reddish-maroon petioles; the newest, most upright leaves are deep burgundy-red, the older outer ones glossy green and arching (no flowers) |
-| `pot/` | The pot every plant sits in: palettes, shape, and the band (none or a stripe) |
+| `pilea/` | The pilea (Pilea peperomioides): round, flat coin leaves on thin stalks that radiate from the base, with baby "pups" beside the main plant (no flowers) |
+| `lotus/` | The lotus: a water plant with lily pads floating on the pot's water, and round leaves and pink flowers held above on thin stems |
+| `pot/` | The pot, separate from the plants: palettes, shape, the pot's look (`potLookFromSeed`) and the finish registry |
+| `PottedPlant.tsx` | The picture of a potted plant: the shared canvas, the pot, then a plant drawn on top |
 | `genome.ts`, `geometry.ts`, `rng.ts` | Shared helpers: canvas and soil point, geometry, seeded random numbers |
 
 ## How to change a plant
@@ -36,6 +37,8 @@ Every number is in a named config, never in the engine. The usual places:
 | Pot colors | `POT_PALETTES` in `pot/palettes.ts` |
 | How likely a pot is to have the stripe | `POT_BAND_ODDS` in `pot/palettes.ts` |
 | Pot shape and stripe | `POT_SHAPE` in `pot/shape.ts` |
+| How likely each pot finish is | `POT_FINISH_WEIGHTS` in `pot/style.ts` |
+| Add a pot finish | One file in `pot/finishes/`, one entry in `pot/finishes/index.ts`, one weight in `POT_FINISH_WEIGHTS` |
 
 A config is checked by `validateConfig` when a plant is built, and it lists everything that does not fit together.
 
@@ -69,19 +72,22 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
 
 ### The engine (`staged/`)
 
-- `StemmedPlant` has two optional drawing slots, `renderBehindLeaves` and `renderAboveLeaves`, so a plant can add its own parts. The peace lily uses them for flower stalks and heads.
+- `StemmedPlant` draws the plant only, with no pot and no `svg`. It has two optional drawing slots, `renderBehindLeaves` and `renderAboveLeaves`, so a plant can add its own parts. The peace lily uses them for flower stalks and heads.
 - The config has an optional `fan` section, and each placed leaf carries a `fan` value from -1 to 1. A species can use it to bend its outer leaves.
 - The leaf outline function takes an optional `fan` argument. The pothos ignores it.
 
 ### Pots (`pot/`)
 
-- The dotted band is gone. A pot now has either no band or the stripe.
-- Existing seeds keep their pot: a pot that was plain is still plain, and one that had a stripe or dots now shows the stripe. This is done by a weighted choice (`POT_BAND_ODDS`, none 1 part and stripe 2) using the same single random draw as before.
+- The pot was split from the plants. A plant draws only its stems, leaves and flowers. A pot has its own look, `PotLook` (palette, band, finish and a pattern seed), chosen by `potLookFromSeed(seed)` from a random stream made from the seed alone. Existing seeds gave a different plant and pot once when this changed.
+- `PottedPlant` puts a pot and a plant together. Each plant has a bare drawing (such as `PothosDrawing` and `LotusDrawing`) and a composed component (`Pothos`, `PeaceLily`, `SnakePlant`, and the rest) that takes an optional `pot` look and defaults to the one its seed gives. Any pot can go with any plant.
+- A **finish** is a way to fill the pot body, registered in `pot/finishes/index.ts`. The first is `solid`: the body color with the stripe if the look has one. To add one, write a file in `pot/finishes/`, add it to the registry, and add its weight to `POT_FINISH_WEIGHTS` in `pot/style.ts`.
+- The dotted band is gone. A pot has either no band or the stripe, chosen by weighted odds (`POT_BAND_ODDS`, none 1 part and stripe 2).
 
 ### The `/plants` page
 
-- One four-stages section with a plant picker (pothos, peace lily, pilea, and the rest) and a Grow another button that regrows the chosen plant. Each plant keeps its own seed.
-- A gallery of eight seeds for the pilea at the last stage.
+- One four-stages section with a plant picker (pothos, peace lily, pilea, snake plant, Kimberly Queen, lily, rose, monstera, philodendron and lotus) and a Grow another button that regrows the chosen plant. Each plant keeps its own seed, and arrows and a number box step through seeds.
+- A pot finish picker that overrides the finish of every pot on the page, and a row of consecutive seeds' pots to compare.
+- Galleries of eight seeds for the snake plant, lily, rose and pilea at the last stage.
 - Galleries of eight seeds for the pothos and the peace lily.
 
 ## Tests
@@ -91,12 +97,17 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
 | `pothos/pothosStages.test.tsx` | The stage rules for the pothos, over 60 seeds |
 | `staged/engine.test.ts` | The engine follows whatever config it is given |
 | `peaceLily/peaceLily.test.tsx` | Flower stages, flower height and spread, the leaf cap, the outer-leaf fan, and scale |
-| `dracaena/dracaena.test.tsx` | The stage rules for the dracaena: stage counts, containment, the outward arch, scaling, and scale-invariance |
+| `snakePlant/snakePlant.test.tsx` | The stage rules for the snake plant: stage counts, containment, roots, buried bases, scaling, and scale-invariance |
 | `kimberlyQueen/kimberlyQueen.test.tsx` | The stage rules for the Kimberly Queen fern: stage counts, containment, coverage, roots, frond identity, scaling, and scale-invariance |
+| `lily/lily.test.tsx` | Flower stages, the leaf cap and fan, and the stage rules for the lily |
+| `rose/rose.test.tsx` | Flower stages, the leaf cap, and the stage rules for the rose |
 | `monstera/monstera.test.tsx` | The stage rules for the monstera: stage counts, containment, coverage, roots, leaf identity, scaling, and scale-invariance |
 | `pilea/pilea.test.tsx` | The stage rules for the pilea: stage counts, containment, coverage, roots, leaf identity, scaling, scale-invariance, and that pups appear from stage 2 |
 | `philodendron/philodendron.test.tsx` | The stage rules for the philodendron: stage counts, containment, coverage, roots, leaf identity, scaling, scale-invariance, red stems, and that the newest upright leaves are burgundy |
-| `pot/pot.test.tsx` | Pot geometry, palettes, bands (including that no dots are drawn), and the band odds |
+| `pot/pot.test.tsx` | Pot geometry, `potLookFromSeed`, palettes, bands (including that no dots are drawn), and the band odds |
+| `pot/finishes/finishes.test.tsx` | The finish registry, its weights, the weighted pick and the solid finish |
+| `pot/finishes/addingAFinish.test.tsx` | A finish that exists only in the test is drawn inside the pot's clip |
+| `PottedPlant.test.tsx` | The split: plants carry no pot, the pot is drawn before the plant, any pot with any plant, and scale |
 
 ## Known gaps
 

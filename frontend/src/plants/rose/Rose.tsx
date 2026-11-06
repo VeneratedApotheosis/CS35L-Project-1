@@ -2,6 +2,8 @@
 
 import { useMemo } from "react"
 import { flowerState } from "../peaceLily/flowers"
+import { potLookFromSeed, type PotLook } from "../pot"
+import { PottedPlant } from "../PottedPlant"
 import { StemmedPlant, type StemStyle } from "../staged/StemmedPlant"
 import { FlowerHeads, FlowerStalks } from "./Flower"
 import { RoseLeafShape } from "./RoseLeafShape"
@@ -23,8 +25,8 @@ export interface RoseProps {
    * parent's width. Purely visual: leaf, stem and flower placement never changes.
    */
   scale?: number
-  /** Force a pot palette index instead of the seed's choice. */
-  pot?: number
+  /** The pot to put the plant in. Defaults to the look the seed gives. */
+  pot?: PotLook
   className?: string
   title?: string
 }
@@ -42,28 +44,26 @@ export function Rose({
   const anchor = ROSE_CONFIG.dome.anchor
 
   return (
-    <StemmedPlant
-      plant={plant}
-      stage={stage}
-      scale={scale}
-      pot={pot}
-      stemStyle={ROSE_STEM}
-      renderBehindLeaves={(current) =>
-        flowerState(current.stage, FLOWER_CONFIG) === "none" ? null : (
-          <FlowerStalks flowers={plant.flowers} scale={current.scale} anchor={anchor} />
-        )
-      }
-      renderLeaf={(leaf: PlacedRoseLeaf, clipId) => (
-        <RoseLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} />
-      )}
-      renderAboveLeaves={(current, id) => {
-        const state = flowerState(current.stage, FLOWER_CONFIG)
-        return state === "none" ? null : (
-          <FlowerHeads flowers={plant.flowers} state={state} scale={current.scale} anchor={anchor} id={id} />
-        )
-      }}
-      className={className}
-      title={title}
-    />
+    <PottedPlant look={pot ?? potLookFromSeed(seed)} scale={scale} className={className} title={title}>
+      <StemmedPlant
+        plant={plant}
+        stage={stage}
+        stemStyle={ROSE_STEM}
+        renderBehindLeaves={(current) =>
+          flowerState(current.stage, FLOWER_CONFIG) === "none" ? null : (
+            <FlowerStalks flowers={plant.flowers} scale={current.scale} anchor={anchor} />
+          )
+        }
+        renderLeaf={(leaf: PlacedRoseLeaf, clipId) => (
+          <RoseLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} />
+        )}
+        renderAboveLeaves={(current, id) => {
+          const state = flowerState(current.stage, FLOWER_CONFIG)
+          return state === "none" ? null : (
+            <FlowerHeads flowers={plant.flowers} state={state} scale={current.scale} anchor={anchor} id={id} />
+          )
+        }}
+      />
+    </PottedPlant>
   )
 }
