@@ -113,8 +113,9 @@ The plant is the main visual. Style reference: the icons in Animal Crossing: New
 - **Growth is a small number of stages**, each a larger copy of the full plant, not a continuous animation. Stage count and sizes are in the plant config, not in components.
 - **Size.** The `scale` prop resizes the whole picture (plant and pot). It never changes where leaves or stems sit.
 - **Containment.** Leaves stay above the soil line and within the pot's width (8px overhang allowed), so plants never overlap neighbors in the grid.
+- **The pot is drawn separately** (`PottedPlant`): the seed also picks the pot's look — palette, band and finish — so any pot can go with any plant.
 
-Plant types in the first version: **pothos**, **peace lily** and **pilea** — ids `pothos`, `peace_lily`, `pilea`. This is the final list (issue #155), and the backend validates `plant_type` against the same three. Pothos and peace lily use the stage engine; pilea is still on the older engine.
+Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant**, **Kimberly Queen**, **lily**, **rose**, **monstera**, **philodendron** and **lotus** — ids `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`. The create-habit picker, the previews and the backend's `plant_type` validation all read the same list (`frontend/src/plants/plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`). Every plant except the lotus is built on the shared stage engine; the lotus is a water plant with its own drawing.
 
 ## 7. Layout
 
@@ -245,11 +246,11 @@ frontend/src/
 **Done**
 - Design tokens, light and dark themes, base components (`Button`, `Card`, `Icon`) and the style guide page.
 - Supabase auth with protected routes.
-- Procedural plants and pots, and the `/plants` prototype page.
+- Procedural plants and pots (ten plant types on the shared stage engine, plus the water lotus), and the `/plants` prototype page.
+- Create-habit form with the full plant picker and a live, seeded preview.
 
 **Open**
 - **Login and Garden pages** are placeholders and are not yet on the design system.
-- **Pilea** is on the older engine and does not follow the stage rules.
 - **Missing components:** Modal, toast, input wrappers.
 - **Plants on dark surfaces.** Check the pot and leaf colors against the dark theme.
 - **Stage-up animation** is described in section 10 but not built.
