@@ -3,7 +3,7 @@
 import type { ComponentType } from "react"
 import { Pothos } from "./pothos/Pothos"
 import { PeaceLily } from "./peaceLily"
-import { Pilea } from "./Pilea"
+import { Pilea } from "./pilea"
 
 /**
  * The plant types the create-habit form offers. This is the single source of

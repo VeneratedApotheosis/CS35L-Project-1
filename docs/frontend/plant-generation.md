@@ -10,7 +10,14 @@ Status:
 | --- | --- | --- |
 | Pothos | Stage engine | Current |
 | Peace lily | Stage engine, plus its own flowers | Current |
-| Pilea peperomioides | Older continuous-growth engine | Works; to be ported to the stage engine |
+| Snake plant | Stage engine (leaf-only) | Current |
+| Kimberly Queen fern | Stage engine (leaf-only, arching feathery fronds) | Current |
+| Dracaena 'Golden Heart' | Stage engine (leaf-only, arching leaves) | Current |
+| Lily | Stage engine, reuses the peace lily's flower engine | Current |
+| Rose | Stage engine, reuses the peace lily's flower engine | Current |
+| Monstera deliciosa | Stage engine (leaf-only, fenestrated leaves) | Current |
+| Pilea peperomioides | Stage engine (leaf-only, round coins, with pups) | Current |
+| Philodendron 'Sun Red' / Rojo Congo | Stage engine (leaf-only, broad paddles, red stems, burgundy newest leaves) | Current |
 
 ---
 
@@ -24,7 +31,7 @@ Status:
 - [3. Stage engine](#3-stage-engine)
 - [4. Pothos](#4-pothos)
 - [5. Peace lily](#5-peace-lily)
-- [6. Pilea peperomioides (older engine)](#6-pilea-peperomioides-older-engine)
+- [6. Pilea peperomioides](#6-pilea-peperomioides)
 - [7. Tests](#7-tests)
 - [8. Open items](#8-open-items)
 - [9. History](#9-history)
@@ -75,6 +82,8 @@ plants/
   Pilea.tsx, pileaGenome.ts  the pilea (older engine): PileaDrawing and Pilea
 ```
 ### Adding a plant that grows on stems
+
+For a precise, copy-pasteable runbook (every file, every edit, the tests, and the optional fan / flowers / soil planting), see [creating-a-plant.md](creating-a-plant.md). The outline below is the short version.
 
 1. Write a **config** (copy `pothos/pothosConfig.ts` and change numbers). `validateConfig` runs automatically and says what does not fit together.
 2. Write a **leaf shape model**: how to draw a random leaf, its outline as a polygon, and where its middle is. The engine only needs the outline to measure coverage and containment.
@@ -269,9 +278,30 @@ Code: `frontend/src/plants/peaceLily/`. It uses the stage engine for its leaves,
 - Flower stalks are 2.4 wide at every stage, like the leaf stems.
 - **Stages:** none in stages 1 and 2, a closed green and cream **bud** in stage 3 (`budStage`) and an open white **bloom** in stage 4 (`bloomStage`). The same flowers bud and bloom, in the same places. Later stages stay in bloom. A plant with fewer stages never reaches them.
 
-## 6. Pilea peperomioides (older engine)
+## 6. Pilea peperomioides
 
-Code: `pileaGenome.ts` and `Pilea.tsx` (`PileaDrawing` is the bare plant, `Pilea` puts it in a pot and gives the pot its size as the decoration scale). Round coin leaves on thin stalks spiral out from a short stem. Old leaves are low and large; new ones are small and upright. One to two pups (baby plants) appear beside the main plant. It still uses a continuous growth value with four anchor stages and a `size` parameter that changes leaf count. It does not yet follow the leaf cap, containment or scale rules above and is due to be ported.
+Code: `frontend/src/plants/pilea/`. It uses the stage engine for its leaves, so it follows every rule in [Design rules](#design-rules). Its own numbers are in `pileaConfig.ts`.
+
+**Differences from the pothos**
+
+| Setting | Pothos | Pilea |
+| --- | --- | --- |
+| Leaf shape | Heart | Round, flat coin held face-on (`pileaLeaf.ts`), a near-circular blade whose stalk meets its bottom edge |
+| Leaf length | 16% to 55% of the dome height | 32% to 58% (a coin's length is its full height) |
+| Dome | 56 by 101.4 | 52 by 80 (a broad, rounded mound) |
+| Leaves | 2 to 6 | 2 to 6 (2, 3, 5, 6 over four stages) |
+| Stems | 16% to 62%, 34 degrees of lean | 24% to 52%, 30 degrees of lean (thin stalks that radiate from the base) |
+| Leaf turn | 10 to 28 degrees | 0 to 12 degrees, with up to 14 degrees of random tilt (coins sit every which way) |
+| Fan | Off | Off: the coins are held face-on |
+| Extra parts | None | Pups |
+
+**Look.** Each coin is a flat green blade with a lighter right half, fine veins radiating from a central dimple (the peltate attachment), and one soft white highlight. The drawing is in `PileaLeafShape.tsx` and the colors in `pileaLeaf.ts` (`PILEA_LEAF_PALETTE`). Because a coin is near-circular, its outer curve is sampled from the same control points that are drawn, so the engine measures exactly what is shown.
+
+**Pups** are the pilea's own baby plants, computed in `pileaStages.ts` (`pileaPups`):
+
+- A plant has 1 to 2 pup clusters, each a small group of 2 to 3 coins on short stalks, set at the soil beside the main plant (`PILEA_PUPS`).
+- Pups are built once at full size from their own random streams, so adding them never moves the main coins. They are drawn through the engine's `renderBehindLeaves` slot and scaled about the soil point with each stage, so they grow with the plant.
+- **Stages:** none in stage 1; pups appear from stage 2 (`PILEA_PUPS.fromStage`) and grow with later stages.
 
 ## 7. Tests
 
@@ -293,6 +323,19 @@ Over 60 seeds unless noted.
 - scale changes nothing but the picture size,
 - a second plant with different limits follows its own config.
 
+**Pilea** (`pilea/pilea.test.tsx`):
+
+- stage counts (2, 3, 5, 6) and never more than 6 coins for any number of stages,
+- exactly the requested number of stages, and deterministic output,
+- last stage at least 3.6 times the first in width and height, with longer coins,
+- the same width-to-height shape at every stage (even growth),
+- every coin a stage shares with the last stage is that coin scaled about the soil point,
+- every coin outline above the soil and within the side limits,
+- canopy coverage at least 0.15, and every stem rooted between 25% and 75% across the pot,
+- coin identity and shape unchanged across stages,
+- pups appear from stage 2 and never in stage 1, and there are no flowers,
+- scale changes nothing but the picture size.
+
 **Pot and the split** (`pot/pot.test.tsx`, `pot/finishes/*.test.tsx`, `PottedPlant.test.tsx`):
 
 - `potLookFromSeed` is deterministic, picks a real palette, band and finish, uses every palette and band across seeds, and its bands follow the odds,
@@ -303,6 +346,7 @@ Over 60 seeds unless noted.
 - plant results have no pot, band or finish, and a bare plant drawing has no pot and no `svg`,
 - `PottedPlant` draws the pot before the plant, draws the look it is given, and puts any pot with any plant,
 - the same seed gives the same markup twice, and `scale` changes only the picture width.
+
 **Peace lily** (`peaceLily/peaceLily.test.tsx`):
 
 - flower stages: none, none, bud, bloom, and the right markup for each,
@@ -321,7 +365,6 @@ Over 60 seeds unless noted.
 
 - **Stage count.** The backend's growth rules ([8.7](../backend/design.md#87-plant-growth)) have **five** stages (0 to 24%, 25 to 49%, 50 to 74%, 75 to 99%, 100%). The plants default to four. Either map five onto four, or set the default to five and decide when the peace lily blooms.
 - **Health.** The backend has three health states (healthy, slightly wilted, wilted). No plant has a wilted look yet.
-- **Pilea** is still on the older engine.
 - **Flower config** is not covered by `validateConfig`. Only the leaf config is checked; the flower numbers are protected by the tests.
 - **Dark theme.** Pot and leaf colors are not yet checked on dark surfaces.
 
@@ -335,4 +378,5 @@ Over 60 seeds unless noted.
 - The peace lily's flowers first started too high in their dome and were shortened to fit, which made them small. They now start lower, and a head that does not fit is lowered before it is shortened.
 - The peace lily gained up to 8 leaves (from 6), outer leaves that fan outward, flower tops placed between 60% and 120% of the plant's maximum height, and flowers kept within 30 degrees of the center. Placing a head by its middle was needed for the spread: a first version let a leaning head drift past the limit, and the retry lowered it until it sank below the soil.
 - The pot's dotted band was removed. Pots that would have had dots now get the stripe, and the choice keeps every plain pot plain.
+- The pilea was ported from the older continuous-growth engine onto the stage engine. Its spiralling coins became round coins on stems that radiate from the base, within the leaf cap, containment and scale rules; its signature pups were kept as an extra part that grows with the plant. The old `Pilea.tsx` and `pileaGenome.ts`, and the continuous-growth helpers they used, were removed.
 - The pot was split from the plants (issue #175). Plants used to pick their own pot from their random stream. Now a plant draws only itself and the pot has its own look, stream and finish registry, so every existing seed gives a different plant and pot once. Nothing stores a seed yet, so this was accepted.
