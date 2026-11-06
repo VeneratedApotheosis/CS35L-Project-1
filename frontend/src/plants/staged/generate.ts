@@ -1,6 +1,5 @@
 import { placeOutline } from "../geometry"
 import type { Pt } from "../geometry"
-import { pickPotStyle } from "../pot"
 import { clamp, lerp, mulberry32 } from "../rng"
 import { validateConfig } from "./config"
 import { measureCoverage, type CoverageResult } from "./coverage"
@@ -113,7 +112,7 @@ function buildStage<Spec>(
 const cache = new Map<string, StagedPlant<unknown>>()
 
 /**
- * Build a plant for a seed: a pot, plus every stage from sprout to full size.
+ * Build a plant for a seed: every stage from sprout to full size, without its pot.
  * Every stage is the full plant scaled about the soil point, showing only the
  * leaves that stage has. The same seed, species and stage count always give
  * the same plant. Results are cached, so treat them as read-only.
@@ -131,9 +130,8 @@ export function createStagedPlant<Spec>(
   const hit = cache.get(key)
   if (hit) return hit as StagedPlant<Spec>
 
-  // The plant's own random stream picks the pot, then the two sequence phases.
+  // The plant's own random stream starts with the two sequence phases. The pot has its own stream.
   const rng = mulberry32(seed)
-  const { pot, band } = pickPotStyle(rng)
   const phases = { roots: rng(), layers: rng() }
 
   const counts = leafCountLadder(stageCount, config.stages)
@@ -145,7 +143,7 @@ export function createStagedPlant<Spec>(
     buildStage(genes, k + 1, leafCount, scales[k], leafShare, species),
   )
 
-  const plant: StagedPlant<Spec> = { seed, pot, band, stages }
+  const plant: StagedPlant<Spec> = { seed, stages }
   cache.set(key, plant)
   return plant
 }
@@ -156,5 +154,5 @@ export function leafOutline<Spec>(
   species: StagedPlantSpecies<Spec>,
   perSegment: number = species.config.search.fitSegments,
 ): Pt[] {
-  return placeOutline(species.leaf.outline(leaf.spec, leaf.length, perSegment), { x: leaf.baseX, y: leaf.baseY }, leaf.angle)
+  return placeOutline(species.leaf.outline(leaf.spec, leaf.length, perSegment, leaf.fan), { x: leaf.baseX, y: leaf.baseY }, leaf.angle)
 }

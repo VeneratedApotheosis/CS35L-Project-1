@@ -6,7 +6,7 @@ export interface PotPalette {
   rim: string
   /** The shaded side of the body. */
   shade: string
-  /** Stripe and dots. */
+  /** The stripe. */
   band: string
 }
 
@@ -20,7 +20,13 @@ export const POT_PALETTES: readonly PotPalette[] = [
 ]
 
 /** The decorations a pot can be drawn with. */
-export type PotBand = "none" | "stripe" | "dots"
+export type PotBand = "none" | "stripe"
 
 /** The decorations a plant can be given. Add a name here once the pot can draw it. */
-export const POT_BANDS: readonly PotBand[] = ["none", "stripe", "dots"]
+export const POT_BANDS: readonly PotBand[] = ["none", "stripe"]
+
+/**
+ * How likely each band is, as parts of the total. Stripe is twice as likely as
+ * none. (Pots used to have a dotted band as well; those now get the stripe.)
+ */
+export const POT_BAND_ODDS: Record<PotBand, number> = { none: 1, stripe: 2 }

@@ -11,6 +11,7 @@
   --font-size-2xl: 1.7rem;    /* ~27px */
   --font-size-3xl: 2.3rem;    /* ~37px */
   --font-size-4xl: 3.5rem;    /* 56px */
+  --font-size-h3: 1.25rem;    /* heading 3 / form labels */
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;

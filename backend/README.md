@@ -45,6 +45,15 @@ npm run format:check
 
 Use `npm run format` to format source files.
 
+## Tests
+
+```bash
+npm test
+npm run test:watch
+```
+
+Tests use vitest and a fake Supabase client. They need no `.env` and make no network calls.
+
 ## Dependency audit
 
 At setup, `npm audit --omit=dev` reported no vulnerabilities.

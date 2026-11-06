@@ -1,4 +1,5 @@
 export { Pot } from "./Pot"
-export { POT_BANDS, POT_PALETTES, type PotBand, type PotPalette } from "./palettes"
-export { POT_RIM, POT_SHAPE, POT_SOIL } from "./shape"
-export { pickPotStyle, type PotStyle } from "./style"
+export { POT_FINISH_IDS, getFinish, type PotFinish, type PotFinishId, type PotFinishInput } from "./finishes"
+export { POT_BANDS, POT_BAND_ODDS, POT_PALETTES, type PotBand, type PotPalette } from "./palettes"
+export { POT_RIM, POT_SHAPE, POT_SOIL, type PotBody } from "./shape"
+export { POT_FINISH_WEIGHTS, pickPotBand, pickPotFinish, potLookFromSeed, type PotLook } from "./style"

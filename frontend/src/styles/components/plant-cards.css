@@ -1,0 +1,138 @@
+.plant-card {
+  min-width: 0;
+}
+
+.plant-card__surface {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: 100%;
+  padding: var(--space-5);
+  padding-bottom: calc(var(--space-5) + var(--space-2));
+}
+
+.plant-card__surface > .habit-progress {
+  /* Transfer a little space from above the progress bar to the card's foot. */
+  margin-top: calc(-1 * var(--space-2));
+}
+
+.plant-card__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.plant-card__health {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+}
+
+.plant-card__options {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.plant-card__trigger {
+  list-style: none;
+  min-width: var(--plant-card-touch-target);
+  min-height: var(--plant-card-touch-target);
+  padding: var(--space-2);
+}
+
+.plant-card__trigger::-webkit-details-marker {
+  display: none;
+}
+
+.plant-card__popover {
+  position: absolute;
+  inset: calc(100% + var(--space-1)) 0 auto auto;
+  z-index: var(--z-dropdown);
+  width: max-content;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.plant-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plant-card__open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--plant-card-touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.plant-card__open:focus-visible {
+  outline: var(--space-1) solid var(--color-focus);
+  outline-offset: var(--space-1);
+}
+
+.plant-card__name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-lg);
+}
+
+.plant-card__illustration {
+  display: block;
+  width: 100%;
+  max-width: var(--plant-card-art-width);
+  /* Use the SVG's headroom and leave more breathing room above the habit name.
+     Preserve the layout footprint so card heights and progress bars stay aligned. */
+  transform: translateY(calc(-1 * var(--space-6)));
+}
+
+.plant-card__illustration > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* A restrained health cue until the dedicated wilted drawings in #152 exist. */
+.plant-card__illustration[data-health="slightly_wilted"] {
+  filter: saturate(0.8);
+}
+
+.plant-card__illustration[data-health="wilted"] {
+  filter: saturate(0.55);
+}
+
+.plant-card-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 30rem) {
+  .plant-card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(var(--plant-card-min-width), 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plant-card .button {
+    transition: none;
+    transform: none;
+  }
+
+  .plant-card .button:hover:not(:disabled) {
+    transform: none;
+  }
+}
