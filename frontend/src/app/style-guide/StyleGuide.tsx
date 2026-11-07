@@ -14,6 +14,8 @@ import {
   Trash2,
 } from "lucide-react"
 import { Button, type ButtonVariant } from "@/components/Button"
+import { Modal } from "@/components/Modal"
+import { Toast, type ToastProps } from "@/components/Toast"
 import { Card } from "@/components/Card"
 import { Icon } from "@/components/Icon"
 import { NavBar } from "@/components/NavBar"
@@ -151,6 +153,43 @@ function ProgressExamples() {
         <ProgressBar label="A larger goal" count={27} target={50} />
       </Card>
     </div>
+  )
+}
+
+function FeedbackExamples() {
+  const [modalOpen, setModalOpen] = useState(false)
+  const [count, setCount] = useState(0)
+  const [notification, setNotification] = useState<(Pick<ToastProps, "message" | "variant" | "action"> & { id: number }) | null>(null)
+
+  function logActivity() {
+    setCount((value) => value + 1)
+    setNotification({
+      id: Date.now(), message: "Activity logged.",
+      action: { label: "Undo", onClick: () => setCount((value) => value - 1) },
+    })
+  }
+
+  return (
+    <Card className="stack-md">
+      <p className="text-body">Demo activities logged: {count}</p>
+      <div className="flex flex-wrap gap-3">
+        <Button onClick={() => setModalOpen(true)}>Open confirmation</Button>
+        <Button variant="secondary" onClick={logActivity}>Log demo activity</Button>
+        <Button variant="ghost" onClick={() => setNotification({ id: Date.now(), variant: "error", message: "Could not save your habit. Please try again." })}>Show error</Button>
+      </div>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Create this habit?"
+        description="This is a preview. Confirming only shows a notification.">
+        <div className="flex flex-wrap justify-end gap-3">
+          <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
+          <Button onClick={() => {
+            setModalOpen(false)
+            setNotification({ id: Date.now(), message: "Habit created (demo)." })
+          }}>Create habit</Button>
+        </div>
+      </Modal>
+      {notification && <Toast key={notification.id} message={notification.message} variant={notification.variant}
+        action={notification.action} onDismiss={() => setNotification(null)} />}
+    </Card>
   )
 }
 
@@ -427,6 +466,15 @@ export default function StyleGuide() {
           description="Each habit has a stable plant, a health label and current-period progress. Try every stage and health state, use the options with the keyboard, and switch themes above. All actions here use local demo data."
         >
           <PlantCardExamples />
+        </Section>
+
+        <Section
+          index="10"
+          eyebrow="Feedback"
+          title="Modal and toast"
+          description="Try the confirmation with Tab and Escape, then log an activity and undo it within five seconds. Both components follow the theme switch and reduced-motion preference."
+        >
+          <FeedbackExamples />
         </Section>
 
         <footer className="flex items-center justify-between border-t border-[var(--color-border)] pt-6">
