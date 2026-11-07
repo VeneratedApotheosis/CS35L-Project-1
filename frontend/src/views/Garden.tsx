@@ -1,6 +1,6 @@
 "use client"
 
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
@@ -8,7 +8,7 @@ import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { durationPhrase, formatDate, periodPhrase } from "@/lib/goal"
 import { habitKeys, listHabits } from "@/lib/habits"
-import { dateInTimezone, getProfile } from "@/lib/profile"
+import { useProfile } from "@/lib/useProfile"
 
 /** Shared saved-habit list for the Garden and the basic dashboard. */
 export default function Garden({ title = "My Garden" }: { title?: string }) {
@@ -24,17 +24,7 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
     enabled: Boolean(user),
     retry: false,
   })
-  const profile = useQuery({
-    queryKey: ["profile", user?.id],
-    queryFn: async () => {
-      const profile = await getProfile()
-      return { ...profile, today: dateInTimezone(profile.timezone) }
-    },
-    enabled: Boolean(user),
-    retry: false,
-    // Re-evaluate today's date while the garden stays open, including midnight.
-    refetchInterval: 60_000,
-  })
+  const profile = useProfile()
 
   const error = habits.error ?? profile.error
   const unauthorized = error instanceof ApiError && error.status === 401
