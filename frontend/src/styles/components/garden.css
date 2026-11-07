@@ -11,6 +11,18 @@
   overflow-wrap: anywhere;
 }
 
+.garden-link {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: var(--space-1);
+}
+
+.garden-link:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
 .garden-placeholder {
   height: var(--space-4);
   border-radius: var(--radius-sm);

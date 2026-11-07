@@ -92,7 +92,9 @@ export default function Garden() {
             {rows.map((habit) => (
               <li key={habit.id}>
                 <Card className="stack-sm">
-                  <h2 className="text-h3 garden-name">{habit.name}</h2>
+                  <h2 className="text-h3 garden-name">
+                    <Link className="garden-link" href={`/habits/${habit.id}`}>{habit.name}</Link>
+                  </h2>
                   <p className="text-body text-secondary">
                     {habit.target_count} {habit.target_count === 1 ? "time" : "times"}{" "}
                     {periodPhrase(habit.interval_count, habit.interval_unit)}
