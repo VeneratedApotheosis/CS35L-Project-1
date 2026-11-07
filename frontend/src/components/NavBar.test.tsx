@@ -10,10 +10,9 @@ describe("NavBar", () => {
       .toContain('href="/"')
     expect(markup).toContain('href="/create"')
     expect(markup).toContain('href="/dashboard"')
-    for (const route of ["badges", "settings"]) {
-      expect(markup).not.toContain(`href="/${route}"`)
-    }
-    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(2)
+    expect(markup).toContain('href="/settings"')
+    expect(markup).not.toContain('href="/badges"')
+    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(1)
   })
 
   it("marks only Add Habit as current on the creation route", () => {
@@ -33,5 +32,12 @@ describe("NavBar", () => {
     expect(markup.match(/aria-current="page"/g)).toHaveLength(1)
     expect(markup.match(/<a[^>]*>/g)?.find((tag) => tag.includes('aria-current="page"')))
       .toContain('href="/dashboard"')
+  })
+
+  it("marks only Settings current on the settings route", () => {
+    const markup = renderToStaticMarkup(<NavBar currentPath="/settings" />)
+    expect(markup.match(/aria-current="page"/g)).toHaveLength(1)
+    expect(markup.match(/<a[^>]*>/g)?.find((tag) => tag.includes('aria-current="page"')))
+      .toContain('href="/settings"')
   })
 })

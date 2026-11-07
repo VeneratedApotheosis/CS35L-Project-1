@@ -121,7 +121,7 @@ Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant
 
 **App shell.** A top navigation bar with My Garden, Dashboard, Badges, Settings and an Add Habit button. On small screens it becomes a bottom bar.
 
-`AppShell` is shared by routes in `app/(signed-in)/`, behind the layout's auth guard. It supplies centered content, a skip link and space for the mobile bar and safe area. `NavBar` marks the current route with `aria-current` and a thin outline around the item. My Garden (`/`), the basic Dashboard (`/dashboard`), and Add Habit (`/create`) are available; Badges and Settings are disabled until those pages exist. Navigation switches to a top bar at 52rem; compact labels (Garden and Add) give the mobile items more room, with full accessible names. The style guide includes contained desktop and phone previews.
+`AppShell` is shared by routes in `app/(signed-in)/`, behind the layout's auth guard. It supplies centered content, a skip link and space for the mobile bar and safe area. `NavBar` marks the current route with `aria-current` and a thin outline around the item. My Garden (`/`), the basic Dashboard (`/dashboard`), Settings (`/settings`, currently timezone only), and Add Habit (`/create`) are available; Badges is disabled until its page exists. Navigation switches to a top bar at 52rem; compact labels (Garden and Add) give the mobile items more room, with full accessible names. The style guide includes contained desktop and phone previews.
 
 **Alignment.** Page content is left aligned in a centered column with a maximum width. Only the login screen and empty states are center aligned, because they hold a single message.
 

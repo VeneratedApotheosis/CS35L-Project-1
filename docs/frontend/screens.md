@@ -124,6 +124,12 @@ A summary of activity across all active habits.
 
 ### 7 Settings
 
+The current `/settings` page implements the timezone field and saves through
+`PATCH /me`. The other settings below are planned. Signed-in pages initialize
+an empty profile timezone from the browser (UTC if detection is unavailable)
+before allowing habit actions. An existing saved timezone is never replaced
+automatically. Profile setup failures show a retry action.
+
 - Username, email, and profile picture (from Google). Display name is editable, and saved through the backend.
 - **Timezone:** defaults to the browser's on first sign-in, and can be changed here.
 - Light/dark mode toggle, saved in the browser.

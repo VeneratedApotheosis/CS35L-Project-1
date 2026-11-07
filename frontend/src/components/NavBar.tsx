@@ -6,7 +6,7 @@ const destinations = [
   { label: "My Garden", href: "/", icon: Sprout, available: true },
   { label: "Dashboard", href: "/dashboard", icon: ChartNoAxesCombined, available: true },
   { label: "Badges", href: "/badges", icon: Flower2, available: false },
-  { label: "Settings", href: "/settings", icon: Settings, available: false },
+  { label: "Settings", href: "/settings", icon: Settings, available: true },
 ] as const
 
 export function NavBar({ currentPath, preview = false }: {
