@@ -55,6 +55,11 @@ All active habits shown as potted plants in a grid.
 
 ### 3 Overall Dashboard
 
+The current basic `/dashboard` page shares the Garden's saved-habit list,
+including goals, future-start labels, and habit detail links. Successful habit
+creation redirects here (#170). The activity summary below is planned for the
+logging and visualization work.
+
 A summary of activity across all active habits.
 
 - **Active habits:** count of habits currently tracked.
@@ -107,7 +112,7 @@ A summary of activity across all active habits.
 - **Goal preview:** a sentence summarizing the setup, e.g., "Go to the gym 3 times every week for 4 weeks."
 - **Confirm step:** before saving, a summary of the goal that says it can't be edited later. To fix a mistake, delete the habit and create it again.
 - **Validation errors** are shown inline. If saving fails, an error message is shown.
-- **After creation:** redirect to the Garden until the Details page exists, then to the new habit's Details page. **Cancel** returns to the Garden.
+- **After creation:** redirect to `/dashboard`, where the newly saved habit appears. **Cancel** returns to the Garden.
 
 ### 6 Badges and Habit History
 

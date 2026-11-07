@@ -1,4 +1,4 @@
-# Garden checks: issues #112, #113 and #114
+# Garden and dashboard checks: issues #112, #113, #114 and #170
 
 Run the backend on port 3000 and the frontend on port 5173 using the root README.
 Open http://localhost:5173 and sign in. These checks use the real database;
@@ -7,8 +7,10 @@ the automated frontend tests use mocked HTTP responses instead.
 1. **Empty:** sign in with a test account that has no habits. The Garden shows
    "No habits yet" and a "Create your first habit" link to `/create`.
 2. **Create and return:** create a habit such as "Read", 3 times every week for
-   4 weeks. On return to the Garden, its name and goal appear without refreshing.
-   Refresh the browser and confirm it is still listed.
+   4 weeks. After saving, the URL is `/dashboard`, the heading is "Dashboard",
+   and its name and goal appear without refreshing. Refresh the browser and
+   confirm it is still listed. Both Dashboard and My Garden in the navigation
+   show the saved habits, and the current page's link is marked as selected.
 3. **Future start:** create a habit starting tomorrow in the profile's timezone.
    It shows "Not started yet" and its start date. A habit starting today has no
    such label. An unset profile timezone uses UTC, matching the backend.
@@ -34,6 +36,9 @@ the automated frontend tests use mocked HTTP responses instead.
     a different test account and open that URL. It shows "Habit not found"
     without the original name or any other habit details. A nonexistent UUID
     produces the same message. Signed-out visitors are redirected to login.
+11. **Creation failure:** stop the backend before confirming a new habit.
+    Saving shows an error and leaves the form filled in; it must not redirect
+    to `/dashboard`. Restart the backend and retry saving.
 
 Automated checks from `frontend/`:
 
