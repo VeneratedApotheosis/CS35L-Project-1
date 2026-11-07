@@ -1,0 +1,104 @@
+.modal {
+  width: min(32rem, calc(100% - var(--space-8)));
+  max-height: calc(100dvh - var(--space-8));
+  margin: auto;
+  overflow-y: auto;
+  padding: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover);
+}
+
+.modal::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.modal[open] {
+  animation: feedback-appear 160ms ease-out;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.modal__content {
+  margin-top: var(--space-5);
+}
+
+.toast {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4));
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  width: min(32rem, calc(100% - var(--space-8)));
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover);
+  animation: feedback-appear 160ms ease-out;
+}
+
+.toast__message {
+  flex: 1 1 10rem;
+  overflow-wrap: anywhere;
+}
+
+[data-theme="dark"] .modal,
+[data-theme="dark"] .toast--success {
+  background: var(--color-surface-secondary);
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 50%);
+}
+
+[data-theme="dark"] .modal,
+[data-theme="dark"] .toast {
+  border: 0;
+}
+
+[data-theme="dark"] .modal::backdrop {
+  background: rgb(0 0 0 / 70%);
+}
+
+.toast--error {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+  color: var(--color-danger-text);
+}
+
+.toast--error .button--ghost {
+  color: inherit;
+}
+
+.toast--error .button--ghost:hover:not(:disabled) {
+  background: var(--color-danger-hover);
+  color: inherit;
+}
+
+.toast--error .button:focus-visible {
+  outline-color: currentColor;
+}
+
+@media (min-width: 52rem) {
+  .toast { bottom: var(--space-6); }
+}
+
+@keyframes feedback-appear {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal[open], .toast { animation: none; }
+}
