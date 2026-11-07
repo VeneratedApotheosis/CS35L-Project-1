@@ -2,6 +2,8 @@
 
 import { useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
+import { useAuth } from "@/auth/useAuth"
 import { ArrowLeft, Dices } from "lucide-react"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
@@ -10,6 +12,7 @@ import {
   buildCreateHabitPayload,
   createHabit,
   HABIT_LIMITS,
+  habitKeys,
   parseWholeNumber,
   type IntervalUnit,
 } from "@/lib/habits"
@@ -43,6 +46,8 @@ function subscribeNever() {
 
 export default function CreateHabit() {
   const router = useRouter()
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
@@ -181,6 +186,10 @@ export default function CreateHabit() {
           startDate: chosenStartDate,
         }),
       )
+      // Refresh every cached page so the new habit appears on return.
+      if (user) {
+        await queryClient.invalidateQueries({ queryKey: habitKeys.all(user.id) })
+      }
       // [PLACEHOLDER] use the returned habit and go to /habits/${habit.id} once
       // the habit details page exists
       // Stay in the submitting state: the page is being replaced.

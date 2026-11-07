@@ -89,3 +89,18 @@ export interface Habit {
 export function createHabit(input: CreateHabitInput): Promise<Habit> {
   return api.post<Habit>("/habits", input)
 }
+
+export interface HabitPage {
+  habits: Habit[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export const habitKeys = {
+  all: (userId: string) => ["habits", userId] as const,
+}
+
+export function listHabits(offset = 0): Promise<HabitPage> {
+  return api.get<HabitPage>(`/habits?limit=50&offset=${offset}`)
+}
