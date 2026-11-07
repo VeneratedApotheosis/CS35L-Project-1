@@ -10,7 +10,8 @@ import { durationPhrase, formatDate, periodPhrase } from "@/lib/goal"
 import { habitKeys, listHabits } from "@/lib/habits"
 import { dateInTimezone, getProfile } from "@/lib/profile"
 
-export default function Garden() {
+/** Shared saved-habit list for the Garden and the basic dashboard. */
+export default function Garden({ title = "My Garden" }: { title?: string }) {
   const { user, signOut } = useAuth()
   const habits = useInfiniteQuery({
     queryKey: habitKeys.all(user?.id ?? "signed-out"),
@@ -49,7 +50,7 @@ export default function Garden() {
   return (
     <main className="stack-lg">
       <header className="stack-sm">
-        <h1 className="text-h1">My Garden</h1>
+        <h1 className="text-h1">{title}</h1>
         <p className="text-body text-secondary">Your habits and the goals you’re working toward.</p>
       </header>
 

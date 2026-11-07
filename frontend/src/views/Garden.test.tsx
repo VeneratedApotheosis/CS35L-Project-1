@@ -5,6 +5,7 @@ import { QueryProvider } from "@/lib/QueryProvider"
 import type { Habit } from "@/lib/habits"
 import Garden from "./Garden"
 import CreateHabit from "./CreateHabit"
+import DashboardPage from "@/app/(signed-in)/dashboard/page"
 
 const auth = vi.hoisted(() => {
   vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test")
@@ -141,22 +142,39 @@ describe("Garden", () => {
     await waitFor(() => expect(fetchMock).not.toHaveBeenCalled())
   })
 
-  it("refreshes the cached Garden after creating a habit", async () => {
+  it("redirects to the dashboard after saving and refreshes its cached habits", async () => {
     let saved = false
     fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
       if (url.endsWith("/me")) return json({ id: auth.user?.id, timezone: "UTC" })
       if (init.method === "POST") { saved = true; return json(habit({ name: "Practice" }), 201) }
       return json(page(saved ? [habit({ name: "Practice" })] : []))
     })
-    const view = render(<QueryProvider><Garden /></QueryProvider>)
+    const view = render(<QueryProvider><DashboardPage /></QueryProvider>)
     await screen.findByText("No habits yet")
     view.rerender(<QueryProvider><CreateHabit /></QueryProvider>)
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Practice" } })
     fireEvent.change(screen.getByLabelText("Number of periods"), { target: { value: "4" } })
     fireEvent.click(screen.getByRole("button", { name: "Review habit" }))
     fireEvent.click(screen.getByRole("button", { name: "Create habit" }))
-    await waitFor(() => expect(auth.replace).toHaveBeenCalledWith("/"))
-    view.rerender(<QueryProvider><Garden /></QueryProvider>)
+    await waitFor(() => expect(auth.replace).toHaveBeenCalledWith("/dashboard"))
+    view.rerender(<QueryProvider><DashboardPage /></QueryProvider>)
+    expect(screen.getByRole("heading", { name: "Dashboard" })).toBeTruthy()
     await screen.findByRole("heading", { name: "Practice" })
   })
+
+  it("stays on the creation form and shows an error when saving fails", async () => {
+    fetchMock.mockResolvedValue(jsonResponseError())
+    render(<QueryProvider><CreateHabit /></QueryProvider>)
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Practice" } })
+    fireEvent.change(screen.getByLabelText("Number of periods"), { target: { value: "4" } })
+    fireEvent.click(screen.getByRole("button", { name: "Review habit" }))
+    fireEvent.click(screen.getByRole("button", { name: "Create habit" }))
+    expect((await screen.findByRole("alert")).textContent).toContain("Could not create habit")
+    expect(auth.replace).not.toHaveBeenCalled()
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Practice")
+  })
 })
+
+function jsonResponseError() {
+  return json({ error: { code: "internal_error", message: "Could not create habit" } }, 500)
+}

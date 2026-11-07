@@ -190,10 +190,8 @@ export default function CreateHabit() {
       if (user) {
         await queryClient.invalidateQueries({ queryKey: habitKeys.all(user.id) })
       }
-      // [PLACEHOLDER] use the returned habit and go to /habits/${habit.id} once
-      // the habit details page exists
       // Stay in the submitting state: the page is being replaced.
-      router.replace("/")
+      router.replace("/dashboard")
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         // Signed out or token expired. Same redirect as ProtectedRoute.
