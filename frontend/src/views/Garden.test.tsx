@@ -83,6 +83,7 @@ describe("Garden", () => {
     render(<QueryProvider><Garden /></QueryProvider>)
     await screen.findByRole("heading", { name: "Read" })
     expect(screen.getByText("3 times every week for 4 weeks.")).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Read" }).getAttribute("href")).toBe("/habits/habit-1")
     expect(screen.getByText("1 time every 2 weeks.")).toBeTruthy()
     expect(screen.getAllByText(/Not started yet/)).toHaveLength(1)
     expect(fetchMock.mock.calls.find(([url]) => url.includes("/habits"))?.[1].headers.Authorization).toBe("Bearer token-user-a")

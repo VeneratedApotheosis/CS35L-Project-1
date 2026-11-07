@@ -1,4 +1,4 @@
-# Garden checks: issues #112 and #113
+# Garden checks: issues #112, #113 and #114
 
 Run the backend on port 3000 and the frontend on port 5173 using the root README.
 Open http://localhost:5173 and sign in. These checks use the real database;
@@ -26,6 +26,14 @@ the automated frontend tests use mocked HTTP responses instead.
    visible alongside the error message.
 8. **Layout:** check a narrow window, keyboard navigation, and light/dark themes.
    Long names should wrap. This milestone shows text only, with no plant art.
+9. **Habit placeholder:** click a habit's name. Its `/habits/<id>` page shows
+   the name and "Back to Garden". Refresh or open the URL in a new tab and
+   confirm the same habit loads. This is only a placeholder, with no activity
+   logging or statistics yet.
+10. **Inaccessible detail:** copy a test account's habit URL, then sign in with
+    a different test account and open that URL. It shows "Habit not found"
+    without the original name or any other habit details. A nonexistent UUID
+    produces the same message. Signed-out visitors are redirected to login.
 
 Automated checks from `frontend/`:
 

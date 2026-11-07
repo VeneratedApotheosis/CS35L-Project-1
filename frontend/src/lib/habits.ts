@@ -99,8 +99,13 @@ export interface HabitPage {
 
 export const habitKeys = {
   all: (userId: string) => ["habits", userId] as const,
+  detail: (userId: string, id: string) => ["habits", userId, "detail", id] as const,
 }
 
 export function listHabits(offset = 0): Promise<HabitPage> {
   return api.get<HabitPage>(`/habits?limit=50&offset=${offset}`)
+}
+
+export function getHabit(id: string): Promise<Habit> {
+  return api.get<Habit>(`/habits/${encodeURIComponent(id)}`)
 }
