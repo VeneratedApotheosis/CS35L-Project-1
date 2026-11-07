@@ -17,6 +17,7 @@
 @import "./components/navigation.css";
 @import "./components/progress.css";
 @import "./components/plant-cards.css";
+@import "./components/garden.css";
 
 * {
   box-sizing: border-box;
