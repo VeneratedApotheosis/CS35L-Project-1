@@ -139,11 +139,11 @@ The pot's base is one curve instead of a flat line, and so is the underside of t
 
 Every measurement is a named value in `pot/shape.ts` (`POT_SHAPE`). Two of them are used by the plants: `POT_RIM` (where stems are placed across the pot) and `POT_SOIL` (where plants meet the pot, which becomes the shared `SOIL` point). Neither number is repeated anywhere else, so changing the pot's shape moves the plants with it. This is all a plant knows about its pot.
 
-The canvas is `0 0 200 235`, and the soil point is `(100, 148)`.
+The canvas is `0 30 200 205` (the original 200 by 235 canvas with the top 30 units trimmed), and the soil point is `(100, 148)`.
 
 ### Putting a pot and a plant together
 
-`PottedPlant` (`plants/PottedPlant.tsx`) renders the shared `<svg viewBox="0 0 200 235">`, draws `<Pot look={...} />` first and then its children on top. Each plant has a bare drawing, a group of shapes with no `svg` and no pot (`PothosDrawing`, `PeaceLilyDrawing`, `PileaDrawing`), and a composed component (`Pothos`, `PeaceLily`, `Pilea`) that is the drawing inside a `PottedPlant`. The composed components take an optional `pot` look and default to `potLookFromSeed(seed)`, so the same seed gives the same plant and the same pot, and any pot can go with any plant:
+`PottedPlant` (`plants/PottedPlant.tsx`) renders the shared `<svg viewBox="0 30 200 205">`, draws `<Pot look={...} />` first and then its children on top. Each plant has a bare drawing, a group of shapes with no `svg` and no pot (`PothosDrawing`, `PeaceLilyDrawing`, `PileaDrawing`), and a composed component (`Pothos`, `PeaceLily`, `Pilea`) that is the drawing inside a `PottedPlant`. The composed components take an optional `pot` look and default to `potLookFromSeed(seed)`, so the same seed gives the same plant and the same pot, and any pot can go with any plant:
 
 ```tsx
 <Pothos seed={7} />                                      // the pot its seed gives

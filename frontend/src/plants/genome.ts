@@ -13,8 +13,13 @@ import { POT_SOIL } from "./pot/shape"
 
 /** Where plants meet the soil, in the shared canvas. It is the center of the pot's soil. */
 export const SOIL = { x: POT_SOIL.x, y: POT_SOIL.y }
-/** Shared canvas for every plant. */
-export const VIEWBOX = "0 0 200 235"
+/**
+ * Shared canvas for every plant. One frame for all of them, so every pot is
+ * drawn at the same size and place. It starts 30 units down (the canvas was
+ * "0 0 200 235"), trimming the empty space above the plants: the tallest plant
+ * still reaches to y 30, the new top edge.
+ */
+export const VIEWBOX = "0 30 200 205"
 
 /** Combine integers into one well-mixed sub-seed. */
 export function subSeed(...parts: number[]) {
