@@ -1,7 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isBeforeDate, todayInZone } from "../domain/dates.js";
 import type { PlantType } from "../domain/plants.js";
-import { shortStats, type ShortStats } from "../domain/stats.js";
+import {
+  fullStats,
+  shortStats,
+  type FullStats,
+  type ShortStats,
+} from "../domain/stats.js";
 import { AppError, notFound, validationFailed } from "../lib/errors.js";
 import { logger } from "../lib/logger.js";
 import type { Page, Pagination } from "../lib/pagination.js";
@@ -34,6 +39,7 @@ export type Habit = {
 };
 
 export type HabitWithStats = Habit & { stats: ShortStats };
+export type HabitWithFullStats = Habit & { stats: FullStats };
 
 const HABIT_COLUMNS =
   "id, owner_id, name, description, plant_type, target_count, interval_count, interval_unit, num_periods, start_date, created_at";
@@ -147,4 +153,25 @@ export async function getHabit(
     throw notFound("Habit not found");
   }
   return data as Habit;
+}
+
+// One habit with the full `stats` block for the Details page: everything in
+// the short block plus consistency, streak, every period, the days with logs
+// and the logs that can still be deleted. Another user's habit is a 404.
+export async function getHabitDetail(
+  supabase: SupabaseClient,
+  userId: string,
+  id: string,
+): Promise<HabitWithFullStats> {
+  const habit = await getHabit(supabase, userId, id);
+  const profile = await getProfile(supabase, userId);
+  const logs = await fetchLogs(supabase, [habit.id]);
+  return {
+    ...habit,
+    stats: fullStats(
+      habit,
+      logs.get(habit.id) ?? [],
+      todayInZone(profile.timezone),
+    ),
+  };
 }

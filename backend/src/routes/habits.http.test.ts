@@ -345,13 +345,57 @@ describe("GET /habits/:id", () => {
     const res = await get(habitId);
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual(habit);
+    expect(res.body).toMatchObject(habit);
     const selects = fakeSupabase.callsFor("habits", "select");
     expect(selects).toHaveLength(1);
     expect(selects[0]?.filter).toEqual({ column: "id", value: habitId });
     expect(selects[0]?.moreFilters).toEqual([
       { column: "owner_id", value: TEST_USER.id },
     ]);
+  });
+
+  it("adds the full stats", async () => {
+    fakeSupabase.setResult("habits", "select", { data: habit, error: null });
+    fakeSupabase.setResult("activity_logs", "select", {
+      data: [
+        { id: "l1", habit_id: habitId, occurred_on: "2026-11-04" },
+        { id: "l2", habit_id: habitId, occurred_on: "2026-11-04" },
+        { id: "l3", habit_id: habitId, occurred_on: "2026-11-04" },
+      ],
+      error: null,
+    });
+
+    const res = await get(habitId);
+
+    expect(res.status).toBe(200);
+    expect(res.body.stats).toMatchObject({
+      ...freshStats,
+      current_period: { ...freshStats.current_period, count: 3 },
+      overall_progress: 0.25,
+      stage: 2,
+      end_date: "2026-12-02",
+      streak: 1,
+      consistency: { successful: 0, completed: 0, rate: null },
+      log_days: [{ date: "2026-11-04", count: 3 }],
+      current_period_logs: [
+        { id: "l1", occurred_on: "2026-11-04" },
+        { id: "l2", occurred_on: "2026-11-04" },
+        { id: "l3", occurred_on: "2026-11-04" },
+      ],
+    });
+    expect(res.body.stats.periods).toHaveLength(4);
+    expect(res.body.stats.periods[0]).toMatchObject({
+      number: 1,
+      count: 3,
+      met: true,
+      status: "current",
+    });
+    const logReads = fakeSupabase.callsFor("activity_logs", "select");
+    expect(logReads).toHaveLength(1);
+    expect(logReads[0]?.inFilter).toEqual({
+      column: "habit_id",
+      values: [habitId],
+    });
   });
 
   it("returns 404 when there is no such habit for this user", async () => {
@@ -363,6 +407,21 @@ describe("GET /habits/:id", () => {
     expect(res.body).toEqual({
       error: { code: "not_found", message: "Habit not found" },
     });
+    // Nothing is calculated, and no logs are read, for a habit that is not yours.
+    expect(fakeSupabase.callsFor("activity_logs", "select")).toHaveLength(0);
+  });
+
+  it("returns 500 when the logs cannot be read", async () => {
+    fakeSupabase.setResult("habits", "select", { data: habit, error: null });
+    fakeSupabase.setResult("activity_logs", "select", {
+      data: null,
+      error: { message: "boom" },
+    });
+
+    const res = await get(habitId);
+
+    expect(res.status).toBe(500);
+    expect(res.body.error.message).toBe("Could not load logs");
   });
 
   it("returns 400 for an id that is not a uuid", async () => {
