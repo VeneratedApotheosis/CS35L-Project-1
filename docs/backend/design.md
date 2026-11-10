@@ -254,7 +254,7 @@ With 4 periods, 80% consistency means no misses (3/4 = 75%).
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_PUBLISHABLE_KEY` | Publishable key. Safe to expose |
 | `PORT` | Defaults to 3000 |
-| `FRONTEND_ORIGIN` | Allowed CORS origin. The frontend runs on port 5173 |
+| `FRONTEND_ORIGIN` | Allowed CORS origin. The frontend runs on port 5173. A trailing slash is removed, because a browser's origin never has one |
 
 - The file is `backend/.env`, loaded by `dotenv/config`.
 - `config/env.ts` validates these at startup, so a missing one fails with a clear message.
