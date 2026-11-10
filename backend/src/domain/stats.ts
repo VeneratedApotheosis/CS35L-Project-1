@@ -4,13 +4,8 @@ import {
   type GrowthStage,
   type PlantHealth,
 } from "./growth.js";
-import {
-  displayPeriodIndex,
-  endDate,
-  habitState,
-  periodIndexOf,
-  type HabitState,
-} from "./periods.js";
+import { isLogDeletable } from "./logging.js";
+import { endDate, habitState, type HabitState } from "./periods.js";
 import {
   consistency,
   currentPeriodProgress,
@@ -99,11 +94,9 @@ export function fullStats(
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     .map(([date, count]) => ({ date, count }));
 
-  const shown = displayPeriodIndex(habit, today);
-  const deletable =
-    habitState(habit, today) === "expired"
-      ? []
-      : logs.filter((log) => periodIndexOf(habit, log.occurred_on) === shown);
+  const deletable = logs.filter((log) =>
+    isLogDeletable(habit, log.occurred_on, today),
+  );
 
   return {
     ...shortStats(habit, dates, today),
