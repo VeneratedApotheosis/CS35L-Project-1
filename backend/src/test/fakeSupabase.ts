@@ -37,6 +37,8 @@ export type RecordedCall = {
 export class FakeSupabase {
   readonly calls: RecordedCall[] = [];
   private readonly results = new Map<string, FakeResult>();
+  // Results returned once each, in order, before the one from setResult().
+  private readonly queues = new Map<string, FakeResult[]>();
 
   readonly client = {
     auth: {
@@ -52,6 +54,12 @@ export class FakeSupabase {
     this.results.set(`${table}.${operation}`, result);
   }
 
+  // For a query that runs twice and needs a different answer each time.
+  queueResult(table: string, operation: Operation, result: FakeResult) {
+    const key = `${table}.${operation}`;
+    this.queues.set(key, [...(this.queues.get(key) ?? []), result]);
+  }
+
   callsFor(table: string, operation: Operation) {
     return this.calls.filter(
       (call) => call.table === table && call.operation === operation,
@@ -61,6 +69,7 @@ export class FakeSupabase {
   reset() {
     this.calls.length = 0;
     this.results.clear();
+    this.queues.clear();
   }
 
   private query(table: string) {
@@ -123,6 +132,8 @@ export class FakeSupabase {
     const finish = (): FakeResult => {
       const operation = call.operation as Operation;
       this.calls.push({ ...call, table, operation });
+      const queued = this.queues.get(`${table}.${operation}`)?.shift();
+      if (queued) return queued;
       return (
         this.results.get(`${table}.${operation}`) ?? {
           data: null,

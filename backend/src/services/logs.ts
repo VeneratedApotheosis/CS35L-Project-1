@@ -4,7 +4,7 @@ import { logger } from "../lib/logger.js";
 
 export type LogRow = { id: string; habit_id: string; occurred_on: string };
 
-const LOG_COLUMNS = "id, habit_id, occurred_on";
+export const LOG_COLUMNS = "id, habit_id, occurred_on";
 
 // Supabase returns at most 1000 rows per request, so logs are read in pages.
 const PAGE_SIZE = 1000;
