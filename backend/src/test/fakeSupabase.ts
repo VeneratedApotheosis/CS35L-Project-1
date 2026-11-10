@@ -14,7 +14,7 @@ export type FakeResult = {
   error: FakeError | null;
   count?: number | null;
 };
-export type Operation = "select" | "insert" | "update";
+export type Operation = "select" | "insert" | "update" | "delete";
 
 export type RecordedCall = {
   table: string;
@@ -24,6 +24,8 @@ export type RecordedCall = {
   // The first eq() filter, and any later eq() filters in call order.
   filter?: { column: string; value: unknown };
   moreFilters?: { column: string; value: unknown }[];
+  // An in() filter: the column and the values it must be one of.
+  inFilter?: { column: string; values: unknown[] };
   count?: "exact";
   orders?: { column: string; ascending: boolean }[];
   range?: { from: number; to: number };
@@ -80,6 +82,14 @@ export class FakeSupabase {
       update: (patch: unknown) => {
         call.operation = "update";
         call.payload = patch;
+        return query;
+      },
+      delete: () => {
+        call.operation = "delete";
+        return query;
+      },
+      in: (column: string, values: unknown[]) => {
+        call.inFilter = { column, values };
         return query;
       },
       eq: (column: string, value: unknown) => {
