@@ -26,7 +26,27 @@ const profile = {
   timezone: "America/Los_Angeles",
 };
 
-const createdHabit = { id: "22222222-2222-2222-2222-222222222222", ...body };
+const createdHabit = {
+  id: "22222222-2222-2222-2222-222222222222",
+  ...body,
+  start_date: "2026-11-04",
+};
+
+// The stats of a habit that started today (4 Nov in Los Angeles) with no logs.
+const freshStats = {
+  state: "active",
+  current_period: {
+    number: 1,
+    total: 4,
+    start: "2026-11-04",
+    end: "2026-11-11",
+    count: 0,
+    target: 3,
+  },
+  overall_progress: 0,
+  stage: 1,
+  health: "healthy",
+};
 
 // zod only accepts real uuids, so the variant digit must be 8, 9, a or b.
 const habitId = "7d3f9c1e-5b2a-4c8e-9f41-2a6b8d0e1c33";
@@ -48,6 +68,7 @@ beforeEach(() => {
     data: createdHabit,
     error: null,
   });
+  fakeSupabase.setResult("activity_logs", "select", { data: [], error: null });
 });
 
 afterEach(() => vi.useRealTimers());
@@ -150,7 +171,91 @@ describe("GET /habits", () => {
     const res = await get();
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ habits: rows, total: 7, limit: 50, offset: 0 });
+    expect(res.body).toEqual({
+      habits: rows.map((row) => ({ ...row, stats: freshStats })),
+      total: 7,
+      limit: 50,
+      offset: 0,
+    });
+  });
+
+  it("adds the stats from the logs, reading all logs in one query", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: rows,
+      error: null,
+      count: 2,
+    });
+    // Two logs on the first habit, none on the second.
+    fakeSupabase.setResult("activity_logs", "select", {
+      data: [
+        { id: "a1", habit_id: rows[0]?.id, occurred_on: "2026-11-04" },
+        { id: "a2", habit_id: rows[0]?.id, occurred_on: "2026-11-04" },
+      ],
+      error: null,
+    });
+
+    const res = await get();
+
+    expect(res.status).toBe(200);
+    expect(res.body.habits[0].stats.current_period.count).toBe(2);
+    expect(res.body.habits[0].stats.overall_progress).toBeCloseTo(2 / 12);
+    expect(res.body.habits[1].stats.current_period.count).toBe(0);
+    const logReads = fakeSupabase.callsFor("activity_logs", "select");
+    expect(logReads).toHaveLength(1);
+    expect(logReads[0]?.inFilter).toEqual({
+      column: "habit_id",
+      values: rows.map((row) => row.id),
+    });
+  });
+
+  it("uses the profile timezone for today", async () => {
+    // 5 Nov is tomorrow in Los Angeles, but today in UTC.
+    const startsOnFifth = [{ ...rows[0], start_date: "2026-11-05" }];
+    fakeSupabase.setResult("habits", "select", {
+      data: startsOnFifth,
+      error: null,
+      count: 1,
+    });
+
+    const inLosAngeles = await get();
+    expect(inLosAngeles.body.habits[0].stats.state).toBe("not_started");
+
+    fakeSupabase.setResult("profiles", "select", {
+      data: { ...profile, timezone: null },
+      error: null,
+    });
+    const inUtc = await get();
+    expect(inUtc.body.habits[0].stats.state).toBe("active");
+  });
+
+  it("skips the profile and log reads for an empty page", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: [],
+      error: null,
+      count: 0,
+    });
+
+    await get();
+
+    expect(fakeSupabase.callsFor("profiles", "select")).toHaveLength(0);
+    expect(fakeSupabase.callsFor("activity_logs", "select")).toHaveLength(0);
+  });
+
+  it("returns 500 when the logs cannot be read", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: rows,
+      error: null,
+      count: 2,
+    });
+    fakeSupabase.setResult("activity_logs", "select", {
+      data: null,
+      error: { message: "boom" },
+    });
+
+    const res = await get();
+
+    expect(res.status).toBe(500);
+    expect(res.body.error.message).toBe("Could not load logs");
   });
 
   it("filters by owner, sorts newest first and asks for the first 50", async () => {
@@ -240,13 +345,57 @@ describe("GET /habits/:id", () => {
     const res = await get(habitId);
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual(habit);
+    expect(res.body).toMatchObject(habit);
     const selects = fakeSupabase.callsFor("habits", "select");
     expect(selects).toHaveLength(1);
     expect(selects[0]?.filter).toEqual({ column: "id", value: habitId });
     expect(selects[0]?.moreFilters).toEqual([
       { column: "owner_id", value: TEST_USER.id },
     ]);
+  });
+
+  it("adds the full stats", async () => {
+    fakeSupabase.setResult("habits", "select", { data: habit, error: null });
+    fakeSupabase.setResult("activity_logs", "select", {
+      data: [
+        { id: "l1", habit_id: habitId, occurred_on: "2026-11-04" },
+        { id: "l2", habit_id: habitId, occurred_on: "2026-11-04" },
+        { id: "l3", habit_id: habitId, occurred_on: "2026-11-04" },
+      ],
+      error: null,
+    });
+
+    const res = await get(habitId);
+
+    expect(res.status).toBe(200);
+    expect(res.body.stats).toMatchObject({
+      ...freshStats,
+      current_period: { ...freshStats.current_period, count: 3 },
+      overall_progress: 0.25,
+      stage: 2,
+      end_date: "2026-12-02",
+      streak: 1,
+      consistency: { successful: 0, completed: 0, rate: null },
+      log_days: [{ date: "2026-11-04", count: 3 }],
+      current_period_logs: [
+        { id: "l1", occurred_on: "2026-11-04" },
+        { id: "l2", occurred_on: "2026-11-04" },
+        { id: "l3", occurred_on: "2026-11-04" },
+      ],
+    });
+    expect(res.body.stats.periods).toHaveLength(4);
+    expect(res.body.stats.periods[0]).toMatchObject({
+      number: 1,
+      count: 3,
+      met: true,
+      status: "current",
+    });
+    const logReads = fakeSupabase.callsFor("activity_logs", "select");
+    expect(logReads).toHaveLength(1);
+    expect(logReads[0]?.inFilter).toEqual({
+      column: "habit_id",
+      values: [habitId],
+    });
   });
 
   it("returns 404 when there is no such habit for this user", async () => {
@@ -258,6 +407,21 @@ describe("GET /habits/:id", () => {
     expect(res.body).toEqual({
       error: { code: "not_found", message: "Habit not found" },
     });
+    // Nothing is calculated, and no logs are read, for a habit that is not yours.
+    expect(fakeSupabase.callsFor("activity_logs", "select")).toHaveLength(0);
+  });
+
+  it("returns 500 when the logs cannot be read", async () => {
+    fakeSupabase.setResult("habits", "select", { data: habit, error: null });
+    fakeSupabase.setResult("activity_logs", "select", {
+      data: null,
+      error: { message: "boom" },
+    });
+
+    const res = await get(habitId);
+
+    expect(res.status).toBe(500);
+    expect(res.body.error.message).toBe("Could not load logs");
   });
 
   it("returns 400 for an id that is not a uuid", async () => {
