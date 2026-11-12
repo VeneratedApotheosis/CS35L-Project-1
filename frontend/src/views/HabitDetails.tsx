@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
+import { HabitPlant } from "@/components/HabitPlant"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { getHabit, habitKeys, type Habit } from "@/lib/habits"
@@ -51,7 +52,10 @@ export default function HabitDetails({ id }: { id: string }) {
       ) : habit.isPending ? (
         <p role="status" className="text-body text-secondary">Loading habit…</p>
       ) : (
-        <HabitInfo habit={habit.data} today={profile.data?.today} />
+        <>
+          <HabitPlant habit={habit.data} />
+          <HabitInfo habit={habit.data} today={profile.data?.today} />
+        </>
       )}
     </main>
   )
