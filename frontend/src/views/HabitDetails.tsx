@@ -6,6 +6,7 @@ import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
 import { HabitPlant } from "@/components/HabitPlant"
 import { HabitProgress } from "@/components/HabitProgress"
+import { HabitHistory } from "@/components/HabitHistory"
 import { HabitActivity } from "@/components/HabitActivity"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
@@ -31,7 +32,7 @@ export default function HabitDetails({ id }: { id: string }) {
   const fatalError = habit.isError && (!habit.data || unavailable || status === 401)
 
   return (
-    <main className="stack-lg">
+    <main className="stack-lg habit-details-page">
       <Link href="/" className="button button--ghost button--md self-start">Back to Garden</Link>
       {fatalError ? (
         <Card className="stack-md">
@@ -58,10 +59,23 @@ export default function HabitDetails({ id }: { id: string }) {
       ) : habit.data ? (
         <>
           {habit.isError && <p role="alert" className="text-body-sm">Couldn&apos;t refresh the latest details. Your last saved activity is still shown.</p>}
-          <HabitPlant habit={habit.data} />
-          <HabitInfo habit={habit.data} today={profile.data?.today} />
-          <HabitProgress stats={habit.data.stats} />
-          <HabitActivity key={habit.data.id} habit={habit.data} today={profile.data?.today} />
+          <header className="stack-sm">
+            <h1 id="habit-name" className="text-h1 garden-name">{habit.data.name}</h1>
+            <p className="text-body text-secondary">
+              {habit.data.target_count} {habit.data.target_count === 1 ? "time" : "times"} {periodPhrase(habit.data.interval_count, habit.data.interval_unit)}
+            </p>
+          </header>
+          <div className="habit-overview">
+            <Card className="habit-overview-plant"><HabitPlant habit={habit.data} /></Card>
+            <HabitInfo habit={habit.data} today={profile.data?.today} />
+          </div>
+          <div className="habit-details-columns">
+          <div className="habit-tools">
+            <HabitProgress stats={habit.data.stats} />
+            <HabitActivity key={habit.data.id} habit={habit.data} today={profile.data?.today} />
+          </div>
+          <HabitHistory key={`history-${habit.data.id}`} habit={habit.data} today={profile.data?.today} />
+          </div>
         </>
       ) : null}
     </main>
@@ -85,12 +99,6 @@ function HabitInfo({ habit, today }: { habit: Habit; today?: string }) {
 
   return (
     <section className="stack-lg habit-info" aria-labelledby="habit-name">
-      <header className="stack-sm">
-        <h1 id="habit-name" className="text-h1 garden-name">{habit.name}</h1>
-        <p className="text-body text-secondary">
-          {habit.target_count} {habit.target_count === 1 ? "time" : "times"} {periodPhrase(habit.interval_count, habit.interval_unit)}
-        </p>
-      </header>
       <Card className="stack-md">
         <h2 className="text-h2">Habit details</h2>
         <dl className="habit-info-grid text-body">
@@ -114,13 +122,13 @@ function HabitInfo({ habit, today }: { habit: Habit; today?: string }) {
             </dd>
           </div>
         </dl>
-      </Card>
       {habit.description && (
         <section className="stack-sm" aria-labelledby="habit-description-heading">
           <h2 id="habit-description-heading" className="text-h2">Description</h2>
           <p className="text-body text-secondary habit-description">{habit.description}</p>
         </section>
       )}
+      </Card>
     </section>
   )
 }

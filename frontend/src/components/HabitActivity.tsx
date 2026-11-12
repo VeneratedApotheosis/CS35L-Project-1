@@ -91,8 +91,8 @@ export function HabitActivity({ habit, today }: { habit: HabitDetail; today?: st
 
   return (
     <section className="stack-md" aria-labelledby="habit-activity-heading">
-      <h2 className="text-h2" id="habit-activity-heading">Activity</h2>
       <Card className="stack-lg">
+        <h2 className="text-h2" id="habit-activity-heading">Activity</h2>
         <form className="form" onSubmit={submit} noValidate>
           <div className="field">
             <label htmlFor="activity-date" className="field__label">Activity date</label>
@@ -127,14 +127,14 @@ export function HabitActivity({ habit, today }: { habit: HabitDetail; today?: st
         )}
         {confirmation && <p className="text-body-sm" role="status">{confirmation}</p>}
 
-        <section className="stack-md" aria-labelledby="current-logs-heading">
-          <h3 className="text-h3" id="current-logs-heading">Activities this period</h3>
+        <details className="habit-disclosure" open>
+          <summary><h3 className="text-h3" id="current-logs-heading">Activities this period</h3></summary>
           {!expired && (habit.stats.current_period_logs ?? []).length > 0 ? (
             <ul className="habit-activity-list">
               {habit.stats.current_period_logs.map((log) => (
                 <li key={log.id} className="habit-activity-row">
                   <time dateTime={log.occurred_on}>{formatDate(log.occurred_on)}</time>
-                  {current && <Button variant="ghost" size="sm" disabled={busy || unauthorized}
+                  {current && <Button id={`delete-log-${encodeURIComponent(log.id)}`} variant="ghost" size="sm" disabled={busy || unauthorized}
                     aria-label={`Delete activity on ${formatDate(log.occurred_on)}`}
                     onClick={() => deleteLog(log.id)}>
                     {remove.isPending && remove.variables === log.id ? "Deleting…" : "Delete activity"}
@@ -143,7 +143,7 @@ export function HabitActivity({ habit, today }: { habit: HabitDetail; today?: st
               ))}
             </ul>
           ) : <p className="text-body-sm text-secondary">{expired ? "Earlier activity is locked." : "No activities logged in this period yet."}</p>}
-        </section>
+        </details>
       </Card>
       {lastLogged && <Toast key={lastLogged.id} message="Activity logged." duration={5000}
         onDismiss={() => setLastLogged(null)}
