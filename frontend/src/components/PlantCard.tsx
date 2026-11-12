@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useId, useRef } from "react"
 import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Pencil, Plus } from "lucide-react"
 import { plantTypeById, type PlantTypeId } from "@/plants/plantTypes"
@@ -27,15 +28,16 @@ export interface PlantCardProps {
   target: number
   /** For example, "This week" or "This month". */
   periodLabel: string
-  onLogActivity: () => void
-  onViewDetails: () => void
-  onEditHabit: () => void
+  onLogActivity?: () => void
+  onViewDetails?: () => void
+  detailsHref?: string
+  onEditHabit?: () => void
 }
 
 /** A presentation-only garden item. The parent supplies data and owns all actions. */
 export function PlantCard({
   name, plantType, seed, stage, health, count, target, periodLabel,
-  onLogActivity, onViewDetails, onEditHabit,
+  onLogActivity, onViewDetails, onEditHabit, detailsHref,
 }: PlantCardProps) {
   const headingId = useId()
   const disclosure = useRef<HTMLDetailsElement>(null)
@@ -84,21 +86,31 @@ export function PlantCard({
             </summary>
             <Card variant="elevated" className="plant-card__popover">
               <ul className="plant-card__actions">
-                <li><Button variant="ghost" icon={Plus} full onClick={() => runAction(onLogActivity)}>Log activity</Button></li>
-                <li><Button variant="ghost" icon={Eye} full onClick={() => runAction(onViewDetails)}>View details</Button></li>
-                <li><Button variant="ghost" icon={Pencil} full onClick={() => runAction(onEditHabit)}>Edit habit</Button></li>
+                {onLogActivity && <li><Button variant="ghost" icon={Plus} full onClick={() => runAction(onLogActivity)}>Log activity</Button></li>}
+                {detailsHref ? <li><Link className="button button--ghost button--md" href={detailsHref}>View details</Link></li>
+                  : onViewDetails && <li><Button variant="ghost" icon={Eye} full onClick={() => runAction(onViewDetails)}>View details</Button></li>}
+                {onEditHabit && <li><Button variant="ghost" icon={Pencil} full onClick={() => runAction(onEditHabit)}>Edit habit</Button></li>}
               </ul>
             </Card>
           </details>
         </div>
         <h3 id={headingId}>
-          <button type="button" className="plant-card__open" onClick={onViewDetails}
-            aria-label={`View details for ${name}`}>
-            <span className="plant-card__illustration" data-health={health} aria-hidden="true">
-              <Preview seed={seed} stage={stage} />
-            </span>
-            <span className="text-h3 plant-card__name">{name}</span>
-          </button>
+          {detailsHref ? (
+            <Link href={detailsHref} className="plant-card__open">
+              <span className="plant-card__illustration" data-health={health} aria-hidden="true">
+                <Preview seed={seed} stage={stage} />
+              </span>
+              <span className="text-h3 plant-card__name">{name}</span>
+            </Link>
+          ) : (
+            <button type="button" className="plant-card__open" onClick={onViewDetails}
+              aria-label={`View details for ${name}`}>
+              <span className="plant-card__illustration" data-health={health} aria-hidden="true">
+                <Preview seed={seed} stage={stage} />
+              </span>
+              <span className="text-h3 plant-card__name">{name}</span>
+            </button>
+          )}
         </h3>
         <ProgressBar label={`${name}: ${periodLabel}`} count={count} target={target} />
       </Card>

@@ -21,6 +21,8 @@ vi.mock("@/lib/useProfile", () => ({ useProfile: () => ({ data: { today: auth.to
 const baseHabit = {
   id: "mine", owner_id: "user-a", name: "Read", description: "A chapter each evening.",
   plant_type: "peace_lily", target_count: 3, interval_count: 1, interval_unit: "week",
+  stats: { state: "active", stage: 2, health: "healthy", overall_progress: 0.3,
+    current_period: { number: 1, total: 2, start: "2026-11-07", end: "2026-11-14", count: 1, target: 3 } },
   num_periods: 2, start_date: "2026-11-07", created_at: "2026-11-07T00:00:00Z",
 }
 const habitJson = (overrides: Record<string, unknown> = {}) => json({ ...baseHabit, ...overrides })
@@ -53,6 +55,8 @@ describe("habit details", () => {
     await screen.findByRole("heading", { name: "Read a little" })
     expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/habits/my-habit")
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer token-user-a")
+    expect(screen.getByText("Peace lily · Stage 2 · Healthy")).toBeTruthy()
+    expect(screen.getByText("A chapter each evening.")).toBeTruthy()
     expect(screen.getByRole("link", { name: "Back to Garden" }).getAttribute("href")).toBe("/")
   })
 

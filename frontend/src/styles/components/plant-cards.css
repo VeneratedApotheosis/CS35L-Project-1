@@ -136,3 +136,16 @@
     transform: none;
   }
 }
+
+/* Match the list semantics without letting .garden-list force a flex layout. */
+.garden-list.plant-card-grid { display: grid; }
+
+.habit-plant {
+  width: 100%;
+  max-width: calc(var(--plant-card-art-width) * 1.5);
+}
+
+.habit-plant__illustration {
+  max-width: none;
+  transform: none;
+}
