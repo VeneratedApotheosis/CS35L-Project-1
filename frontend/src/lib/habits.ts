@@ -119,6 +119,26 @@ export function listHabits(offset = 0): Promise<HabitPage> {
   return api.get<HabitPage>(`/habits?limit=50&offset=${offset}`)
 }
 
-export function getHabit(id: string): Promise<HabitWithStats> {
-  return api.get<HabitWithStats>(`/habits/${encodeURIComponent(id)}`)
+/** Progress fields from the full stats returned by GET /habits/:id. */
+export interface HabitProgressStats {
+  state: "not_started" | "active" | "expired"
+  current_period: {
+    number: number
+    total: number | null
+    start: string
+    end: string
+    count: number
+    target: number
+  }
+  overall_progress: number | null
+  consistency: { successful: number; completed: number; rate: number | null }
+  streak: number
+}
+
+export interface HabitDetail extends HabitWithStats {
+  stats: HabitStats & HabitProgressStats
+}
+
+export function getHabit(id: string): Promise<HabitDetail> {
+  return api.get<HabitDetail>(`/habits/${encodeURIComponent(id)}`)
 }

@@ -68,7 +68,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   width: 100%;
   min-height: var(--plant-card-touch-target);
   padding: 0;
@@ -93,10 +93,9 @@
 .plant-card__illustration {
   display: block;
   width: 100%;
-  max-width: var(--plant-card-art-width);
-  /* Use the SVG's headroom and leave more breathing room above the habit name.
-     Preserve the layout footprint so card heights and progress bars stay aligned. */
-  transform: translateY(calc(-1 * var(--space-6)));
+  max-width: calc(var(--plant-card-art-width) + var(--space-8));
+  /* A smaller upward offset keeps the pot closer to the habit title. */
+  transform: translateY(calc(-1 * var(--space-2)));
 }
 
 .plant-card__illustration > svg {

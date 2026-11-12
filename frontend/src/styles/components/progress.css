@@ -1,4 +1,6 @@
 .habit-progress {
+  container-type: inline-size;
+  --progress-stroke: 1px;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -23,15 +25,16 @@
 .habit-progress__track {
   height: var(--space-4);
   overflow: hidden;
-  border: 1px solid var(--color-border-strong);
+  border: var(--progress-stroke) solid var(--color-border-strong);
   border-radius: var(--radius-pill);
   background: var(--color-surface-secondary);
 }
 
 .habit-progress__track--segmented {
   display: grid;
-  gap: 1px;
-  background: var(--color-surface);
+  /* Keep the dividers and outer border the same thickness. */
+  column-gap: var(--progress-stroke);
+  background: var(--color-text);
 }
 
 .habit-progress__step {
@@ -47,4 +50,29 @@
 .habit-progress__fill {
   display: block;
   height: 100%;
+}
+
+.progress-ring {
+  position: relative;
+  width: calc(var(--space-16) * 2);
+  max-width: 100%;
+  aspect-ratio: 1;
+}
+.progress-ring svg { display: block; width: 100%; height: 100%; }
+.progress-ring__track, .progress-ring__fill { fill: none; stroke-width: 8; }
+.progress-ring__track { stroke: var(--color-surface-secondary); }
+.progress-ring__fill { stroke: var(--color-link); }
+.progress-ring__value { position: absolute; inset: 0; display: grid; place-items: center; }
+.habit-progress-summary, .habit-progress-metrics {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+.habit-progress-metrics dd { display: flex; flex-direction: column; }
+
+/* Use the bar's available width rather than the viewport size. */
+@container (min-width: 40rem) {
+  .habit-progress__track {
+    --progress-stroke: 2px;
+  }
 }
