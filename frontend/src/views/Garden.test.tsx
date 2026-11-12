@@ -153,10 +153,14 @@ describe("Garden", () => {
     fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
       if (url.endsWith("/me")) return json({ id: auth.user?.id, timezone: "UTC" })
       if (init.method === "POST") { saved = true; return json(habit({ name: "Practice" }), 201) }
+      if (url.endsWith("/dashboard")) return json({
+        active_count: saved ? 1 : 0, overall_consistency: null, best_streak: null,
+        habits: saved ? [{ id: "habit-1", name: "Practice", state: "active", streak: 0 }] : [],
+      })
       return json(page(saved ? [habit({ name: "Practice" })] : []))
     })
     const view = render(<QueryProvider><DashboardPage /></QueryProvider>)
-    await screen.findByText("No habits yet")
+    await screen.findByText("No active habits yet")
     view.rerender(<QueryProvider><CreateHabit /></QueryProvider>)
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Practice" } })
     fireEvent.change(screen.getByLabelText("Number of periods"), { target: { value: "4" } })
@@ -165,7 +169,7 @@ describe("Garden", () => {
     await waitFor(() => expect(auth.replace).toHaveBeenCalledWith("/dashboard"))
     view.rerender(<QueryProvider><DashboardPage /></QueryProvider>)
     expect(screen.getByRole("heading", { name: "Dashboard" })).toBeTruthy()
-    await screen.findByRole("heading", { name: "Practice" })
+    await screen.findByRole("link", { name: "Practice" })
   })
 
   it("stays on the creation form and shows an error when saving fails", async () => {
