@@ -12,7 +12,8 @@ This page is the map. The detail lives in the documents below.
 - [2. How it fits together](#2-how-it-fits-together)
 - [3. Rules that cut across layers](#3-rules-that-cut-across-layers)
 - [4. Deployment](#4-deployment)
-- [5. Out of scope](#5-out-of-scope)
+- [5. Shared habits (planned)](#5-shared-habits-planned)
+- [6. Out of scope](#6-out-of-scope)
 
 ---
 
@@ -65,6 +66,21 @@ Whatever the host, update the Google and Supabase redirect URLs to the deployed 
 
 ---
 
-## 5. Out of scope
+## 5. Shared habits (planned)
 
-Group habits, indefinite habits, reduction habits, reminders and advanced analytics.
+A shared habit is one goal that several people follow together. It is planned for Week 5 and is not built yet.
+
+- **One owner, invited members.** The creator owns the habit and invites others with a private code, shared as a link such as `/join/[code]`. Nobody can join after the start date, and the owner can cap the number of members.
+- **Same goal for everyone.** The target, start date and duration are the same for every member.
+- **Each member logs for themselves.** Each person keeps their own logs and streak, and can change only their own logs.
+- **One shared plant.** Everyone sees the same plant. It grows with the average of the members' progress, and its health follows the average of their health.
+- **Names and summaries only.** Members see each other's names and progress summaries, never the exact logs.
+- **Editing is still not allowed,** with one exception: the owner can edit a shared habit before it starts. Once someone else has joined, the goal and dates lock.
+
+The tables, access rules and functions are in [the database design](database/design.md#8-shared-habits-planned). The endpoints and the rules behind the group numbers are in [the backend design](backend/design.md#66-shared-habits-planned). The screens are in [the screens](frontend/screens.md#8-shared-habits-planned).
+
+---
+
+## 6. Out of scope
+
+Indefinite habits, reduction habits, reminders, advanced analytics, chat between members and public profiles.
