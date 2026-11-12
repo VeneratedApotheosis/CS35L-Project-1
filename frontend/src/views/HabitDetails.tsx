@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
 import { HabitPlant } from "@/components/HabitPlant"
+import { HabitProgress } from "@/components/HabitProgress"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { getHabit, habitKeys, type Habit } from "@/lib/habits"
@@ -55,6 +56,7 @@ export default function HabitDetails({ id }: { id: string }) {
         <>
           <HabitPlant habit={habit.data} />
           <HabitInfo habit={habit.data} today={profile.data?.today} />
+          <HabitProgress stats={habit.data.stats} />
         </>
       )}
     </main>

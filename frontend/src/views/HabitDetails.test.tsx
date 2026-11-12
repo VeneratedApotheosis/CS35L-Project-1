@@ -21,8 +21,9 @@ vi.mock("@/lib/useProfile", () => ({ useProfile: () => ({ data: { today: auth.to
 const baseHabit = {
   id: "mine", owner_id: "user-a", name: "Read", description: "A chapter each evening.",
   plant_type: "peace_lily", target_count: 3, interval_count: 1, interval_unit: "week",
-  stats: { state: "active", stage: 2, health: "healthy", overall_progress: 0.3,
-    current_period: { number: 1, total: 2, start: "2026-11-07", end: "2026-11-14", count: 1, target: 3 } },
+  stats: { state: "active", stage: 2, health: "healthy", overall_progress: 0.5, streak: 1,
+    consistency: { successful: 1, completed: 2, rate: 0.5 },
+    current_period: { number: 2, total: 2, start: "2026-11-14", end: "2026-11-21", count: 4, target: 3 } },
   num_periods: 2, start_date: "2026-11-07", created_at: "2026-11-07T00:00:00Z",
 }
 const habitJson = (overrides: Record<string, unknown> = {}) => json({ ...baseHabit, ...overrides })
@@ -57,6 +58,8 @@ describe("habit details", () => {
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer token-user-a")
     expect(screen.getByText("Peace lily · Stage 2 · Healthy")).toBeTruthy()
     expect(screen.getByText("A chapter each evening.")).toBeTruthy()
+    expect(screen.getByRole("progressbar", { name: "Overall progress" }).getAttribute("aria-valuenow")).toBe("50")
+    expect(screen.getByText("4/3")).toBeTruthy()
     expect(screen.getByRole("link", { name: "Back to Garden" }).getAttribute("href")).toBe("/")
   })
 
@@ -73,6 +76,7 @@ describe("habit details", () => {
     expect(screen.queryByText("A chapter each evening.")).toBeNull()
     expect(screen.queryByText("Peace lily")).toBeNull()
     expect(document.querySelector("time")).toBeNull()
+    expect(screen.queryByRole("progressbar")).toBeNull()
   })
 
   it("clears detail data when accounts change, including for the same habit id", async () => {
