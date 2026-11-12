@@ -1,7 +1,7 @@
 import { api } from "./api"
 import { habitKeys } from "./habits"
 
-/** The portion of GET /dashboard displayed by issue #213. */
+/** The portion of GET /dashboard displayed by issues #213 and #214. */
 export interface DashboardSummary {
   active_count: number
   overall_consistency: number | null
@@ -11,6 +11,11 @@ export interface DashboardSummary {
     name: string
     state: "not_started" | "active" | "expired"
     streak: number
+  }[]
+  needs_attention: {
+    id: string
+    name: string
+    health: "healthy" | "slightly_wilted" | "wilted"
   }[]
 }
 

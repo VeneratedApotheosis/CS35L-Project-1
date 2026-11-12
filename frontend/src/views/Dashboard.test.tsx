@@ -17,7 +17,7 @@ vi.mock("@/auth/useAuth", () => ({ useAuth: () => auth }))
 vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: auth.getSession } } }))
 
 const fetchMock = vi.fn()
-const empty: DashboardSummary = { active_count: 0, overall_consistency: null, best_streak: null, habits: [] }
+const empty: DashboardSummary = { active_count: 0, overall_consistency: null, best_streak: null, habits: [], needs_attention: [] }
 const summary: DashboardSummary = {
   active_count: 3, overall_consistency: 0.625,
   best_streak: { id: "read", name: "Read", streak: 4 },
@@ -26,10 +26,12 @@ const summary: DashboardSummary = {
     { id: "walk", name: "Walk", state: "active", streak: 1 },
     { id: "study", name: "Study", state: "not_started", streak: 0 },
   ],
+  needs_attention: [],
 }
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json" },
 })
+
 const metric = (label: string) => screen.getByText(label).parentElement!
 
 beforeEach(() => {
@@ -136,5 +138,42 @@ describe("Dashboard issue #213", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sign in again" }))
     expect(auth.signOut).toHaveBeenCalledOnce()
     expect(screen.queryByText("Active habits")).toBeNull()
+  })
+})
+
+describe("Dashboard issue #214", () => {
+  it("shows the backend's wilted and slightly wilted habits with detail links, excluding healthy habits", async () => {
+    fetchMock.mockResolvedValue(json({ ...summary, needs_attention: [
+      { id: "walk", name: "Walk", health: "wilted" },
+      { id: "study", name: "Study", health: "slightly_wilted" },
+    ] }))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    const attention = await screen.findByRole("region", { name: "A little attention" })
+    const links = within(attention).getAllByRole("link")
+    expect(links.map((link) => link.textContent)).toEqual(["Walk", "Study"])
+    expect(links.map((link) => link.getAttribute("href"))).toEqual(["/habits/walk", "/habits/study"])
+    expect(within(attention).getByText("Wilted")).toBeTruthy()
+    expect(within(attention).getByText("Slightly wilted")).toBeTruthy()
+    expect(within(attention).queryByRole("link", { name: "Read" })).toBeNull()
+    expect(within(attention).queryByText(/Nothing needs extra attention/)).toBeNull()
+  })
+
+  it("shows an encouraging message when the backend attention list is empty", async () => {
+    fetchMock.mockResolvedValue(json(summary))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    const attention = await screen.findByRole("region", { name: "A little attention" })
+    expect(within(attention).getByText("Nothing needs extra attention right now. Keep growing at your own pace.")).toBeTruthy()
+    expect(within(attention).queryByRole("list")).toBeNull()
+  })
+
+  it("does not invent an empty attention state while loading or when the request fails", async () => {
+    let reject!: (error: Error) => void
+    fetchMock.mockImplementation(() => new Promise((_resolve, fail) => { reject = fail }))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    expect(screen.queryByText(/Nothing needs extra attention/)).toBeNull()
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    reject(new TypeError("offline"))
+    await screen.findByRole("alert")
+    expect(screen.queryByRole("region", { name: "A little attention" })).toBeNull()
   })
 })
