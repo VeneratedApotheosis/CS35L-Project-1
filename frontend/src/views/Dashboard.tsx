@@ -6,9 +6,34 @@ import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
-import { dashboardKey, getDashboard } from "@/lib/dashboard"
+import { dashboardKey, getDashboard, type FinishedHabit } from "@/lib/dashboard"
+import { formatDate } from "@/lib/goal"
 
 const periods = (count: number) => `${count} ${count === 1 ? "period" : "periods"}`
+
+const badgeLabels = { gold: "Gold badge", silver: "Silver badge", bronze: "Bronze badge", none: "No badge" }
+const finalPercent = (rate: number | null) => rate === null ? "—"
+  : new Intl.NumberFormat(undefined, { style: "percent", maximumFractionDigits: 2 }).format(rate)
+
+function FinalResult({ habit }: { habit: FinishedHabit }) {
+  const noBadge = habit.badge === "none"
+  return (
+    <li className={`dashboard-result stack-md ${noBadge ? "dashboard-result--no-badge" : "dashboard-result--awarded"}`}>
+      <header className="dashboard-result-heading">
+        <div className="stack-sm">
+          <h3 className="text-h3 garden-name"><Link className="garden-link" href={`/habits/${habit.id}`}>{habit.name}</Link></h3>
+          <p className="text-body-sm text-secondary">Ended <time dateTime={habit.end_date}>{formatDate(habit.end_date)}</time></p>
+        </div>
+        <span className="dashboard-result-label text-caption">{badgeLabels[habit.badge]}</span>
+      </header>
+      <dl className="dashboard-result-metrics text-body">
+        <div className="stack-sm"><dt className="text-secondary">Final progress</dt><dd className="dashboard-value">{finalPercent(habit.progress)}</dd></div>
+        <div className="stack-sm"><dt className="text-secondary">Final consistency</dt><dd className="dashboard-value">{finalPercent(habit.consistency)}</dd></div>
+      </dl>
+      {noBadge && <p className="text-body-sm text-secondary">Ended below 60% of the total target. Every attempt is a chance to learn and grow.</p>}
+    </li>
+  )
+}
 
 export default function Dashboard() {
   const { user, signOut } = useAuth()
@@ -128,11 +153,25 @@ export default function Dashboard() {
             </section>
           ) : (
             <Card className="stack-md">
-              <h2 className="text-h2">No active habits yet</h2>
+              <h2 className="text-h2">{data.finished.length > 0 ? "No active habits" : "No active habits yet"}</h2>
               <p className="text-body text-secondary">Create a habit to start building your streaks, one period at a time.</p>
               <Link href="/create" className="button button--primary button--md self-start">Create a habit</Link>
             </Card>
           )}
+
+          <section className="stack-md" aria-labelledby="dashboard-finished">
+            <div className="stack-sm">
+              <h2 className="text-h2" id="dashboard-finished">Finished habits</h2>
+              <p className="text-body-sm text-secondary">Look back on your final results and what you learned along the way.</p>
+            </div>
+            {data.finished.length > 0 ? (
+              <ul className="dashboard-habits">
+                {data.finished.map((habit) => <FinalResult key={habit.id} habit={habit} />)}
+              </ul>
+            ) : (
+              <Card><p className="text-body text-secondary">No finished habits yet. When a habit ends, its final results will appear here. Keep growing at your own pace.</p></Card>
+            )}
+          </section>
         </>
       )}
     </main>

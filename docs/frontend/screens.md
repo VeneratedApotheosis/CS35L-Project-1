@@ -66,8 +66,12 @@ with a create-habit link. Successful creation redirects here and refreshes the
 summary (#170). "A little attention" lists the backend's `needs_attention`
 habits with neutral health labels and links to their details; an empty list
 shows encouragement (#214). This includes missed last periods through the
-backend's existing health rule. Finished-habit sections remain separate work
-(#215); the remaining planned presentation is described below.
+backend's existing health rule. "Finished habits" shows expired habits from the
+backend's `finished` list with the final badge, progress and consistency (#215).
+No-badge results (under 60%) have a distinct dashed, muted treatment and an
+explicit label; awarded results have a solid accent and badge-level label.
+An empty history shows encouragement. The full badges page is still planned;
+the remaining planned presentation is described below.
 
 A summary of activity across all active habits.
 

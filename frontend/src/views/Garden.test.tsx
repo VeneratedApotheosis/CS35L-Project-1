@@ -157,6 +157,7 @@ describe("Garden", () => {
         active_count: saved ? 1 : 0, overall_consistency: null, best_streak: null,
         habits: saved ? [{ id: "habit-1", name: "Practice", state: "active", streak: 0 }] : [],
         needs_attention: [],
+        finished: [],
       })
       return json(page(saved ? [habit({ name: "Practice" })] : []))
     })
