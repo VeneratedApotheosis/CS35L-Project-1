@@ -1,8 +1,8 @@
 "use client"
 
 import type { HabitWithStats } from "@/lib/habits"
-import { plantTypeById } from "@/plants/plantTypes"
-import { habitSeed } from "@/plants/habitSeed"
+import { plantTypeById } from "@/pottedPlant/plants/plantTypes"
+import { habitSeed } from "@/pottedPlant/habitSeed"
 
 const healthLabels = { healthy: "Healthy", slightly_wilted: "Slightly wilted", wilted: "Wilted" }
 

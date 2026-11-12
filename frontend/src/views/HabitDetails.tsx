@@ -11,7 +11,7 @@ import { ApiError } from "@/lib/api"
 import { getHabit, habitKeys, type Habit } from "@/lib/habits"
 import { computeEndDate, formatDate, periodPhrase } from "@/lib/goal"
 import { useProfile } from "@/lib/useProfile"
-import { plantTypeById } from "@/plants/plantTypes"
+import { plantTypeById } from "@/pottedPlant/plants/plantTypes"
 
 /** Only display data returned by the protected API, cached per account. */
 export default function HabitDetails({ id }: { id: string }) {

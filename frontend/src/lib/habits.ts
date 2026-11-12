@@ -1,4 +1,4 @@
-import type { PlantTypeId } from "@/plants/plantTypes"
+import type { PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 import { api } from "./api"
 
 export type IntervalUnit = "day" | "week" | "month"
