@@ -103,13 +103,6 @@ const PLANTS = [
       "Broad, rounded paddle leaves in an upright crown on the same stage engine as the pothos, on thick reddish-maroon petioles. The newest, most upright leaves are deep burgundy-red; the older outer leaves are glossy green and arch outward. No flowers.",
     stageNames: ["Sprout", "Young", "Fuller", "Full crown"],
   },
-  {
-    id: "lotus",
-    label: "Lotus",
-    description:
-      "A water plant: the pot holds water with lily pads floating on it, and a few round leaves and pink flowers are held above on thin stems. Buds appear in stage 3 and open by stage 4.",
-    stageNames: ["Sprout", "Pads", "Budding", "Blooming"],
-  },
 ] as const
 type PlantId = (typeof PLANTS)[number]["id"]
 

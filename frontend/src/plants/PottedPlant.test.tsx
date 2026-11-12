@@ -1,11 +1,13 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { VIEWBOX } from "./genome"
 import { PeaceLily, PeaceLilyDrawing } from "./peaceLily"
 import { PottedPlant } from "./PottedPlant"
 import { createPeaceLily } from "./peaceLily/peaceLilyStages"
 import { Pilea, PileaDrawing } from "./pilea"
 import { createPilea } from "./pilea/pileaStages"
 import { POT_PALETTES, POT_SHAPE, potLookFromSeed, type PotLook } from "./pot"
+import { PLANT_TYPES } from "./plantTypes"
 import { Pothos, PothosDrawing, createPothos } from "./pothos"
 
 const LOOK: PotLook = { palette: 3, band: "stripe", finish: "solid", seed: 99 }
@@ -112,6 +114,26 @@ describe("PottedPlant", () => {
       )
     expect(render(0.4)).toContain("width:40%")
     expect(strip(render(0.4))).toBe(strip(render()))
+  })
+})
+
+describe("the shared frame", () => {
+  it("trims the top of the original canvas and keeps its width", () => {
+    expect(VIEWBOX).toBe("0 30 200 205")
+  })
+
+  it("gives every plant the same frame and the same pot", () => {
+    const markups = PLANT_TYPES.map((plant) => ({
+      id: plant.id,
+      markup: renderToStaticMarkup(<plant.Preview seed={42} />),
+    }))
+    expect(markups).toHaveLength(10)
+    const viewBox = (markup: string) => markup.match(/viewBox="([^"]*)"/)![1]
+    const pot = (markup: string) => markup.slice(markup.indexOf("<g>"), markup.indexOf(END_OF_POT))
+    for (const { id, markup } of markups) {
+      expect(viewBox(markup), id).toBe(VIEWBOX)
+      expect(pot(markup), id).toBe(pot(markups[0].markup))
+    }
   })
 })
 
