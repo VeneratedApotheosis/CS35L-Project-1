@@ -136,7 +136,10 @@ export interface HabitProgressStats {
 }
 
 export interface HabitDetail extends HabitWithStats {
-  stats: HabitStats & HabitProgressStats
+  stats: HabitStats & HabitProgressStats & {
+    end_date: string | null
+    current_period_logs: { id: string; occurred_on: string }[]
+  }
 }
 
 export function getHabit(id: string): Promise<HabitDetail> {

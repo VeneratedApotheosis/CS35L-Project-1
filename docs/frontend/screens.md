@@ -105,6 +105,17 @@ A summary of activity across all active habits.
 
 **Actions:**
 
+Implemented in #203 and #204: the date picker defaults to today in the profile
+timezone and uses the backend's current-period bounds. Saving updates progress
+and plant stats immediately from the response, then refreshes full details,
+Garden and Dashboard. Logging errors preserve the selected date for retry.
+Expired habits disable logging. A five-second toast offers Undo through the
+delete endpoint; the current-period activity list also has individual delete
+buttons. Earlier periods have no delete action. The activity calendar and
+per-period history remain #209's separate scope. For a not-yet-started personal
+habit, the existing backend rule permits only today toward the first period;
+the date picker mirrors that exception.
+
 - **Log activity.** A date picker defaults to today and allows any date in the current period up to today.
 - **Undo** toast for about 5 seconds after logging.
 - **Delete a log** from the current period.
