@@ -22,7 +22,7 @@ const baseHabit = {
   id: "mine", owner_id: "user-a", name: "Read", description: "A chapter each evening.",
   plant_type: "peace_lily", target_count: 3, interval_count: 1, interval_unit: "week",
   stats: { state: "active", stage: 2, health: "healthy", overall_progress: 0.5, streak: 1,
-    end_date: "2026-11-21", current_period_logs: [],
+    end_date: "2026-11-21", periods: [], log_days: [], current_period_logs: [],
     consistency: { successful: 1, completed: 2, rate: 0.5 },
     current_period: { number: 2, total: 2, start: "2026-11-14", end: "2026-11-21", count: 4, target: 3 } },
   num_periods: 2, start_date: "2026-11-07", created_at: "2026-11-07T00:00:00Z",

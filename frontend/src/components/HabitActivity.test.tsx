@@ -41,7 +41,7 @@ function detail() {
     created_at: "2026-11-09T00:00:00Z",
     stats: { ...shortStats(), end_date: expired ? "2026-11-10" : notStarted ? "2026-12-04" : "2026-11-23",
       streak: logs.length >= 3 ? 1 : 0, consistency: { successful: 0, completed: 0, rate: null },
-      current_period_logs: expired ? [] : [...logs],
+      periods: [], current_period_logs: expired ? [] : [...logs],
       log_days: [{ date: "2026-11-01", count: 1 }, ...logs.map((log) => ({ date: log.occurred_on, count: 1 }))],
     },
   }

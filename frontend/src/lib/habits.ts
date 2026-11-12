@@ -135,9 +135,22 @@ export interface HabitProgressStats {
   streak: number
 }
 
+export interface HabitPeriod {
+  number: number
+  start: string
+  /** Exclusive end date, as returned by the backend. */
+  end: string
+  count: number
+  target: number
+  met: boolean
+  status: "completed" | "current" | "upcoming"
+}
+
 export interface HabitDetail extends HabitWithStats {
   stats: HabitStats & HabitProgressStats & {
     end_date: string | null
+    periods: HabitPeriod[]
+    log_days: { date: string; count: number }[]
     current_period_logs: { id: string; occurred_on: string }[]
   }
 }
