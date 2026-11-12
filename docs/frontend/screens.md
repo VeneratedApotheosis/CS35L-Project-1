@@ -55,10 +55,13 @@ All active habits shown as potted plants in a grid.
 
 ### 3 Overall Dashboard
 
-The current basic `/dashboard` page shares the Garden's saved-habit list,
-including goals, future-start labels, and habit detail links. Successful habit
-creation redirects here (#170). The activity summary below is planned for the
-logging and visualization work.
+The current `/dashboard` page uses `GET /dashboard` to show active habit count,
+overall consistency (a dash while unavailable), and current streaks per habit.
+The backend's best streak is highlighted (#213). Streaks are labelled in periods,
+and future habits show "Not started yet". New users see a friendly empty state
+with a create-habit link. Successful creation redirects here and refreshes the
+summary (#170). Attention and finished-habit sections remain separate work
+(#214 and #215); the remaining planned presentation is described below.
 
 A summary of activity across all active habits.
 

@@ -1,0 +1,140 @@
+// @vitest-environment jsdom
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { QueryProvider } from "@/lib/QueryProvider"
+import type { DashboardSummary } from "@/lib/dashboard"
+import DashboardPage from "@/app/(signed-in)/dashboard/page"
+
+const auth = vi.hoisted(() => {
+  vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test")
+  return {
+    user: { id: "user-a" } as { id: string } | null,
+    signOut: vi.fn(),
+    getSession: vi.fn(),
+  }
+})
+vi.mock("@/auth/useAuth", () => ({ useAuth: () => auth }))
+vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: auth.getSession } } }))
+
+const fetchMock = vi.fn()
+const empty: DashboardSummary = { active_count: 0, overall_consistency: null, best_streak: null, habits: [] }
+const summary: DashboardSummary = {
+  active_count: 3, overall_consistency: 0.625,
+  best_streak: { id: "read", name: "Read", streak: 4 },
+  habits: [
+    { id: "read", name: "Read", state: "active", streak: 4 },
+    { id: "walk", name: "Walk", state: "active", streak: 1 },
+    { id: "study", name: "Study", state: "not_started", streak: 0 },
+  ],
+}
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
+  status, headers: { "Content-Type": "application/json" },
+})
+const metric = (label: string) => screen.getByText(label).parentElement!
+
+beforeEach(() => {
+  auth.user = { id: "user-a" }
+  auth.getSession.mockImplementation(async () => ({
+    data: { session: auth.user ? { access_token: `token-${auth.user.id}` } : null },
+  }))
+  vi.stubGlobal("fetch", fetchMock)
+})
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+  vi.resetAllMocks()
+})
+
+describe("Dashboard issue #213", () => {
+  it("shows the backend's count, percentage and per-habit streaks, highlighting its chosen best", async () => {
+    fetchMock.mockResolvedValue(json(summary))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    await screen.findByText("62.5%")
+    expect(within(metric("Active habits")).getByText("3")).toBeTruthy()
+    expect(within(metric("Best current streak")).getByText("4 periods")).toBeTruthy()
+    const list = screen.getByRole("list")
+    const rows = within(list).getAllByRole("listitem")
+    expect(rows).toHaveLength(3)
+    expect(rows[0].classList.contains("dashboard-habit--best")).toBe(true)
+    expect(within(rows[0]).getByText("Best streak")).toBeTruthy()
+    expect(within(rows[1]).getByText("1 period")).toBeTruthy()
+    expect(within(rows[2]).getByText("0 periods")).toBeTruthy()
+    expect(within(rows[2]).getByText("Not started yet")).toBeTruthy()
+    expect(within(rows[0]).getByRole("link", { name: "Read" }).getAttribute("href")).toBe("/habits/read")
+    expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/dashboard")
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer token-user-a")
+  })
+
+  it("shows a dash before a completed period and a friendly empty state", async () => {
+    fetchMock.mockResolvedValue(json(empty))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    await screen.findByText("No active habits yet")
+    expect(within(metric("Active habits")).getByText("0")).toBeTruthy()
+    expect(within(metric("Overall consistency")).getByText("—")).toBeTruthy()
+    expect(screen.getByText("Available after your first completed period.")).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Create a habit" }).getAttribute("href")).toBe("/create")
+    expect(screen.queryByRole("list")).toBeNull()
+  })
+
+  it("shows actual zero consistency as 0%, not a missing value", async () => {
+    fetchMock.mockResolvedValue(json({ ...summary, overall_consistency: 0, best_streak: null,
+      habits: summary.habits.map((habit) => ({ ...habit, streak: 0 })) }))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    await screen.findByText("0%")
+    expect(within(metric("Best current streak")).getByText("—")).toBeTruthy()
+    expect(screen.queryByText("Best streak")).toBeNull()
+  })
+
+  it("uses the backend's tie choice instead of highlighting every tied habit", async () => {
+    fetchMock.mockResolvedValue(json({ ...summary,
+      habits: summary.habits.map((habit) => ({ ...habit, streak: 4 })) }))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    await screen.findByRole("list")
+    expect(screen.getAllByText("Best streak")).toHaveLength(1)
+    expect(within(metric("Best current streak")).getByRole("link").textContent).toBe("Read")
+  })
+
+  it("shows loading without inventing zero stats before the response arrives", async () => {
+    let resolve!: (response: Response) => void
+    fetchMock.mockImplementation(() => new Promise<Response>((done) => { resolve = done }))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    expect(screen.getByRole("status").textContent).toBe("Loading your dashboard…")
+    expect(screen.queryByText("Active habits")).toBeNull()
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    resolve(json(empty))
+    await screen.findByText("No active habits yet")
+  })
+
+  it("shows an error and recovers when Try again succeeds", async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError("offline"))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    expect((await screen.findByRole("alert")).textContent).toContain("Couldn't load your dashboard")
+    expect(screen.queryByText("No active habits yet")).toBeNull()
+    fetchMock.mockResolvedValue(json(summary))
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }))
+    await screen.findByText("62.5%")
+    expect(screen.queryByRole("alert")).toBeNull()
+  })
+
+  it("clears the previous account's summary on account change", async () => {
+    fetchMock.mockResolvedValue(json(summary))
+    const view = render(<QueryProvider><DashboardPage /></QueryProvider>)
+    await screen.findByText("62.5%")
+    auth.user = { id: "user-b" }
+    fetchMock.mockResolvedValue(json(empty))
+    view.rerender(<QueryProvider><DashboardPage /></QueryProvider>)
+    expect(screen.queryByText("62.5%")).toBeNull()
+    expect(screen.queryAllByRole("link", { name: "Read" })).toHaveLength(0)
+    await screen.findByText("No active habits yet")
+    expect(fetchMock.mock.calls.at(-1)?.[1].headers.Authorization).toBe("Bearer token-user-b")
+  })
+
+  it("requests sign-in again when the backend rejects the session", async () => {
+    fetchMock.mockResolvedValue(json({ error: { code: "unauthorized", message: "Invalid token" } }, 401))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    await screen.findByRole("alert")
+    fireEvent.click(screen.getByRole("button", { name: "Sign in again" }))
+    expect(auth.signOut).toHaveBeenCalledOnce()
+    expect(screen.queryByText("Active habits")).toBeNull()
+  })
+})
