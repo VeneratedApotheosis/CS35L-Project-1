@@ -108,7 +108,7 @@ RLS can't restrict which columns change, so column-level grants do it. A grant i
 | Table | Users can update | Status |
 | --- | --- | --- |
 | `profiles` | `display_name`, `avatar_url`, `timezone` | Live |
-| `habits` | `name`, `description`, `plant_type` only | Planned (#104) |
+| `habits` | Nothing. A habit cannot be edited, only created and deleted | Planned (`20261111_01_lock_all_habit_columns.sql`). #104 had allowed `name`, `description` and `plant_type` |
 | `activity_logs` | Nothing. Revoke `update`, but never revoke `delete` | Planned (#104) |
 
 Re-run the revokes whenever a new table is added.
@@ -145,7 +145,7 @@ Re-run the revokes whenever a new table is added.
 | Personal habits only. Groups are out of scope | Keeps the first version small |
 | Table is `profiles`, not `users` | Avoids confusion with `auth.users` |
 | Profile row is created by a trigger, not an insert policy | Works for every sign-in method with no frontend code |
-| Goal columns are locked with column grants | RLS can't restrict columns, and a grant is an allow-list |
+| No `habits` column can be updated, enforced with column grants | Accountability comes before flexibility: a habit is a commitment. RLS can't restrict columns, and a grant is an allow-list |
 | Habits are hard deleted, with a confirmation | Badges and streaks are computed, so nothing stored is lost |
 | Email is not copied to `profiles` | A copy goes stale and could leak |
 | One timezone per user, on the profile | The server needs it to know what "today" is |
