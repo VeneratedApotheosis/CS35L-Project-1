@@ -28,8 +28,10 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | Project layout, per-request Supabase client, `requireAuth`, `validate`, error handler | Built (#143) |
 | `GET` and `PATCH /me` | Built (#131) |
 | `POST /habits` | Built (#129) |
-| `GET /habits` and `GET /habits/:id` | Planned (#130) |
-| Log endpoints and calculations | Planned: Week 3 |
+| `GET /habits` and `GET /habits/:id`, with `stats` | Built (#130, #199, #200) |
+| Calculations in `domain/` (periods, progress, streak, growth, health, badges) | Built (#191 to #194) |
+| `POST` and `DELETE` for logs | Built (#196, #197) |
+| `GET /dashboard` | Built (#201) |
 | Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
@@ -79,7 +81,7 @@ backend/src/
   config/env.ts        reads and validates env vars in one place
   lib/                 supabase.ts (the only createClient), logger, errors
   middleware/          requireAuth, validate, errorHandler
-  routes/              one file per resource: habits, me, logs
+  routes/              one file per resource: habits, me, logs, dashboard
   services/            the logic for each route, talks to Supabase
   domain/              pure calculation functions: periods, streaks, growth
 ```
@@ -110,13 +112,13 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `GET /me` | Signed-in user, display name and timezone | Built (#131) |
 | `PATCH /me` | Update display name and timezone | Built (#131) |
 | `POST /habits` | Create a habit | Built (#129) |
-| `GET /habits` | List own habits | #130 |
-| `GET /habits/:id` | Get one habit | #130 |
+| `GET /habits` | List own habits, each with short `stats` | Built (#130, #199) |
+| `GET /habits/:id` | Get one habit with full `stats` | Built (#130, #200) |
 | `PATCH /habits/:id` | Edit name, description, plant type | #124 (backlog) |
 | `DELETE /habits/:id` | Delete a habit | #125 (backlog) |
-| `POST /habits/:id/logs` | Add a log, current period only | Week 3 |
-| `DELETE /habits/:id/logs/:logId` | Delete a log | Week 3 |
-| `GET /habits/:id/progress`, `/streak`, `/summary` | Calculations | Week 3 |
+| `POST /habits/:id/logs` | Add a log, current period only | Built (#196) |
+| `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
+| `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | Calls `delete_my_account` | No issue yet |
 
 Routes have no version prefix.
@@ -144,6 +146,64 @@ Routes have no version prefix.
 
 `PATCH /me` takes `display_name` (1 to 50 characters) and `timezone`, an IANA name such as `America/Los_Angeles`. Invalid names get 400, and the database trigger also rejects them. While the timezone is unset, the backend uses UTC.
 
+### 6.3 Logs
+
+`POST /habits/:id/logs` takes an optional body `{ "occurred_on": "2026-11-05" }`. With no body, or no date, the log is for today in the user's timezone.
+
+| Case | Result |
+| --- | --- |
+| Today, or an earlier day in the current period | 201 |
+| A date in the future | 400 |
+| A date in an earlier period, which is locked | 400 |
+| Any date on an expired habit | 400 |
+| A habit that has not started, for today | 201, and the log counts toward the first period |
+| A habit that has not started, for any other day | 400 |
+| Another user's habit, or no such habit | 404 |
+
+The response is `{ "log": { id, habit_id, occurred_on }, "stats": <short stats> }`. The stats come with it so the app can move the bar and grow the plant from one response.
+
+`DELETE /habits/:id/logs/:logId` deletes a log in the current period and returns `{ "stats": <short stats> }`. A log in an earlier period, or on an expired habit, gets 400, because those periods are locked. A missing log, or a log on another user's habit, gets 404.
+
+### 6.4 Stats
+
+Stats are calculated by the rules in section 8 whenever they are asked for, and nothing is stored. Dates are `YYYY-MM-DD`, and rates are numbers from 0 to 1 (or `null` when there is nothing to calculate yet).
+
+`GET /habits` adds a short `stats` block to every habit, for the Garden:
+
+| Field | Meaning |
+| --- | --- |
+| `state` | `not_started`, `active` or `expired` |
+| `current_period` | `number`, `total`, `start`, `end` (the first day of the next period), `count` and `target`. Before the start it is the first period, and after the end it is the last one |
+| `overall_progress` | Rule 8.3, or `null` for a habit with no end |
+| `stage` | Growth stage, 1 to 4 (rule 8.7) |
+| `health` | `healthy`, `slightly_wilted` or `wilted` (rule 8.8) |
+
+`GET /habits/:id` adds a full `stats` block, for the Details page. It has everything above plus:
+
+| Field | Meaning |
+| --- | --- |
+| `end_date` | The first day after the last period, or `null` |
+| `consistency` | `successful`, `completed` and `rate` (rule 8.4) |
+| `streak` | Rule 8.6 |
+| `periods` | Every period with `number`, `start`, `end`, `count`, `target`, `met` and `status` (`completed`, `current` or `upcoming`) |
+| `log_days` | One entry per day that has logs, oldest first, as `{ date, count }`, for the calendar |
+| `current_period_logs` | The logs that can still be deleted, as `{ id, occurred_on }`. Empty once the habit has expired |
+
+The list reads the logs of the whole page in one query, not one per habit.
+
+### 6.5 Dashboard
+
+`GET /dashboard` returns the overall view across all of the user's habits:
+
+| Field | Meaning |
+| --- | --- |
+| `active_count` | Habits that have not expired, including ones not started yet |
+| `overall_consistency` | Rule 8.5, or `null` until a habit has finished a period |
+| `best_streak` | `{ id, name, streak }` for the active habit with the longest streak, or `null` when every streak is 0 |
+| `habits` | Every active habit with its `streak`, `consistency`, `health` and `state`, longest streak first |
+| `needs_attention` | Active habits whose plant is not healthy, wilted first. A missed last period always makes the plant at least slightly wilted, so this covers both |
+| `finished` | Expired habits with `end_date`, `progress`, `consistency` and `badge`, most recently ended first. A badge of `none` means the habit failed |
+
 ---
 
 ## 7. Validation, errors and logging
@@ -167,6 +227,8 @@ All calculations live in the backend, in `domain/`. Dates use Luxon, which handl
 - Period *k* covers **[start + k × interval, start + (k+1) × interval)**. Boundaries fall at midnight in the user's timezone. Month periods always count from the original start date, and the day is clamped to the end of a shorter month.
 - Each log stores the **date the activity happened** (`occurred_on`, a local date) and the time it was logged.
 - Users can log any date in the **current period**, up to and including today. Future dates are not allowed.
+- A habit that **has not started yet** can be logged for today only. That log counts toward the first period, as does any date before the start.
+- The first period is the one shown as "this period" before the start, and the last one is shown after the end.
 - Several logs on the same day are allowed, with no cap.
 - Users can delete logs in the current period. Logs are never edited. To fix one, delete it and add it again.
 - A period **locks when it ends**. Locked periods are final.
@@ -213,7 +275,7 @@ The average of each active habit's consistency, leaving out habits with no compl
 | 3 | 50 to 74% |
 | 4 | 75 to 100% |
 
-There are four stages, the same as the frontend plant engine. Growth never reverses. A plant can reach stage 4 before the end date.
+There are four stages, the same as the frontend plant engine. Growth never reverses as time passes, and a plant can reach stage 4 before the end date. Deleting a log in the current period lowers progress, so it can lower the stage again.
 
 ### 8.8 Plant health
 
@@ -283,5 +345,4 @@ The backend is a normal Node service: `npm run build`, then `npm start`. Set the
 | Item | Notes |
 | --- | --- |
 | Hosting for the backend | Section 11 |
-| Logging on a habit that has not started yet | Not decided |
 | Changing timezone mid-habit | Past `occurred_on` dates stay as stored. Not decided otherwise |

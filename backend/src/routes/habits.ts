@@ -7,7 +7,7 @@ import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import {
   createHabit,
-  getHabit,
+  getHabitDetail,
   listHabits,
   type CreateHabitInput,
 } from "../services/habits.js";
@@ -75,6 +75,6 @@ habitsRouter.get(
   async (_req, res) => {
     const { user, supabase, valid } = res.locals;
     const { id } = valid.params as z.infer<typeof habitParams>;
-    res.json(await getHabit(supabase, user.id, id));
+    res.json(await getHabitDetail(supabase, user.id, id));
   },
 );
