@@ -114,14 +114,13 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `POST /habits` | Create a habit | Built (#129) |
 | `GET /habits` | List own habits, each with short `stats` | Built (#130, #199) |
 | `GET /habits/:id` | Get one habit with full `stats` | Built (#130, #200) |
-| `PATCH /habits/:id` | Edit name, description, plant type | #124 (backlog) |
 | `DELETE /habits/:id` | Delete a habit | #125 (backlog) |
 | `POST /habits/:id/logs` | Add a log, current period only | Built (#196) |
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | Calls `delete_my_account` | No issue yet |
 
-Routes have no version prefix.
+Routes have no version prefix. There is no route to edit a habit, because habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
 
 ### 6.1 Create a habit
 
