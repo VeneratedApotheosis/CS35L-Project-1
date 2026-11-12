@@ -79,6 +79,29 @@ export default function Dashboard() {
             </Card>
           </dl>
 
+          <section className="stack-md" aria-labelledby="dashboard-attention">
+            <div className="stack-sm">
+              <h2 className="text-h2" id="dashboard-attention">A little attention</h2>
+              <p className="text-body-sm text-secondary">Small steps count. A little care can help your habits grow.</p>
+            </div>
+            {data.needs_attention.length > 0 ? (
+              <ul className="dashboard-habits">
+                {data.needs_attention.map((habit) => (
+                  <li key={habit.id} className="dashboard-habit">
+                    <Link className="text-h3 garden-link garden-name" href={`/habits/${habit.id}`}>{habit.name}</Link>
+                    <span className="text-body-sm text-secondary">
+                      {habit.health === "wilted" ? "Wilted" : habit.health === "slightly_wilted" ? "Slightly wilted" : "Ready for a little care"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Card>
+                <p className="text-body text-secondary">Nothing needs extra attention right now. Keep growing at your own pace.</p>
+              </Card>
+            )}
+          </section>
+
           {data.habits.length > 0 ? (
             <section className="stack-md" aria-labelledby="dashboard-streaks">
               <div className="stack-sm">
