@@ -52,6 +52,7 @@ flowchart LR
 - **The backend acts as the signed-in user.** No valid token gets 401. There is no admin key.
 - **Store facts, compute stats.** Only habits and logs are stored. Progress, streaks, health, growth and badges are calculated by the backend when shown.
 - **One timezone per user,** stored on the profile. "Today" and period boundaries use it.
+- **Accountability comes before flexibility.** A habit is a commitment, so it cannot be edited after it is created. Letting users keep reshaping a habit would stop holding them to it. To change one, delete it and create a new one.
 - **One owner per rule.** If a detail has a document above, link to it instead of copying it here.
 
 ---
