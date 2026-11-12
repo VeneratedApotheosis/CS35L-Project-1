@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryProvider } from "@/lib/QueryProvider"
-import type { DashboardSummary } from "@/lib/dashboard"
+import type { DashboardSummary, FinishedHabit } from "@/lib/dashboard"
 import DashboardPage from "@/app/(signed-in)/dashboard/page"
 
 const auth = vi.hoisted(() => {
@@ -17,7 +17,7 @@ vi.mock("@/auth/useAuth", () => ({ useAuth: () => auth }))
 vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: auth.getSession } } }))
 
 const fetchMock = vi.fn()
-const empty: DashboardSummary = { active_count: 0, overall_consistency: null, best_streak: null, habits: [], needs_attention: [] }
+const empty: DashboardSummary = { active_count: 0, overall_consistency: null, best_streak: null, habits: [], needs_attention: [], finished: [] }
 const summary: DashboardSummary = {
   active_count: 3, overall_consistency: 0.625,
   best_streak: { id: "read", name: "Read", streak: 4 },
@@ -27,12 +27,17 @@ const summary: DashboardSummary = {
     { id: "study", name: "Study", state: "not_started", streak: 0 },
   ],
   needs_attention: [],
+  finished: [],
 }
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json" },
 })
 
 const metric = (label: string) => screen.getByText(label).parentElement!
+const finishedHabit = (patch: Partial<FinishedHabit> = {}): FinishedHabit => ({
+  id: "finished-read", name: "Finished reading", end_date: "2026-11-01",
+  progress: 1, consistency: 1, badge: "gold", ...patch,
+})
 
 beforeEach(() => {
   auth.user = { id: "user-a" }
@@ -175,5 +180,71 @@ describe("Dashboard issue #214", () => {
     reject(new TypeError("offline"))
     await screen.findByRole("alert")
     expect(screen.queryByRole("region", { name: "A little attention" })).toBeNull()
+  })
+})
+
+describe("Dashboard issue #215", () => {
+  it.each([
+    ["gold", 1, 0.8, "Gold badge", "100%", "80%"],
+    ["silver", 1, 0.5, "Silver badge", "100%", "50%"],
+    ["bronze", 0.6, 0.25, "Bronze badge", "60%", "25%"],
+    ["none", 0.5996153846, 0, "No badge", "59.96%", "0%"],
+  ] as const)("shows the backend's %s result with final progress and consistency", async (badge, progress, consistency, label, progressText, consistencyText) => {
+    fetchMock.mockResolvedValue(json({ ...empty, finished: [finishedHabit({ badge, progress, consistency })] }))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    const history = await screen.findByRole("region", { name: "Finished habits" })
+    const row = within(history).getByRole("listitem")
+    expect(within(row).getByText(label)).toBeTruthy()
+    expect(within(within(row).getByText("Final progress").parentElement!).getByText(progressText)).toBeTruthy()
+    expect(within(within(row).getByText("Final consistency").parentElement!).getByText(consistencyText)).toBeTruthy()
+    expect(within(row).getByRole("link", { name: "Finished reading" }).getAttribute("href")).toBe("/habits/finished-read")
+    expect(row.querySelector("time")?.getAttribute("datetime")).toBe("2026-11-01")
+    expect(screen.queryByRole("region", { name: "Current streaks" })).toBeNull()
+    expect(screen.getByRole("heading", { name: "No active habits" })).toBeTruthy()
+  })
+
+  it("distinguishes no-badge results with explicit text and a separate visual treatment", async () => {
+    fetchMock.mockResolvedValue(json({ ...empty, finished: [
+      finishedHabit({ id: "awarded", name: "Awarded", badge: "bronze", progress: 0.6 }),
+      finishedHabit({ id: "no-badge", name: "Another try", badge: "none", progress: 0.2 }),
+    ] }))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    const history = await screen.findByRole("region", { name: "Finished habits" })
+    const rows = within(history).getAllByRole("listitem")
+    expect(rows[0].classList.contains("dashboard-result--awarded")).toBe(true)
+    expect(rows[1].classList.contains("dashboard-result--no-badge")).toBe(true)
+    expect(within(rows[1]).getByText("No badge")).toBeTruthy()
+    expect(within(rows[1]).getByText(/Ended below 60%/)).toBeTruthy()
+    expect(within(rows[0]).queryByText(/Ended below 60%/)).toBeNull()
+    // Preserve the backend's order rather than regrouping or recalculating results.
+    expect(within(history).getAllByRole("link").map((link) => link.textContent)).toEqual(["Awarded", "Another try"])
+  })
+
+  it("shows encouragement when there are no expired habits", async () => {
+    fetchMock.mockResolvedValue(json(summary))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    const history = await screen.findByRole("region", { name: "Finished habits" })
+    expect(within(history).getByText(/No finished habits yet/)).toBeTruthy()
+    expect(within(history).queryByRole("list")).toBeNull()
+    expect(within(history).queryByRole("link", { name: "Read" })).toBeNull()
+  })
+
+  it("keeps an unavailable final value distinct from a real zero", async () => {
+    fetchMock.mockResolvedValue(json({ ...empty, finished: [finishedHabit({ progress: 0, consistency: null, badge: "none" })] }))
+    render(<QueryProvider><DashboardPage /></QueryProvider>)
+    const history = await screen.findByRole("region", { name: "Finished habits" })
+    expect(within(history).getByText("0%")).toBeTruthy()
+    expect(within(history).getByText("—")).toBeTruthy()
+  })
+
+  it("clears finished results when switching accounts", async () => {
+    fetchMock.mockResolvedValue(json({ ...empty, finished: [finishedHabit()] }))
+    const view = render(<QueryProvider><DashboardPage /></QueryProvider>)
+    await screen.findByRole("link", { name: "Finished reading" })
+    auth.user = { id: "user-b" }
+    fetchMock.mockResolvedValue(json(empty))
+    view.rerender(<QueryProvider><DashboardPage /></QueryProvider>)
+    expect(screen.queryByRole("link", { name: "Finished reading" })).toBeNull()
+    await screen.findByText(/No finished habits yet/)
   })
 })
