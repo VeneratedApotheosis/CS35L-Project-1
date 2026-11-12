@@ -2,7 +2,7 @@
 
 What each screen shows and does. For the rules behind the numbers, see [the backend design](../backend/design.md#8-calculation-rules). For how the screens look, see [the frontend design](design.md). For the big picture, see [design.md](../design.md).
 
-Group habits are not part of this version, so no screen shows them.
+Screens 1 to 7 are for personal habits. Shared habits are planned and described in [section 8](#8-shared-habits-planned).
 
 ---
 
@@ -16,6 +16,7 @@ Group habits are not part of this version, so no screen shows them.
   - [5. Create Habit](#5-create-habit)
   - [6. Badges and Habit History](#6-badges-and-habit-history)
   - [7. Settings](#7-settings)
+  - [8. Shared habits (planned)](#8-shared-habits-planned)
 
 ---
 ## Screens
@@ -28,6 +29,8 @@ flowchart LR
     Garden <--> Settings
     Garden --> Create[Create Habit]
     Garden --> Details[Habit Details]
+    Garden --> Shared[Shared Habit, planned]
+    Join[Join a habit, planned] --> Shared
     Dashboard --> Details
     Create --> Details
     Badges --> BadgeDetails[Badge Details]
@@ -135,3 +138,27 @@ automatically. Profile setup failures show a retry action.
 - Light/dark mode toggle, saved in the browser.
 - Log out. Delete account, under Account, with a confirmation that lists what is deleted (habits, activity logs, badges).
 - **Nav:** Overall Dashboard, My Garden, Badges.
+
+### 8 Shared habits (planned)
+
+Not built yet. The rules are in [the backend design](../backend/design.md#66-shared-habits-planned) and the tables are in [the database design](../database/design.md#8-shared-habits-planned).
+
+**Create.** Create Habit (screen 5) gets a choice between "Just me" and "With friends". With friends adds two fields: **Join by**, a date on or before the start date (default: the day before), and **Max members**, from 2 up to the system limit. The start date can be today or later. The confirm step says the goal and start date lock once a friend joins, and that after the start nothing can be edited. After saving, the owner sees the invite.
+
+**Invite.** The shared habit page shows the link (`/join/[code]`) with a copy button, **Get a new link**, and **Close joining**. Joining also closes by itself after the join by date.
+
+**Join (`/join/[code]`).** Signing in is required, and signing in returns here. The page shows the name, the goal as a sentence, the start date, the owner's name and how many places are left. It says that other members will see your display name. A wrong, closed or expired link shows one message that does not say which. A full habit and an ended joining window each have their own message. Someone who is already a member goes straight to the habit.
+
+**Shared habit page.**
+- **Info:** name, description, goal, start and end dates, remaining duration.
+- **Plant:** the one shared plant, at the group's growth stage and health.
+- **Progress:** the group progress (the average), your own progress (current period count with ticks, overall progress, consistency and streak), and a row for every member with their name, overall progress, current period count, streak and health. Exact logs are never shown.
+- **Activity:** your own calendar and per-period history. **Log activity** has a date picker as in screen 4, with Undo, and you can delete your own logs in the current period. Before the start date, the page says "Starts on ...", shows who has joined, and nobody can log.
+- **Owner actions:** edit before the start (within the rules in the backend design), remove a member, transfer ownership, get a new link or close joining, and delete the habit with a confirmation.
+- **Member actions:** leave, with a confirmation that says your past logs stay but you are no longer counted. The owner transfers ownership before leaving.
+
+**Garden.** A shared habit is one card with the group plant, a "shared" marker with the member count, and your own current period bar. How shared and personal habits are ordered is not decided.
+
+**Badges.** Each member earns their own badge from their own results. Group badges are not decided yet.
+
+**Nav:** the same as the other screens.
