@@ -79,4 +79,5 @@ export const api = {
     request<T>(path, { method: "POST", body: JSON.stringify(json) }),
   patch: <T>(path: string, json: unknown) =>
     request<T>(path, { method: "PATCH", body: JSON.stringify(json) }),
+  delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
 }

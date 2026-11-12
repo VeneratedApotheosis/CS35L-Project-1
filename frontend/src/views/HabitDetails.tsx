@@ -6,6 +6,7 @@ import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
 import { HabitPlant } from "@/components/HabitPlant"
 import { HabitProgress } from "@/components/HabitProgress"
+import { HabitActivity } from "@/components/HabitActivity"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { getHabit, habitKeys, type Habit } from "@/lib/habits"
@@ -22,15 +23,17 @@ export default function HabitDetails({ id }: { id: string }) {
     queryFn: () => getHabit(id),
     enabled: Boolean(user),
     retry: false,
+    refetchInterval: 60_000,
   })
 
   const status = habit.error instanceof ApiError ? habit.error.status : undefined
   const unavailable = status === 404 || status === 400
+  const fatalError = habit.isError && (!habit.data || unavailable || status === 401)
 
   return (
     <main className="stack-lg">
       <Link href="/" className="button button--ghost button--md self-start">Back to Garden</Link>
-      {habit.isError ? (
+      {fatalError ? (
         <Card className="stack-md">
           <div role="alert" className="stack-sm">
             <h1 className="text-h2">
@@ -52,13 +55,15 @@ export default function HabitDetails({ id }: { id: string }) {
         </Card>
       ) : habit.isPending ? (
         <p role="status" className="text-body text-secondary">Loading habit…</p>
-      ) : (
+      ) : habit.data ? (
         <>
+          {habit.isError && <p role="alert" className="text-body-sm">Couldn&apos;t refresh the latest details. Your last saved activity is still shown.</p>}
           <HabitPlant habit={habit.data} />
           <HabitInfo habit={habit.data} today={profile.data?.today} />
           <HabitProgress stats={habit.data.stats} />
+          <HabitActivity key={habit.data.id} habit={habit.data} today={profile.data?.today} />
         </>
-      )}
+      ) : null}
     </main>
   )
 }
