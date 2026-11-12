@@ -90,8 +90,21 @@ export function createHabit(input: CreateHabitInput): Promise<Habit> {
   return api.post<Habit>("/habits", input)
 }
 
+/** Read-model stats supplied by GET /habits and GET /habits/:id. */
+export interface HabitStats {
+  state: "not_started" | "active" | "expired"
+  current_period: { number: number; total: number | null; start: string; end: string; count: number; target: number }
+  overall_progress: number | null
+  stage: 1 | 2 | 3 | 4
+  health: "healthy" | "slightly_wilted" | "wilted"
+}
+
+export interface HabitWithStats extends Habit {
+  stats: HabitStats
+}
+
 export interface HabitPage {
-  habits: Habit[]
+  habits: HabitWithStats[]
   total: number
   limit: number
   offset: number
@@ -106,6 +119,6 @@ export function listHabits(offset = 0): Promise<HabitPage> {
   return api.get<HabitPage>(`/habits?limit=50&offset=${offset}`)
 }
 
-export function getHabit(id: string): Promise<Habit> {
-  return api.get<Habit>(`/habits/${encodeURIComponent(id)}`)
+export function getHabit(id: string): Promise<HabitWithStats> {
+  return api.get<HabitWithStats>(`/habits/${encodeURIComponent(id)}`)
 }

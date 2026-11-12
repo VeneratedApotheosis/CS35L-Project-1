@@ -4,6 +4,8 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
+import { PlantCard } from "@/components/PlantCard"
+import { habitSeed } from "@/plants/habitSeed"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { durationPhrase, formatDate, periodPhrase } from "@/lib/goal"
@@ -79,10 +81,20 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
 
       {!pending && rows.length > 0 && (
         <section aria-label="Saved habits" className="stack-md">
-          <ul className="garden-list">
+          <ul className={title === "My Garden" ? "garden-list plant-card-grid" : "garden-list"}>
             {rows.map((habit) => (
               <li key={habit.id}>
-                <Card className="stack-sm">
+                {title === "My Garden" ? (
+                  <div className="stack-sm">
+                    <PlantCard name={habit.name} plantType={habit.plant_type}
+                      seed={habitSeed(habit.id)} stage={habit.stats.stage} health={habit.stats.health}
+                      count={habit.stats.current_period.count} target={habit.stats.current_period.target}
+                      periodLabel={habit.stats.state === "not_started" ? "First period" : habit.stats.state === "expired" ? "Final period" : "Current period"}
+                      detailsHref={`/habits/${habit.id}`} />
+                    {habit.stats.state === "not_started" && <p className="text-body-sm">Not started yet · Starts {formatDate(habit.start_date)}</p>}
+                    {habit.stats.state === "expired" && <p className="text-body-sm">Finished</p>}
+                  </div>
+                ) : <Card className="stack-sm">
                   <h2 className="text-h3 garden-name">
                     <Link className="garden-link" href={`/habits/${habit.id}`}>{habit.name}</Link>
                   </h2>
@@ -94,7 +106,7 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
                   {today && habit.start_date > today && (
                     <p className="text-body-sm">Not started yet · Starts {formatDate(habit.start_date)}</p>
                   )}
-                </Card>
+                </Card>}
               </li>
             ))}
           </ul>
