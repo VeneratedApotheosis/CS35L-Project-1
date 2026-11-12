@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useId, useRef } from "react"
 import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Pencil, Plus } from "lucide-react"
-import { plantTypeById, type PlantTypeId } from "@/plants/plantTypes"
+import { plantTypeById, type PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 import { Button } from "./Button"
 import { Card } from "./Card"
 import { Icon } from "./Icon"

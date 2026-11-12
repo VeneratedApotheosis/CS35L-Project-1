@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
-import { PLANT_TYPES } from "@/plants/plantTypes"
+import { PLANT_TYPES } from "@/pottedPlant/plants/plantTypes"
 import { PlantCard, type PlantCardProps } from "./PlantCard"
 
 const props: PlantCardProps = {

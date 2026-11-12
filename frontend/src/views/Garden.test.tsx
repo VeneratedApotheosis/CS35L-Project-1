@@ -22,7 +22,7 @@ vi.mock("@/lib/supabase", () => ({
   supabase: { auth: { getSession: auth.getSession } },
 }))
 // The form's graphics are unrelated to fetching and saving habits.
-vi.mock("@/plants/plantTypes", () => {
+vi.mock("@/pottedPlant/plants/plantTypes", () => {
   const plant = { id: "pothos", label: "Pothos", blurb: "", Preview: ({ seed, stage }: { seed: number; stage: number }) => <svg data-testid="plant-preview" data-seed={seed} data-stage={stage} /> }
   return { DEFAULT_PLANT_TYPE: "pothos", PLANT_TYPES: [plant], plantTypeById: () => plant }
 })

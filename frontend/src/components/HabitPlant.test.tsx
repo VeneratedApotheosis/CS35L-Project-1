@@ -2,11 +2,11 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest"
 import type { HabitWithStats } from "@/lib/habits"
-import { habitSeed } from "@/plants/habitSeed"
+import { habitSeed } from "@/pottedPlant/habitSeed"
 import { HabitPlant } from "./HabitPlant"
 import { PlantCard } from "./PlantCard"
 
-vi.mock("@/plants/plantTypes", () => ({
+vi.mock("@/pottedPlant/plants/plantTypes", () => ({
   plantTypeById: () => ({ label: "Pothos", Preview: ({ seed, stage }: { seed: number; stage: number }) => (
     <svg data-testid="plant" data-seed={seed} data-stage={stage} />
   ) }),

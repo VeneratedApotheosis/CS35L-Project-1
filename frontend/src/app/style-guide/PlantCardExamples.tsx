@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/Button"
 import { PlantCard, type PlantHealth } from "@/components/PlantCard"
-import { PLANT_TYPES } from "@/plants/plantTypes"
+import { PLANT_TYPES } from "@/pottedPlant/plants/plantTypes"
 
 const stages = [1, 2, 3, 4] as const
 const healthOptions: { value: PlantHealth; label: string }[] = [
