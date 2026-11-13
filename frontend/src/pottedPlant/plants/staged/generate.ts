@@ -1,4 +1,5 @@
 import { placeOutline } from "../../geometry"
+import { bendOutline } from "./wilt"
 import type { Pt } from "../../geometry"
 import { clamp, lerp, mulberry32 } from "../../rng"
 import { validateConfig } from "./config"
@@ -143,7 +144,7 @@ export function createStagedPlant<Spec>(
     buildStage(genes, k + 1, leafCount, scales[k], leafShare, species),
   )
 
-  const plant: StagedPlant<Spec> = { seed, stages }
+  const plant: StagedPlant<Spec> = { seed, stages, species }
   cache.set(key, plant)
   return plant
 }
@@ -154,5 +155,7 @@ export function leafOutline<Spec>(
   species: StagedPlantSpecies<Spec>,
   perSegment: number = species.config.search.fitSegments,
 ): Pt[] {
-  return placeOutline(species.leaf.outline(leaf.spec, leaf.length, perSegment, leaf.fan), { x: leaf.baseX, y: leaf.baseY }, leaf.angle)
+  const straight = species.leaf.outline(leaf.spec, leaf.length, perSegment, leaf.fan)
+  const shaped = leaf.bend ? bendOutline(straight, leaf.length, leaf.bend) : straight
+  return placeOutline(shaped, { x: leaf.baseX, y: leaf.baseY }, leaf.angle)
 }

@@ -118,15 +118,6 @@
   height: auto;
 }
 
-/* A restrained health cue until the dedicated wilted drawings in #152 exist. */
-.plant-card__illustration[data-health="slightly_wilted"] {
-  filter: saturate(0.8);
-}
-
-.plant-card__illustration[data-health="wilted"] {
-  filter: saturate(0.55);
-}
-
 .plant-card-grid {
   display: grid;
   gap: clamp(var(--space-6), 2.5vw, var(--space-10));
