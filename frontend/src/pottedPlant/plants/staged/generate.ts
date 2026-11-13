@@ -143,7 +143,7 @@ export function createStagedPlant<Spec>(
     buildStage(genes, k + 1, leafCount, scales[k], leafShare, species),
   )
 
-  const plant: StagedPlant<Spec> = { seed, stages }
+  const plant: StagedPlant<Spec> = { seed, stages, species }
   cache.set(key, plant)
   return plant
 }

@@ -1,7 +1,9 @@
 "use client"
 
-import { useId, type ReactNode } from "react"
+import { useId, useMemo, type ReactNode } from "react"
 import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
+import { useWilt } from "./WiltContext"
+import { BROWNING, wiltPlant } from "./wilt"
 
 /** Decimal places kept when writing coordinates into the SVG. */
 const COORDINATE_DECIMALS = 1
@@ -30,6 +32,8 @@ export interface StemmedPlantProps<Spec> {
   plant: StagedPlant<Spec>
   /** 1 to the number of stages. Values outside that range are clamped. */
   stage: number
+  /** Wilt amount, 0 (healthy) to 1 (fully wilted). Defaults to the nearest WiltProvider's, or 0. */
+  wilt?: number
   stemStyle: StemStyle
   /** Opt-in: plant the blades in the soil (hidden stems, buried bases). Leave undefined for normal stems. */
   planting?: SoilPlanting
@@ -49,14 +53,28 @@ export function stageOf<Spec>(plant: StagedPlant<Spec>, stage: number): PlantSta
 
 const fixed = (n: number) => n.toFixed(COORDINATE_DECIMALS)
 
+/** Luminance weights: a brown leaf keeps the light and dark of the leaf it replaces. */
+const LUMA = [0.2126, 0.7152, 0.0722] as const
+
+/** A color matrix that paints `amount` of the leaf's brightness in a brown, and keeps the rest. */
+function brownMatrix(tone: keyof typeof BROWNING, amount: number): string {
+  const { strength, tint } = BROWNING[tone]
+  const t = strength * amount
+  const rows = tint.map((multiplier, channel) =>
+    LUMA.map((weight, source) => (source === channel ? 1 - t : 0) + t * multiplier * weight).concat([0, 0]),
+  )
+  return [...rows, [0, 0, 0, 1, 0]].map((row) => row.map((n) => n.toFixed(4)).join(" ")).join(" ")
+}
+
 /**
  * Draws a staged plant, without its pot: every stem, then every leaf on top.
  * It is a group of shapes for the shared canvas. PottedPlant supplies the
  * picture and the pot.
  */
 export function StemmedPlant<Spec>({
-  plant,
+  plant: healthy,
   stage,
+  wilt,
   stemStyle,
   planting,
   renderLeaf,
@@ -64,6 +82,9 @@ export function StemmedPlant<Spec>({
   renderAboveLeaves,
 }: StemmedPlantProps<Spec>) {
   const id = useId().replace(/:/g, "")
+  const contextWilt = useWilt()
+  const amount = wilt ?? contextWilt
+  const plant = useMemo(() => wiltPlant(healthy, amount), [healthy, amount])
   const current = stageOf(plant, stage)
   const soilClipId = id + "-soil"
 
@@ -74,6 +95,17 @@ export function StemmedPlant<Spec>({
         <clipPath id={soilClipId} clipPathUnits="userSpaceOnUse">
           <rect x={-100} y={-200} width={400} height={planting.soilY + 200} />
         </clipPath>
+      )}
+
+      {/* A wilted plant's browned leaves are drawn through one of these two filters. */}
+      {amount > 0 && (
+        <defs>
+          {(Object.keys(BROWNING) as (keyof typeof BROWNING)[]).map((tone) => (
+            <filter key={tone} id={id + "-" + tone} colorInterpolationFilters="sRGB">
+              <feColorMatrix type="matrix" values={brownMatrix(tone, amount)} />
+            </filter>
+          ))}
+        </defs>
       )}
 
       {/* Stems first, so leaves cover where they meet. A planted species hides them. */}
@@ -103,6 +135,7 @@ export function StemmedPlant<Spec>({
         const group = (
           <g
             key={"l" + leaf.index}
+            filter={leaf.browning ? "url(#" + id + "-" + leaf.browning.tone + ")" : undefined}
             transform={
               "translate(" + fixed(leaf.baseX) + " " + fixed(leaf.baseY + (planting ? planting.bury * leaf.length : 0)) +
               ") rotate(" + fixed(leaf.angle) + ")"

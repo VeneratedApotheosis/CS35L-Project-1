@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useHoldToLog } from "./useHoldToLog"
 import { useEffect, useId, useRef } from "react"
 import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Plus } from "lucide-react"
+import { wiltForHealth } from "@/pottedPlant/plants/staged/wilt"
 import { plantTypeById, type PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 import { Button } from "./Button"
 import { Card } from "./Card"
@@ -99,7 +100,7 @@ export function PlantCard({
           {detailsHref ? (
             <Link href={detailsHref} className="plant-card__open" {...hold.handlers}>
               <span className="plant-card__illustration" data-health={health} aria-hidden="true">
-                <Preview seed={seed} stage={stage} />
+                <Preview seed={seed} stage={stage} wilt={wiltForHealth(health)} />
               </span>
               <span className="text-h3 plant-card__name">{name}</span>
             </Link>
@@ -107,7 +108,7 @@ export function PlantCard({
             <button type="button" className="plant-card__open" {...hold.handlers} onClick={onViewDetails}
               aria-label={`View details for ${name}`}>
               <span className="plant-card__illustration" data-health={health} aria-hidden="true">
-                <Preview seed={seed} stage={stage} />
+                <Preview seed={seed} stage={stage} wilt={wiltForHealth(health)} />
               </span>
               <span className="text-h3 plant-card__name">{name}</span>
             </button>

@@ -11,6 +11,7 @@ import { Rose } from "./rose"
 import { Monstera } from "./monstera"
 import { Philodendron } from "./philodendron"
 import { Lotus } from "./lotus"
+import { WiltProvider } from "./staged/WiltContext"
 
 /**
  * The plant types the create-habit form offers. This is the single source of
@@ -25,6 +26,8 @@ import { Lotus } from "./lotus"
 export interface PlantPreviewProps {
   seed?: number
   stage?: 1 | 2 | 3 | 4
+  /** 0 (healthy) to 1 (fully wilted): leaves droop and some turn brown. The pot is unchanged. */
+  wilt?: number
 }
 
 export interface PlantType {
@@ -43,61 +46,61 @@ export const PLANT_TYPES = [
     id: "pothos",
     label: "Pothos",
     blurb: "Heart-shaped leaves that trail as it grows.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Pothos seed={seed} stage={stage} stages={4} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><Pothos seed={seed} stage={stage} stages={4} /></WiltProvider>,
   },
   {
     id: "peace_lily",
     label: "Peace lily",
     blurb: "Pointed leaves with white blooms at full growth.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <PeaceLily seed={seed} stage={stage} stages={4} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><PeaceLily seed={seed} stage={stage} stages={4} /></WiltProvider>,
   },
   {
     id: "pilea",
     label: "Pilea",
     blurb: "Round coin leaves on thin stalks.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Pilea seed={seed} stage={stage} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><Pilea seed={seed} stage={stage} /></WiltProvider>,
   },
   {
     id: "snake_plant",
     label: "Snake plant",
     blurb: "Tall, upright sword leaves with pale edges.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <SnakePlant seed={seed} stage={stage} stages={4} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><SnakePlant seed={seed} stage={stage} stages={4} /></WiltProvider>,
   },
   {
     id: "kimberly_queen",
     label: "Kimberly Queen",
     blurb: "Arching fern fronds in an upright crown.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <KimberlyQueen seed={seed} stage={stage} stages={4} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><KimberlyQueen seed={seed} stage={stage} stages={4} /></WiltProvider>,
   },
   {
     id: "lily",
     label: "Lily",
     blurb: "Fanned leaves with star-shaped blooms.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Lily seed={seed} stage={stage} stages={4} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><Lily seed={seed} stage={stage} stages={4} /></WiltProvider>,
   },
   {
     id: "rose",
     label: "Rose",
     blurb: "Rounded leaves with layered red blooms.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Rose seed={seed} stage={stage} stages={4} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><Rose seed={seed} stage={stage} stages={4} /></WiltProvider>,
   },
   {
     id: "monstera",
     label: "Monstera",
     blurb: "Big, glossy leaves with natural holes.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Monstera seed={seed} stage={stage} stages={4} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><Monstera seed={seed} stage={stage} stages={4} /></WiltProvider>,
   },
   {
     id: "philodendron",
     label: "Philodendron",
     blurb: "Broad paddle leaves on red stems.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Philodendron seed={seed} stage={stage} stages={4} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><Philodendron seed={seed} stage={stage} stages={4} /></WiltProvider>,
   },
   {
     id: "lotus",
     label: "Lotus",
     blurb: "Floating pads and pink flowers on water.",
-    Preview: ({ seed = PREVIEW_SEED, stage = 4 }) => <Lotus seed={seed} stage={stage} />,
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0 }) => <WiltProvider wilt={wilt}><Lotus seed={seed} stage={stage} /></WiltProvider>,
   },
 ] as const satisfies readonly PlantType[]
 

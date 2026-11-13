@@ -5,6 +5,7 @@ import { Dices, Leaf, RotateCcw } from "lucide-react"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { PLANT_TYPES } from "@/pottedPlant/plants/plantTypes"
+import { WILT } from "@/pottedPlant/plants/staged/wilt"
 import { Pothos } from "@/pottedPlant/plants/pothos/Pothos"
 import { POT_PALETTES, potLookFromSeed } from "@/pottedPlant/pots"
 
@@ -15,17 +16,6 @@ const HEALTH_STATES = [
   { id: "wilted", label: "Wilted" },
 ] as const
 type Health = (typeof HEALTH_STATES)[number]["id"]
-
-/**
- * What the app does today for a plant that is not healthy: fade the colors.
- * It mirrors `.plant-card__illustration[data-health]` in plant-cards.css.
- * #152 replaces it with a drooping shape in the plant engine.
- */
-const CURRENT_WILT_FILTER: Record<Health, string | undefined> = {
-  healthy: undefined,
-  slightly_wilted: "saturate(0.8)",
-  wilted: "saturate(0.55)",
-}
 
 const SECTION_SEED = 42
 
@@ -49,35 +39,47 @@ function LabSection({ title, description, action, children }: {
   )
 }
 
-/** #152: every plant type in each health state, side by side. */
+/** #152: every plant type in each health state, side by side, and at any wilt amount in between. */
 export function WiltedLookSection() {
-  const [health, setHealth] = useState<Health | "all">("all")
+  const [health, setHealth] = useState<Health | "all" | "custom">("all")
+  const [custom, setCustom] = useState(0.5)
   const shown = health === "all" ? HEALTH_STATES : HEALTH_STATES.filter((state) => state.id === health)
+  const rows = health === "custom"
+    ? [{ id: "custom", label: "Wilt amount " + Math.round(custom * 100) + "%", wilt: custom }]
+    : shown.map((state) => ({ id: state.id, label: state.label, wilt: WILT.forHealth[state.id] }))
 
   return (
     <LabSection
       title="Wilted look"
-      description="Every plant in the three health states. Today a plant that isn't healthy only loses color. #152 adds a drooping shape to the plant engine, so a wilted plant also reads without color. Leaves must stay inside the pot and the side limits."
+      description="Every plant in the three health states. As a plant wilts its leaves droop, until the average leaf is almost horizontal, and about half of the leaves turn brown, a quarter of them dark brown. The pot never changes. Drooped leaves stay inside the pot's side limits. Lotus is not on the stage engine yet, so it doesn't wilt."
       action={
         <div role="group" aria-label="Health state to show" className="flex flex-wrap gap-2">
-          {[{ id: "all", label: "All states" }, ...HEALTH_STATES].map((state) => (
+          {[{ id: "all", label: "All states" }, ...HEALTH_STATES, { id: "custom", label: "Custom amount" }].map((state) => (
             <Button key={state.id} size="sm" variant={health === state.id ? "primary" : "secondary"}
-              aria-pressed={health === state.id} onClick={() => setHealth(state.id as Health | "all")}>
+              aria-pressed={health === state.id} onClick={() => setHealth(state.id as typeof health)}>
               {state.label}
             </Button>
           ))}
         </div>
       }
     >
+      {health === "custom" && (
+        <label className="flex max-w-sm flex-col gap-3">
+          <span className="text-caption">Wilt amount {Math.round(custom * 100)}%</span>
+          <input type="range" min={0} max={1} step={0.05} value={custom}
+            onChange={(event) => setCustom(Number(event.target.value))}
+            className="w-full accent-[var(--color-primary-selected)]" />
+        </label>
+      )}
       <div className="flex flex-col gap-6">
-        {shown.map((state) => (
-          <div key={state.id} className="flex flex-col gap-3">
-            <h3 className="text-h3">{state.label}</h3>
+        {rows.map((row) => (
+          <div key={row.id} className="flex flex-col gap-3">
+            <h3 className="text-h3">{row.label}</h3>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               {PLANT_TYPES.map(({ id, label, Preview }) => (
                 <Card key={id} className="flex flex-col items-center gap-2 !p-4">
-                  <div className="w-full" style={{ filter: CURRENT_WILT_FILTER[state.id] }}>
-                    <Preview seed={SECTION_SEED} stage={4} />
+                  <div className="w-full">
+                    <Preview seed={SECTION_SEED} stage={4} wilt={row.wilt} />
                   </div>
                   <p className="text-caption">{label}</p>
                 </Card>
