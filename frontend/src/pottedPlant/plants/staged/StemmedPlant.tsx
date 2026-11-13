@@ -2,7 +2,9 @@
 
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react"
 import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
+import { makeAccents, type AccentArea } from "./accents"
 import { blendStage, GROWTH, springProgress } from "./growth"
+import { GrowthAccents } from "./GrowthAccents"
 import { useWilt } from "./WiltContext"
 import { BROWNING, bendSlices, wiltPlant } from "./wilt"
 
@@ -41,6 +43,11 @@ export interface StemmedPlantProps<Spec> {
    * draw, and never when the user prefers reduced motion. Defaults to true.
    */
   animate?: boolean
+  /**
+   * When the stage-up animates, add the accents to a stage-up: lines, pops, and on the last
+   * stage stars, as many and as large as the plant. Defaults to true.
+   */
+  accents?: boolean
   stemStyle: StemStyle
   /** Opt-in: plant the blades in the soil (hidden stems, buried bases). Leave undefined for normal stems. */
   planting?: SoilPlanting
@@ -90,6 +97,7 @@ export function StemmedPlant<Spec>({
   stage,
   wilt,
   animate = true,
+  accents = true,
   stemStyle,
   planting,
   renderLeaf,
@@ -105,12 +113,12 @@ export function StemmedPlant<Spec>({
   // Moving up a stage: remember the stage that was drawn, and grow from it into the new one.
   const [drawn, setDrawn] = useState(target)
   const [growth, setGrowth] = useState<{ from: PlantStage<Spec>; to: PlantStage<Spec> } | null>(null)
-  const [progress, setProgress] = useState(0)
+  const [clock, setClock] = useState({ progress: 0, time: 0 })
   if (drawn !== target) {
     setDrawn(target)
     const grows = animate && target.stage > drawn.stage && !prefersReducedMotion()
     setGrowth(grows ? { from: drawn, to: target } : null)
-    setProgress(0)
+    setClock({ progress: 0, time: 0 })
   }
   useEffect(() => {
     if (!growth) return
@@ -118,14 +126,23 @@ export function StemmedPlant<Spec>({
     let frame = 0
     const tick = (now: number) => {
       const seconds = (now - start) / 1000
-      setProgress(springProgress(seconds))
+      setClock({ progress: springProgress(seconds), time: Math.min(seconds / GROWTH.duration, 1) })
       if (seconds >= GROWTH.duration) setGrowth(null)
       else frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
   }, [growth])
-  const current = growth ? blendStage(growth.from, growth.to, progress) : target
+  const current = growth ? blendStage(growth.from, growth.to, clock.progress) : target
+
+  // The accents of the move: made once per move, from the plant's seed and the stage it grows to.
+  const burst = useMemo(() => {
+    if (!growth || !accents) return null
+    const { to } = growth
+    const foot = plant.species?.config.dome.anchor ?? { x: to.leaves[0].stem.x0, y: to.leaves[0].stem.y0 }
+    const area: AccentArea = { x: foot.x, y: foot.y, halfWidth: to.halfWidth, height: to.height }
+    return { area, items: makeAccents(plant.seed, to.stage, to.scale, area, to.stage === plant.stages.length) }
+  }, [growth, accents, plant])
   const soilClipId = id + "-soil"
 
   return (
@@ -207,6 +224,8 @@ export function StemmedPlant<Spec>({
       })}
 
       {renderAboveLeaves?.(current, id)}
+
+      {burst && <GrowthAccents accents={burst.items} area={burst.area} time={clock.time} />}
     </g>
   )
 }

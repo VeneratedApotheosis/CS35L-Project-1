@@ -113,7 +113,7 @@ export function StageUpSection() {
   return (
     <LabSection
       title="Stage-up animation"
-      description="Log an activity to move the plant up a stage. Each leaf springs from its old place into its new one, and new leaves grow out of the soil. The pot and the soil don't move. It runs only after you press the button, never when the page loads. With reduced motion turned on in your system, the change is instant."
+      description="Log an activity to move the plant up a stage. Each leaf springs from its old place into its new one, and new leaves grow out of the soil, with lines and pops bursting around the plant, and stars on the last stage. A bigger plant gets more accents, and larger ones. The pot and the soil don't move. It runs only after you press the button, never when the page loads. With reduced motion turned on in your system, the change is instant."
       action={
         <div role="group" aria-label="Plant to animate" className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2">
