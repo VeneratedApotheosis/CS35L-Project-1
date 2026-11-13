@@ -94,7 +94,7 @@ const rad = (degrees: number) => (degrees * Math.PI) / 180
  */
 export function bendPoint([x, y]: Pt, length: number, bend: number): Pt {
   const total = rad(bend)
-  if (Math.abs(total) < 1e-6) return [x, y]
+  if (Math.abs(total) < 1e-6 || length < 1e-6) return [x, y]
   const along = Math.min(Math.max(-y, 0), length)
   const k = total / length
   const turn = k * along
@@ -119,7 +119,7 @@ export const BEND_SLICES = 6
  */
 export function bendSlices(length: number, bend: number): { top: number; bottom: number; transform: string }[] {
   const total = rad(bend)
-  const k = total / length
+  const k = length < 1e-6 ? 0 : total / length
   const step = length / BEND_SLICES
   return Array.from({ length: BEND_SLICES }, (_, i) => {
     const start = i * step

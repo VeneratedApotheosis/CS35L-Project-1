@@ -1,7 +1,10 @@
 "use client"
 
-import { useId, useMemo, type ReactNode } from "react"
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react"
 import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
+import { ACCENTS_END, makeAccents, type AccentArea } from "./accents"
+import { blendStage, GROWTH, springProgress } from "./growth"
+import { GrowthAccents } from "./GrowthAccents"
 import { useWilt } from "./WiltContext"
 import { BROWNING, bendSlices, wiltPlant } from "./wilt"
 
@@ -34,6 +37,17 @@ export interface StemmedPlantProps<Spec> {
   stage: number
   /** Wilt amount, 0 (healthy) to 1 (fully wilted). Defaults to the nearest WiltProvider's, or 0. */
   wilt?: number
+  /**
+   * Animate moving up a stage: the leaves spring and grow into their new places.
+   * Only a change of the stage while the plant is on screen animates, never the first
+   * draw, and never when the user prefers reduced motion. Defaults to true.
+   */
+  animate?: boolean
+  /**
+   * When the stage-up animates, add the accents to a stage-up: lines, pops, and on the last
+   * stage stars, as many and as large as the plant. Defaults to true.
+   */
+  accents?: boolean
   stemStyle: StemStyle
   /** Opt-in: plant the blades in the soil (hidden stems, buried bases). Leave undefined for normal stems. */
   planting?: SoilPlanting
@@ -53,6 +67,10 @@ export function stageOf<Spec>(plant: StagedPlant<Spec>, stage: number): PlantSta
 
 /** How far a slice of a curved leaf reaches past its cut, in canvas units, to hide the seam. */
 const SLICE_OVERLAP = 0.8
+
+/** True when the user has asked their system for less motion. */
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 const fixed = (n: number) => n.toFixed(COORDINATE_DECIMALS)
 
@@ -78,6 +96,8 @@ export function StemmedPlant<Spec>({
   plant: healthy,
   stage,
   wilt,
+  animate = true,
+  accents = true,
   stemStyle,
   planting,
   renderLeaf,
@@ -88,7 +108,41 @@ export function StemmedPlant<Spec>({
   const contextWilt = useWilt()
   const amount = wilt ?? contextWilt
   const plant = useMemo(() => wiltPlant(healthy, amount), [healthy, amount])
-  const current = stageOf(plant, stage)
+  const target = stageOf(plant, stage)
+
+  // Moving up a stage: remember the stage that was drawn, and grow from it into the new one.
+  const [drawn, setDrawn] = useState(target)
+  const [growth, setGrowth] = useState<{ from: PlantStage<Spec>; to: PlantStage<Spec> } | null>(null)
+  const [clock, setClock] = useState({ progress: 0, time: 0 })
+  if (drawn !== target) {
+    setDrawn(target)
+    const grows = animate && target.stage > drawn.stage && !prefersReducedMotion()
+    setGrowth(grows ? { from: drawn, to: target } : null)
+    setClock({ progress: 0, time: 0 })
+  }
+  useEffect(() => {
+    if (!growth) return
+    const start = performance.now()
+    let frame = 0
+    const tick = (now: number) => {
+      const seconds = (now - start) / 1000
+      setClock({ progress: springProgress(seconds), time: seconds })
+      if (seconds >= (accents ? Math.max(GROWTH.duration, ACCENTS_END) : GROWTH.duration)) setGrowth(null)
+      else frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [growth, accents])
+  const current = growth ? blendStage(growth.from, growth.to, clock.progress) : target
+
+  // The accents of the move: made once per move, from the plant's seed and the stage it grows to.
+  const burst = useMemo(() => {
+    if (!growth || !accents) return null
+    const { to } = growth
+    const foot = plant.species?.config.dome.anchor ?? { x: to.leaves[0].stem.x0, y: to.leaves[0].stem.y0 }
+    const area: AccentArea = { x: foot.x, y: foot.y, halfWidth: to.halfWidth, height: to.height, scale: to.scale }
+    return { area, items: makeAccents(plant.seed, to.stage, to.scale, area, to.stage === plant.stages.length) }
+  }, [growth, accents, plant])
   const soilClipId = id + "-soil"
 
   return (
@@ -170,6 +224,8 @@ export function StemmedPlant<Spec>({
       })}
 
       {renderAboveLeaves?.(current, id)}
+
+      {burst && <GrowthAccents accents={burst.items} area={burst.area} time={clock.time} />}
     </g>
   )
 }
