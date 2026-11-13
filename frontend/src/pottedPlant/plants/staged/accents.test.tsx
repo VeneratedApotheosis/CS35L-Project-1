@@ -34,27 +34,29 @@ describe("stage-up accents", () => {
       return sizes.reduce((sum, size) => sum + size, 0) / sizes.length
     }
     expect(meanSize(large.accents, "pop")).toBeGreaterThan(meanSize(small.accents, "pop") * 2)
-    expect(accentCount("star", 1)).toBe(ACCENTS.max)
+    expect(accentCount("star", 1)).toBe(ACCENTS.max.stars)
     expect(accentCount("star", 0)).toBe(ACCENTS.fewest.stars)
   })
 
-  it("never makes more than the maximum of any kind, which is 10", () => {
-    expect(ACCENTS.max).toBe(10)
+  it("never makes more than the maximum of any kind: 5 lines, 3 pops and 2 stars", () => {
+    expect(ACCENTS.max).toEqual({ lines: 5, pops: 3, stars: 2 })
     for (const scale of [0, 0.3, 0.7, 1, 3]) {
       const made = kinds(7, 4, scale, true)
-      expect(Math.max(made.line, made.pop, made.star)).toBeLessThanOrEqual(10)
+      expect(made.line).toBeLessThanOrEqual(5)
+      expect(made.pop).toBeLessThanOrEqual(3)
+      expect(made.star).toBeLessThanOrEqual(2)
     }
-    expect(kinds(7, 4, 1, true).line).toBe(10)
+    const full = kinds(7, 4, 1, true)
+    expect([full.line, full.pop, full.star]).toEqual([5, 3, 2])
   })
 
-  it("spreads the accents over the whole half-oval, from the left side over the top to the right", () => {
+  it("spreads each kind over the whole half-oval, from the left side over the top to the right", () => {
     const full = area(1)
     for (const kind of ["line", "pop", "star"] as const) {
       const angles = makeAccents(7, 4, 1, full, true).filter((accent) => accent.kind === kind).map((accent) => accent.angle)
-      expect(Math.min(...angles)).toBeLessThan(Math.PI * 0.2)
-      expect(Math.max(...angles)).toBeGreaterThan(Math.PI * 0.8)
-      const sorted = [...angles].sort((a, b) => a - b)
-      for (let i = 1; i < sorted.length; i++) expect(sorted[i] - sorted[i - 1]).toBeLessThan(Math.PI * 0.4)
+      const sorted = [0, ...[...angles].sort((a, b) => a - b), Math.PI]
+      // No stretch of the half-oval, from either end, is left much emptier than an even spread would leave it.
+      for (let i = 1; i < sorted.length; i++) expect(sorted[i] - sorted[i - 1]).toBeLessThan((Math.PI * 1.8) / angles.length)
     }
   })
 

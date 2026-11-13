@@ -12,9 +12,9 @@ import { mulberry32 } from "../../rng"
  */
 export const ACCENTS = {
   /** The most of each kind there ever is, which a fully grown plant gets. A smaller plant gets proportionally fewer. */
-  max: 10,
+  max: { lines: 5, pops: 3, stars: 2 },
   /** No stage gets fewer than this many of a kind. */
-  fewest: { lines: 4, pops: 3, stars: 3 },
+  fewest: { lines: 2, pops: 1, stars: 1 },
   /** Size units, as a share of the plant's dome width. */
   line: { length: 0.2, width: 0.026 },
   pop: { radius: 0.075 },
@@ -64,8 +64,9 @@ export interface AccentArea {
 
 /** Count for a kind: the full-plant count scaled by the plant's size, never below the least. */
 export function accentCount(kind: AccentKind, scale: number): number {
-  const least = ACCENTS.fewest[kind === "line" ? "lines" : kind === "pop" ? "pops" : "stars"]
-  return Math.min(ACCENTS.max, Math.max(least, Math.round(ACCENTS.max * Math.min(Math.max(scale, 0), 1))))
+  const key = kind === "line" ? "lines" : kind === "pop" ? "pops" : "stars"
+  const most = ACCENTS.max[key]
+  return Math.min(most, Math.max(ACCENTS.fewest[key], Math.round(most * Math.min(Math.max(scale, 0), 1))))
 }
 
 /**
