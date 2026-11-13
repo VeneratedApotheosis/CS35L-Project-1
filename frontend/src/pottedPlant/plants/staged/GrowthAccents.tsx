@@ -1,4 +1,4 @@
-import { ACCENTS, accentFrame, type Accent, type AccentArea } from "./accents"
+import { ACCENTS, accentFrame, accentRing, type Accent, type AccentArea } from "./accents"
 
 const fixed = (n: number) => n.toFixed(2)
 
@@ -9,11 +9,11 @@ const starPath = (r: number) =>
 /**
  * The stage-up accents at one moment: lines bursting out of the plant, pops
  * swelling around it, and stars on the last stage. `time` is how far through
- * the animation it is, from 0 to 1. Nothing here is hidden from the picture's
+ * the animation it is, in seconds. Nothing here is hidden from the picture's
  * own drawing, so the picture treats it as decoration.
  */
 export function GrowthAccents({ accents, area, time }: { accents: Accent[]; area: AccentArea; time: number }) {
-  const centerY = area.y - area.height * ACCENTS.ring.centerHeight
+  const ring = accentRing(area)
   return (
     <g aria-hidden="true" pointerEvents="none">
       {accents.map((accent, index) => {
@@ -21,12 +21,12 @@ export function GrowthAccents({ accents, area, time }: { accents: Accent[]; area
         if (!frame) return null
         if (accent.kind === "line") {
           // Out from the plant along the oval's normal, so every line points away from the middle.
-          const nx = (frame.x - area.x) / (area.halfWidth * ACCENTS.ring.across) ** 2
-          const ny = (frame.y - centerY) / (area.height * ACCENTS.ring.up) ** 2
+          const nx = (frame.x - ring.x) / ring.across ** 2
+          const ny = (frame.y - ring.y) / ring.up ** 2
           const norm = Math.hypot(nx, ny) || 1
           const dx = nx / norm
           const dy = ny / norm
-          const start = frame.travel * accent.size * 1.3
+          const start = frame.travel
           const end = start + frame.grown * accent.size
           return (
             <line

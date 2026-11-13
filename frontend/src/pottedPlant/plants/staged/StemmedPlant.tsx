@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react"
 import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
-import { makeAccents, type AccentArea } from "./accents"
+import { ACCENTS_END, makeAccents, type AccentArea } from "./accents"
 import { blendStage, GROWTH, springProgress } from "./growth"
 import { GrowthAccents } from "./GrowthAccents"
 import { useWilt } from "./WiltContext"
@@ -126,13 +126,13 @@ export function StemmedPlant<Spec>({
     let frame = 0
     const tick = (now: number) => {
       const seconds = (now - start) / 1000
-      setClock({ progress: springProgress(seconds), time: Math.min(seconds / GROWTH.duration, 1) })
-      if (seconds >= GROWTH.duration) setGrowth(null)
+      setClock({ progress: springProgress(seconds), time: seconds })
+      if (seconds >= (accents ? Math.max(GROWTH.duration, ACCENTS_END) : GROWTH.duration)) setGrowth(null)
       else frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [growth])
+  }, [growth, accents])
   const current = growth ? blendStage(growth.from, growth.to, clock.progress) : target
 
   // The accents of the move: made once per move, from the plant's seed and the stage it grows to.
@@ -140,7 +140,7 @@ export function StemmedPlant<Spec>({
     if (!growth || !accents) return null
     const { to } = growth
     const foot = plant.species?.config.dome.anchor ?? { x: to.leaves[0].stem.x0, y: to.leaves[0].stem.y0 }
-    const area: AccentArea = { x: foot.x, y: foot.y, halfWidth: to.halfWidth, height: to.height }
+    const area: AccentArea = { x: foot.x, y: foot.y, halfWidth: to.halfWidth, height: to.height, scale: to.scale }
     return { area, items: makeAccents(plant.seed, to.stage, to.scale, area, to.stage === plant.stages.length) }
   }, [growth, accents, plant])
   const soilClipId = id + "-soil"
