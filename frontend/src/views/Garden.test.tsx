@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryProvider } from "@/lib/QueryProvider"
-import type { Habit } from "@/lib/habits"
+import type { HabitWithStats } from "@/lib/habits"
 import Garden from "./Garden"
 import CreateHabit from "./CreateHabit"
 import DashboardPage from "@/app/(signed-in)/dashboard/page"
@@ -22,22 +22,25 @@ vi.mock("@/lib/supabase", () => ({
   supabase: { auth: { getSession: auth.getSession } },
 }))
 // The form's graphics are unrelated to fetching and saving habits.
-vi.mock("@/plants/plantTypes", () => {
-  const plant = { id: "pothos", label: "Pothos", blurb: "", Preview: () => null }
+vi.mock("@/pottedPlant/plants/plantTypes", () => {
+  const plant = { id: "pothos", label: "Pothos", blurb: "", Preview: ({ seed, stage }: { seed: number; stage: number }) => <svg data-testid="plant-preview" data-seed={seed} data-stage={stage} /> }
   return { DEFAULT_PLANT_TYPE: "pothos", PLANT_TYPES: [plant], plantTypeById: () => plant }
 })
 
 const fetchMock = vi.fn()
-const habit = (patch: Partial<Habit> = {}): Habit => ({
+const habit = (patch: Partial<HabitWithStats> = {}): HabitWithStats => ({
   id: "habit-1", owner_id: "user-a", name: "Read", description: null,
   plant_type: "pothos", target_count: 3, interval_count: 1,
   interval_unit: "week", num_periods: 4, start_date: "2000-01-01",
-  created_at: "2026-11-06T12:00:00Z", ...patch,
+  created_at: "2026-11-06T12:00:00Z",
+  stats: { state: "active", stage: 3, health: "slightly_wilted", overall_progress: 0.6,
+    current_period: { number: 1, total: 4, start: "2026-11-06", end: "2026-11-13", count: 4, target: 3 } },
+  ...patch,
 })
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json" },
 })
-const page = (habits: Habit[], total = habits.length, offset = 0) => ({ habits, total, limit: 50, offset })
+const page = (habits: HabitWithStats[], total = habits.length, offset = 0) => ({ habits, total, limit: 50, offset })
 
 function respondWithHabits(response: () => Response | Promise<Response>) {
   fetchMock.mockImplementation((url: string) => url.endsWith("/me")
@@ -79,13 +82,16 @@ describe("Garden", () => {
     vi.setSystemTime(new Date("2026-11-07T02:00:00Z"))
     respondWithHabits(() => json(page([
       habit({ start_date: "2026-11-06" }),
-      habit({ id: "future", name: "Walk", start_date: "2026-11-07", target_count: 1, interval_count: 2, num_periods: null }),
+      habit({ stats: { ...habit().stats, state: "not_started" }, id: "future", name: "Walk", start_date: "2026-11-07", target_count: 1, interval_count: 2, num_periods: null }),
     ])))
     render(<QueryProvider><Garden /></QueryProvider>)
     await screen.findByRole("heading", { name: "Read" })
-    expect(screen.getByText("3 times every week for 4 weeks.")).toBeTruthy()
+    expect(screen.getAllByText("Slightly wilted")).toHaveLength(2)
+    expect(screen.getAllByTestId("plant-preview")[0].getAttribute("data-stage")).toBe("3")
+    expect(screen.getAllByTestId("plant-preview")[0].getAttribute("data-seed")).not.toBe(screen.getAllByTestId("plant-preview")[1].getAttribute("data-seed"))
+    expect(screen.getAllByRole("button", { name: "Log activity" })).toHaveLength(2)
     expect(screen.getByRole("link", { name: "Read" }).getAttribute("href")).toBe("/habits/habit-1")
-    expect(screen.getByText("1 time every 2 weeks.")).toBeTruthy()
+    expect(screen.getByRole("progressbar", { name: "Read: Current period" }).getAttribute("aria-valuenow")).toBe("3")
     expect(screen.getAllByText(/Not started yet/)).toHaveLength(1)
     expect(fetchMock.mock.calls.find(([url]) => url.includes("/habits"))?.[1].headers.Authorization).toBe("Bearer token-user-a")
   })
@@ -147,10 +153,16 @@ describe("Garden", () => {
     fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
       if (url.endsWith("/me")) return json({ id: auth.user?.id, timezone: "UTC" })
       if (init.method === "POST") { saved = true; return json(habit({ name: "Practice" }), 201) }
+      if (url.endsWith("/dashboard")) return json({
+        active_count: saved ? 1 : 0, overall_consistency: null, best_streak: null,
+        habits: saved ? [{ id: "habit-1", name: "Practice", state: "active", streak: 0 }] : [],
+        needs_attention: [],
+        finished: [],
+      })
       return json(page(saved ? [habit({ name: "Practice" })] : []))
     })
     const view = render(<QueryProvider><DashboardPage /></QueryProvider>)
-    await screen.findByText("No habits yet")
+    await screen.findByText("No active habits yet")
     view.rerender(<QueryProvider><CreateHabit /></QueryProvider>)
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Practice" } })
     fireEvent.change(screen.getByLabelText("Number of periods"), { target: { value: "4" } })
@@ -159,7 +171,7 @@ describe("Garden", () => {
     await waitFor(() => expect(auth.replace).toHaveBeenCalledWith("/dashboard"))
     view.rerender(<QueryProvider><DashboardPage /></QueryProvider>)
     expect(screen.getByRole("heading", { name: "Dashboard" })).toBeTruthy()
-    await screen.findByRole("heading", { name: "Practice" })
+    await screen.findByRole("link", { name: "Practice" })
   })
 
   it("stays on the creation form and shows an error when saving fails", async () => {
@@ -178,3 +190,39 @@ describe("Garden", () => {
 function jsonResponseError() {
   return json({ error: { code: "internal_error", message: "Could not create habit" } }, 500)
 }
+
+it("logs today's profile date from the keyboard menu and undoes only that log", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] })
+  vi.setSystemTime(new Date("2026-11-07T02:00:00Z"))
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url.endsWith("/me")) return Promise.resolve(json({ id: "user-a", timezone: "America/Los_Angeles" }))
+    if (init?.method === "POST") return Promise.resolve(json({ log: { id: "new-log", habit_id: "habit-1", occurred_on: "2026-11-06" }, stats: habit().stats }))
+    if (init?.method === "DELETE") return Promise.resolve(json({ stats: habit().stats }))
+    return Promise.resolve(json(page([habit()])))
+  })
+  render(<QueryProvider><Garden /></QueryProvider>)
+  await screen.findByRole("link", { name: "Read" })
+  fireEvent.click(screen.getByLabelText("Options for Read"))
+  fireEvent.click(screen.getByRole("button", { name: "Log activity" }))
+  await screen.findByText("Activity logged for today.")
+  const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST")
+  expect(post?.[0]).toContain("/habits/habit-1/logs")
+  expect(JSON.parse(post?.[1].body)).toEqual({ occurred_on: "2026-11-06" })
+  fireEvent.click(screen.getByRole("button", { name: "Undo" }))
+  await screen.findByText("Activity removed.")
+  expect(fetchMock.mock.calls.find(([, init]) => init?.method === "DELETE")?.[0]).toContain("/habits/habit-1/logs/new-log")
+})
+
+it("shows a failed log without offering Undo", async () => {
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url.endsWith("/me")) return Promise.resolve(json({ id: "user-a", timezone: "America/Los_Angeles" }))
+    if (init?.method === "POST") return Promise.resolve(json({ message: "Unavailable" }, 500))
+    return Promise.resolve(json(page([habit()])))
+  })
+  render(<QueryProvider><Garden /></QueryProvider>)
+  await screen.findByRole("link", { name: "Read" })
+  fireEvent.click(screen.getByLabelText("Options for Read"))
+  fireEvent.click(screen.getByRole("button", { name: "Log activity" }))
+  expect((await screen.findByRole("alert")).textContent).toContain("Couldn't log activity")
+  expect(screen.queryByRole("button", { name: "Undo" })).toBeNull()
+})

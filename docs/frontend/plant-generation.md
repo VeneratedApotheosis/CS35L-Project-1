@@ -2,7 +2,7 @@
 
 Plants are drawn as SVG from a **seed**. The same seed always gives the same plant, so a habit can store one integer (e.g. its id) and the plant is rebuilt on every screen.
 
-Code lives in `frontend/src/plants/`. A live prototype is at `/plants`. Run the tests with `npm test` in `frontend/`. For how plants fit into the screens, see [design.md](design.md#6-illustration-plants-and-pots).
+Code lives in `frontend/src/pottedPlant/`, with the plants in `plants/` and the pot in `pots/`. A live prototype is at `/plants`. Run the tests with `npm test` in `frontend/`. For how plants fit into the screens, see [design.md](design.md#6-illustration-plants-and-pots).
 
 Status:
 
@@ -43,32 +43,37 @@ Status:
 The stage engine is shared. A plant is the engine plus a config and a leaf shape.
 
 ```
-plants/
-  staged/                  the engine: nothing in here is specific to one plant
-    types.ts               StagedPlantConfig (every tunable number), LeafShapeModel, results
-    config.ts              validateConfig: checks a config's assumptions, lists every problem
-    ladder.ts              leaves per stage and envelope scale per stage
-    dome.ts                the envelope (a half-ellipse) and the canopy sample points
-    genes.ts               the per-seed facts about each leaf, shared by every stage
-    stemLayout.ts          hangs one leaf from its stem and fits it inside the dome
-    coverage.ts            how well leaves fill the canopy, and how deeply they stack
-    generate.ts            createStagedPlant: builds every stage of a plant for a seed
-    StemmedPlant.tsx       draws a staged plant without its pot; the species supplies the leaf drawing
-  pothos/
-    pothosConfig.ts          every number behind the pothos
-    pothosStages.ts          the pothos species: config + heart leaf, and the names tests use
-    Pothos.tsx               PothosDrawing (the bare plant) and Pothos (the plant in a pot)
-    leaf.ts / LeafShape.tsx  the heart leaf: random ranges, outline, palette, drawing style
-  peaceLily/
-    peaceLilyConfig.ts       every number behind the peace lily: leaves, flowers, hood shapes
-    peaceLilyStages.ts       the species: config + pointed leaf, plus createPeaceLily
-    PeaceLily.tsx            PeaceLilyDrawing (stems, leaves, flowers) and PeaceLily (in a pot)
-    leaf.ts / LilyLeafShape.tsx  the pointed leaf: ranges, outline, palette, drawing style
-    shape.ts                 the pointed blade outline shared by leaf and flower hood
-    flowers.ts               flower placement, the flower dome and the bud/bloom stages
-    Flower.tsx               draws flower stalks, buds and open flowers
-  geometry.ts, rng.ts      small shared helpers
-  pot/                     the pot, separate from every plant
+pottedPlant/
+  PottedPlant.tsx          the picture: the shared canvas, the pot, then a plant on top
+  genome.ts, geometry.ts, rng.ts, habitSeed.ts   small helpers shared by plants and pots
+  plants/                  every plant
+    plantTypes.tsx         the list of plant types the app offers
+    staged/                the engine: nothing in here is specific to one plant
+      types.ts             StagedPlantConfig (every tunable number), LeafShapeModel, results
+      config.ts            validateConfig: checks a config's assumptions, lists every problem
+      ladder.ts            leaves per stage and envelope scale per stage
+      dome.ts              the envelope (a half-ellipse) and the canopy sample points
+      genes.ts             the per-seed facts about each leaf, shared by every stage
+      stemLayout.ts        hangs one leaf from its stem and fits it inside the dome
+      coverage.ts          how well leaves fill the canopy, and how deeply they stack
+      generate.ts          createStagedPlant: builds every stage of a plant for a seed
+      StemmedPlant.tsx     draws a staged plant without its pot; the species supplies the leaf drawing
+    pothos/
+      pothosConfig.ts          every number behind the pothos
+      pothosStages.ts          the pothos species: config + heart leaf, and the names tests use
+      Pothos.tsx               PothosDrawing (the bare plant) and Pothos (the plant in a pot)
+      leaf.ts / LeafShape.tsx  the heart leaf: random ranges, outline, palette, drawing style
+    peaceLily/
+      peaceLilyConfig.ts       every number behind the peace lily: leaves, flowers, hood shapes
+      peaceLilyStages.ts       the species: config + pointed leaf, plus createPeaceLily
+      PeaceLily.tsx            PeaceLilyDrawing (stems, leaves, flowers) and PeaceLily (in a pot)
+      leaf.ts / LilyLeafShape.tsx  the pointed leaf: ranges, outline, palette, drawing style
+      shape.ts                 the pointed blade outline shared by leaf and flower hood
+      flowers.ts               flower placement, the flower dome and the bud/bloom stages
+      Flower.tsx               draws flower stalks, buds and open flowers
+    (and a folder for each other species: snakePlant, kimberlyQueen, lily, rose,
+     monstera, philodendron, pilea, lotus)
+  pots/                    the pot, separate from every plant
     palettes.ts            the color palettes, the band names and the band odds
     shape.ts               every measurement of the drawing, plus the rim and soil points
     style.ts               PotLook, potLookFromSeed, and the weights table for finishes
@@ -78,8 +83,6 @@ plants/
       types.ts             PotFinish and PotFinishInput, the interface a finish follows
       solid.tsx            the first finish: the body color with the optional stripe
     index.ts               one place to import all of the above from
-  PottedPlant.tsx          the picture: the shared canvas, the pot, then a plant on top
-  Pilea.tsx, pileaGenome.ts  the pilea (older engine): PileaDrawing and Pilea
 ```
 ### Adding a plant that grows on stems
 
@@ -114,7 +117,7 @@ These are the decisions we made for every stage-engine plant. Each is enforced b
 | **No hidden assumptions** | Every number is in a named config, and `validateConfig` checks they fit together |
 | **A plant draws only itself** | Plant generation takes no draw for a pot and stores no pot fields. A plant depends only on the pot's geometry (`POT_RIM`, `POT_SOIL`, `SOIL`) |
 | **A pot has its own look and stream** | `potLookFromSeed(seed)` picks it from a stream made from the seed alone. Any look can go with any plant |
-| **The pot never changes** | Pot geometry is in `pot/shape.ts`, 46 tall, and does not scale with the plant |
+| **The pot never changes** | Pot geometry is in `pots/shape.ts`, 46 tall, and does not scale with the plant |
 
 ---
 
@@ -131,19 +134,19 @@ These are the decisions we made for every stage-engine plant. Each is enforced b
 
 ## 2. Pot
 
-Code: `frontend/src/plants/pot/`. A low drum pot (body 46 tall) built from a rounded **rim**, a tapered **body**, a dark **soil** oval, and a **shadow** oval. The pot is separate from the plants. A plant draws only its stems, leaves and flowers, and the pot is drawn under it by `PottedPlant`. The pot never changes size with the plant.
+Code: `frontend/src/pottedPlant/pots/`. A low drum pot (body 46 tall) built from a rounded **rim**, a tapered **body**, a dark **soil** oval, and a **shadow** oval. The pot is separate from the plants. A plant draws only its stems, leaves and flowers, and the pot is drawn under it by `PottedPlant`. The pot never changes size with the plant.
 
-A pot's **look** is `PotLook`: a `palette` (an index into the five palettes: terracotta, cream, sage, sky, blush), a `band` (none, or a stripe; the stripe is twice as likely, see `POT_BAND_ODDS`), a `finish` and a `seed` for the finish's pattern. `potLookFromSeed(seed)` in `pot/style.ts` makes one. There used to be a dotted band too; pots that would have had it now get the stripe.
+A pot's **look** is `PotLook`: a `palette` (an index into the five palettes: terracotta, cream, sage, sky, blush), a `band` (none, or a stripe; the stripe is twice as likely, see `POT_BAND_ODDS`), a `finish` and a `seed` for the finish's pattern. `potLookFromSeed(seed)` in `pots/style.ts` makes one. There used to be a dotted band too; pots that would have had it now get the stripe.
 
 The pot's base is one curve instead of a flat line, and so is the underside of the rim. The rim's top corners are quarter circles, and its sides run straight down into smaller rounded corners that join one gentle arc, lowest in the middle. The corners meet the arc exactly, so the outline never turns sharply. The rim is drawn from a few numbers in `RIM` (`height` for its overall height, `baseCorner` for how round the lower corners are; a smaller `baseCorner` gives a deeper curve), and the body's base is a single curve in `POT_SHAPE.body.path`.
 
-Every measurement is a named value in `pot/shape.ts` (`POT_SHAPE`). Two of them are used by the plants: `POT_RIM` (where stems are placed across the pot) and `POT_SOIL` (where plants meet the pot, which becomes the shared `SOIL` point). Neither number is repeated anywhere else, so changing the pot's shape moves the plants with it. This is all a plant knows about its pot.
+Every measurement is a named value in `pots/shape.ts` (`POT_SHAPE`). Two of them are used by the plants: `POT_RIM` (where stems are placed across the pot) and `POT_SOIL` (where plants meet the pot, which becomes the shared `SOIL` point). Neither number is repeated anywhere else, so changing the pot's shape moves the plants with it. This is all a plant knows about its pot.
 
 The canvas is `0 30 200 205` (the original 200 by 235 canvas with the top 30 units trimmed), and the soil point is `(100, 148)`.
 
 ### Putting a pot and a plant together
 
-`PottedPlant` (`plants/PottedPlant.tsx`) renders the shared `<svg viewBox="0 30 200 205">`, draws `<Pot look={...} />` first and then its children on top. Each plant has a bare drawing, a group of shapes with no `svg` and no pot (`PothosDrawing`, `PeaceLilyDrawing`, `PileaDrawing`), and a composed component (`Pothos`, `PeaceLily`, `Pilea`) that is the drawing inside a `PottedPlant`. The composed components take an optional `pot` look and default to `potLookFromSeed(seed)`, so the same seed gives the same plant and the same pot, and any pot can go with any plant:
+`PottedPlant` (`pottedPlant/PottedPlant.tsx`) renders the shared `<svg viewBox="0 30 200 205">`, draws `<Pot look={...} />` first and then its children on top. Each plant has a bare drawing, a group of shapes with no `svg` and no pot (`PothosDrawing`, `PeaceLilyDrawing`, `PileaDrawing`), and a composed component (`Pothos`, `PeaceLily`, `Pilea`) that is the drawing inside a `PottedPlant`. The composed components take an optional `pot` look and default to `potLookFromSeed(seed)`, so the same seed gives the same plant and the same pot, and any pot can go with any plant:
 
 ```tsx
 <Pothos seed={7} />                                      // the pot its seed gives
@@ -172,16 +175,16 @@ It returns flat SVG shapes. `Pot` draws them inside the body's clip path, after 
 
 **To add a finish:**
 
-1. Write one new file in `pot/finishes/` that exports a `PotFinish`. Copy `solid.tsx` as a start.
+1. Write one new file in `pots/finishes/` that exports a `PotFinish`. Copy `solid.tsx` as a start.
 2. Add it to the list at the top of `finishes/index.ts`. `PotFinishId` and `getFinish` pick it up from there.
 3. Add its weight to `POT_FINISH_WEIGHTS` in `style.ts`. A weight of 0 keeps it out of every seed's pick but lets the `/plants` page show it. The type requires an entry for every registered id.
 
 Nothing else changes. Adding a finish with a weight above 0 changes which seeds get it, but never their palette, band or plant. The `/plants` page lists every registered id in its finish picker, which overrides the finish of every pot on the page, and shows twelve consecutive seeds so pots can be compared. Its seed arrows scroll through them.
 
-Tests: `pot/pot.test.tsx` (geometry, `potLookFromSeed`, the pot drawing), `pot/finishes/finishes.test.tsx` (registry, weights, the solid finish), `pot/finishes/addingAFinish.test.tsx` (a finish that exists only in the test is drawn inside the clip) and `PottedPlant.test.tsx` (the split and the wrapper).
+Tests: `pots/pot.test.tsx` (geometry, `potLookFromSeed`, the pot drawing), `pots/finishes/finishes.test.tsx` (registry, weights, the solid finish), `pots/finishes/addingAFinish.test.tsx` (a finish that exists only in the test is drawn inside the clip) and `PottedPlant.test.tsx` (the split and the wrapper).
 ## 3. Stage engine
 
-Code: `frontend/src/plants/staged/`. Everything in this section is shared by every stage-engine plant. The numbers quoted are the **pothos's**; the peace lily changes some of them (section 5).
+Code: `frontend/src/pottedPlant/plants/staged/`. Everything in this section is shared by every stage-engine plant. The numbers quoted are the **pothos's**; the peace lily changes some of them (section 5).
 
 ### 3.1 The envelope
 
@@ -236,7 +239,7 @@ A plant can fan its outer leaves, so they look as if their face points toward th
 
 ## 4. Pothos
 
-Code: `frontend/src/plants/pothos/`. Heart-shaped leaves with golden splashes, in the engine's defaults.
+Code: `frontend/src/pottedPlant/plants/pothos/`. Heart-shaped leaves with golden splashes, in the engine's defaults.
 
 | Setting | Value |
 | --- | --- |
@@ -250,7 +253,7 @@ Every number is in `pothosConfig.ts`, and `HEART_LEAF_RANGES` and `LEAF_STYLE` h
 
 ## 5. Peace lily
 
-Code: `frontend/src/plants/peaceLily/`. It uses the stage engine for its leaves, so it follows every rule in [Design rules](#design-rules). Its own numbers are in `peaceLilyConfig.ts`.
+Code: `frontend/src/pottedPlant/plants/peaceLily/`. It uses the stage engine for its leaves, so it follows every rule in [Design rules](#design-rules). Its own numbers are in `peaceLilyConfig.ts`.
 
 **Differences from the pothos**
 
@@ -280,7 +283,7 @@ Code: `frontend/src/plants/peaceLily/`. It uses the stage engine for its leaves,
 
 ## 6. Pilea peperomioides
 
-Code: `frontend/src/plants/pilea/`. It uses the stage engine for its leaves, so it follows every rule in [Design rules](#design-rules). Its own numbers are in `pileaConfig.ts`.
+Code: `frontend/src/pottedPlant/plants/pilea/`. It uses the stage engine for its leaves, so it follows every rule in [Design rules](#design-rules). Its own numbers are in `pileaConfig.ts`.
 
 **Differences from the pothos**
 
@@ -336,7 +339,7 @@ Over 60 seeds unless noted.
 - pups appear from stage 2 and never in stage 1, and there are no flowers,
 - scale changes nothing but the picture size.
 
-**Pot and the split** (`pot/pot.test.tsx`, `pot/finishes/*.test.tsx`, `PottedPlant.test.tsx`):
+**Pot and the split** (`pots/pot.test.tsx`, `pots/finishes/*.test.tsx`, `PottedPlant.test.tsx`):
 
 - `potLookFromSeed` is deterministic, picks a real palette, band and finish, uses every palette and band across seeds, and its bands follow the odds,
 - every registered finish has a weight and the other way round, `getFinish` finds each one, and an unknown id throws,

@@ -2,13 +2,14 @@
 
 A precise runbook for adding a new plant on the shared **stage engine**. Follow
 it top to bottom. For the ideas behind the engine read
-[`frontend/src/plants/staged/README.md`](../../frontend/src/plants/staged/README.md);
+[`frontend/src/pottedPlant/plants/staged/README.md`](../../frontend/src/pottedPlant/plants/staged/README.md);
 for a worked example read
-[`frontend/src/plants/pothos/README.md`](../../frontend/src/plants/pothos/README.md).
+[`frontend/src/pottedPlant/plants/pothos/README.md`](../../frontend/src/pottedPlant/plants/pothos/README.md).
 For the rules every plant must keep, see
 [plant-generation.md](plant-generation.md).
 
-All paths below are under `frontend/`. Replace `Foo` / `foo` with your plant's
+All paths below are under `frontend/`. A path with no `src/` prefix, such as
+`pothos/leaf.ts` or `staged/types.ts`, is relative to `src/pottedPlant/plants/`. Replace `Foo` / `foo` with your plant's
 name (PascalCase for components, camelCase for ids and files). This guide builds
 a **leaf-only** plant (no flowers); the optional extras — outward fan, flowers,
 planted-in-soil — are at the end.
@@ -17,10 +18,10 @@ planted-in-soil — are at the end.
 
 ## What you will create
 
-A new folder `src/plants/foo/` with six files, plus edits to three shared files:
+A new folder `src/pottedPlant/plants/foo/` with six files, plus edits to three shared files:
 
 ```
-src/plants/foo/
+src/pottedPlant/plants/foo/
   fooLeaf.ts          the leaf: random look + outline polygon + colors
   FooLeafShape.tsx    draws one leaf (flat fills)
   fooConfig.ts        every tunable number (a StagedPlantConfig)
@@ -30,7 +31,7 @@ src/plants/foo/
   foo.test.tsx        the stage-rule tests
 ```
 
-Shared files to edit: `src/app/plants/PlantLab.tsx`, `src/plants/README.md`,
+Shared files to edit: `src/app/plants/PlantLab.tsx`, `src/pottedPlant/README.md`,
 `docs/frontend/plant-generation.md`.
 
 ---
@@ -59,7 +60,7 @@ colors. Two ways to build the outline:
   sampler (copy `pothos/leaf.ts`).
 
 ```ts
-import { range, type Range, type Rng } from "../rng"
+import { range, type Range, type Rng } from "../../rng"
 
 /** One leaf's look, independent of where it sits. Keep every number named. */
 export interface FooLeafSpec {
@@ -132,8 +133,8 @@ Fields you will most likely tune: `stages.maxLeaves` (leaf cap), `dome`
 (how tall/wide), `leaves.lengthRange`, `stems`, and `coverage.target` (how lush).
 
 ```ts
-import { SOIL } from "../genome"
-import { POT_RIM } from "../pot/shape"
+import { SOIL } from "../../genome"
+import { POT_RIM } from "../../pots/shape"
 import type { StagedPlantConfig } from "../staged/types"
 
 const SIDE_OVERHANG = 8
@@ -221,7 +222,7 @@ export { createFoo, type FooPlant } from "./fooStages"
 Four edits (the TypeScript `PlantId` union is derived from the `PLANTS` array,
 so all four must agree or the file won't compile):
 
-1. **Import:** `import { Foo } from "@/plants/foo"`
+1. **Import:** `import { Foo } from "@/pottedPlant/plants/foo"`
 2. **`PLANTS` array** — add an entry:
    ```ts
    { id: "foo", label: "Foo", description: "One sentence on what's distinctive.", stageNames: ["Sprout", "Young", "Fuller", "Full"] },
@@ -245,7 +246,7 @@ and that `scale` changes only the picture size.
 
 ## Step 9 — Docs
 
-Add a one-line row for the plant to the tables in `src/plants/README.md` and
+Add a one-line row for the plant to the tables in `src/pottedPlant/README.md` and
 `docs/frontend/plant-generation.md`.
 
 ## Step 10 — Verify

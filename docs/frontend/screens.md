@@ -2,7 +2,7 @@
 
 What each screen shows and does. For the rules behind the numbers, see [the backend design](../backend/design.md#8-calculation-rules). For how the screens look, see [the frontend design](design.md). For the big picture, see [design.md](../design.md).
 
-Group habits are not part of this version, so no screen shows them.
+Screens 1 to 7 are for personal habits. Shared habits are planned and described in [section 8](#8-shared-habits-planned).
 
 ---
 
@@ -16,6 +16,7 @@ Group habits are not part of this version, so no screen shows them.
   - [5. Create Habit](#5-create-habit)
   - [6. Badges and Habit History](#6-badges-and-habit-history)
   - [7. Settings](#7-settings)
+  - [8. Shared habits (planned)](#8-shared-habits-planned)
 
 ---
 ## Screens
@@ -28,6 +29,8 @@ flowchart LR
     Garden <--> Settings
     Garden --> Create[Create Habit]
     Garden --> Details[Habit Details]
+    Garden --> Shared[Shared Habit, planned]
+    Join[Join a habit, planned] --> Shared
     Dashboard --> Details
     Create --> Details
     Badges --> BadgeDetails[Badge Details]
@@ -49,16 +52,26 @@ All active habits shown as potted plants in a grid.
 - Each plant shows its **name**, a **current period progress bar**, and its **appearance** (growth stage + health).
 - **Click** a plant to open Habit Details.
 - **Press and hold** a plant to log an activity for today.
-- Each plant's options menu: **Log activity**, **View details**, **Edit habit**.
+- Each plant's options menu: **Log activity**, **View details**. There is no edit action, because habits cannot be edited.
 - **Empty state:** an empty garden prompting the user to create their first habit.
 - **Nav:** Overall Dashboard, Badges, Settings, Add Habit.
 
 ### 3 Overall Dashboard
 
-The current basic `/dashboard` page shares the Garden's saved-habit list,
-including goals, future-start labels, and habit detail links. Successful habit
-creation redirects here (#170). The activity summary below is planned for the
-logging and visualization work.
+The current `/dashboard` page uses `GET /dashboard` to show active habit count,
+overall consistency (a dash while unavailable), and current streaks per habit.
+The backend's best streak is highlighted (#213). Streaks are labelled in periods,
+and future habits show "Not started yet". New users see a friendly empty state
+with a create-habit link. Successful creation redirects here and refreshes the
+summary (#170). "A little attention" lists the backend's `needs_attention`
+habits with neutral health labels and links to their details; an empty list
+shows encouragement (#214). This includes missed last periods through the
+backend's existing health rule. "Finished habits" shows expired habits from the
+backend's `finished` list with the final badge, progress and consistency (#215).
+No-badge results (under 60%) have a distinct dashed, muted treatment and an
+explicit label; awarded results have a solid accent and badge-level label.
+An empty history shows encouragement. The full badges page is still planned;
+the remaining planned presentation is described below.
 
 A summary of activity across all active habits.
 
@@ -92,10 +105,21 @@ A summary of activity across all active habits.
 
 **Actions:**
 
+Implemented in #203 and #204: the date picker defaults to today in the profile
+timezone and uses the backend's current-period bounds. Saving updates progress
+and plant stats immediately from the response, then refreshes full details,
+Garden and Dashboard. Logging errors preserve the selected date for retry.
+Expired habits disable logging. A five-second toast offers Undo through the
+delete endpoint; the current-period activity list also has individual delete
+buttons. Earlier periods have no delete action. The activity calendar and
+per-period history remain #209's separate scope. For a not-yet-started personal
+habit, the existing backend rule permits only today toward the first period;
+the date picker mirrors that exception.
+
 - **Log activity.** A date picker defaults to today and allows any date in the current period up to today.
 - **Undo** toast for about 5 seconds after logging.
 - **Delete a log** from the current period.
-- **Edit habit:** name, description, and plant type only. Goal, period, and duration are locked after creation.
+- **No editing.** A habit cannot be changed after it is created, so the name, description, plant, goal and duration are all fixed. To change one, delete it and create a new one.
 - **Delete habit** (with confirmation). Removes the habit and its logs.
 
 ### 5 Create Habit
@@ -135,3 +159,27 @@ automatically. Profile setup failures show a retry action.
 - Light/dark mode toggle, saved in the browser.
 - Log out. Delete account, under Account, with a confirmation that lists what is deleted (habits, activity logs, badges).
 - **Nav:** Overall Dashboard, My Garden, Badges.
+
+### 8 Shared habits (planned)
+
+Not built yet. The rules are in [the backend design](../backend/design.md#66-shared-habits-planned) and the tables are in [the database design](../database/design.md#8-shared-habits-planned).
+
+**Create.** Create Habit (screen 5) gets a choice between "Just me" and "With friends". With friends adds two fields: **Join by**, a date on or before the start date (default: the day before), and **Max members**, from 2 up to the system limit. The start date can be today or later. The confirm step says the goal and start date lock once a friend joins, and that after the start nothing can be edited. After saving, the owner sees the invite.
+
+**Invite.** The shared habit page shows the link (`/join/[code]`) with a copy button, **Get a new link**, and **Close joining**. Joining also closes by itself after the join by date.
+
+**Join (`/join/[code]`).** Signing in is required, and signing in returns here. The page shows the name, the goal as a sentence, the start date, the owner's name and how many places are left. It says that other members will see your display name. A wrong, closed or expired link shows one message that does not say which. A full habit and an ended joining window each have their own message. Someone who is already a member goes straight to the habit.
+
+**Shared habit page.**
+- **Info:** name, description, goal, start and end dates, remaining duration.
+- **Plant:** the one shared plant, at the group's growth stage and health.
+- **Progress:** the group progress (the average), your own progress (current period count with ticks, overall progress, consistency and streak), and a row for every member with their name, overall progress, current period count, streak and health. Exact logs are never shown.
+- **Activity:** your own calendar and per-period history. **Log activity** has a date picker as in screen 4, with Undo, and you can delete your own logs in the current period. Before the start date, the page says "Starts on ...", shows who has joined, and nobody can log.
+- **Owner actions:** edit before the start (within the rules in the backend design), remove a member, transfer ownership, get a new link or close joining, and delete the habit with a confirmation.
+- **Member actions:** leave, with a confirmation that says your past logs stay but you are no longer counted. The owner transfers ownership before leaving.
+
+**Garden.** A shared habit is one card with the group plant, a "shared" marker with the member count, and your own current period bar. How shared and personal habits are ordered is not decided.
+
+**Badges.** Each member earns their own badge from their own results. Group badges are not decided yet.
+
+**Nav:** the same as the other screens.

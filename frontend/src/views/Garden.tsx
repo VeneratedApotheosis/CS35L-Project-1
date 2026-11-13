@@ -1,9 +1,14 @@
 "use client"
 
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useRef, useState } from "react"
+import { Toast } from "@/components/Toast"
+import { addActivity, deleteActivity } from "@/lib/logs"
+import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
+import { PlantCard } from "@/components/PlantCard"
+import { habitSeed } from "@/pottedPlant/habitSeed"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { durationPhrase, formatDate, periodPhrase } from "@/lib/goal"
@@ -25,6 +30,39 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
     retry: false,
   })
   const profile = useProfile()
+  const client = useQueryClient()
+  const writing = useRef(false)
+  const [noticeId, setNoticeId] = useState(0)
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState<{ message: string; error?: boolean; undo?: () => void } | null>(null)
+
+  async function logToday(habitId: string) {
+    if (writing.current || !user || !profile.data?.today) return
+    writing.current = true
+    setNoticeId((id) => id + 1)
+    setBusy(true)
+    try {
+      const result = await addActivity(habitId, profile.data.today)
+      void client.invalidateQueries({ queryKey: habitKeys.all(user.id) })
+      setNotice({ message: "Activity logged for today.", undo: () => { void undoLog(habitId, result.log.id) } })
+    } catch (error) {
+      setNotice({ message: error instanceof ApiError && error.status === 401 ? "Your session expired. Sign in again to log activity." : "Couldn't log activity. Check your connection and try again.", error: true })
+    } finally { writing.current = false; setBusy(false) }
+  }
+
+  async function undoLog(habitId: string, logId: string) {
+    if (writing.current || !user) return
+    writing.current = true
+    setNoticeId((id) => id + 1)
+    setBusy(true)
+    try {
+      await deleteActivity(habitId, logId)
+      void client.invalidateQueries({ queryKey: habitKeys.all(user.id) })
+      setNotice({ message: "Activity removed." })
+    } catch {
+      setNotice({ message: "Couldn't undo activity. Try deleting it from habit details.", error: true })
+    } finally { writing.current = false; setBusy(false) }
+  }
 
   const error = habits.error ?? profile.error
   const unauthorized = error instanceof ApiError && error.status === 401
@@ -79,10 +117,22 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
 
       {!pending && rows.length > 0 && (
         <section aria-label="Saved habits" className="stack-md">
-          <ul className="garden-list">
+          <ul className={title === "My Garden" ? "garden-list plant-card-grid" : "garden-list"}>
             {rows.map((habit) => (
               <li key={habit.id}>
-                <Card className="stack-sm">
+                {title === "My Garden" ? (
+                  <div className="stack-sm">
+                    <PlantCard name={habit.name} plantType={habit.plant_type}
+                      seed={habitSeed(habit.id)} stage={habit.stats.stage} health={habit.stats.health}
+                      count={habit.stats.current_period.count} target={habit.stats.current_period.target}
+                      periodLabel={habit.stats.state === "not_started" ? "First period" : habit.stats.state === "expired" ? "Final period" : "Current period"}
+                      loggingDisabled={busy}
+                      onLogActivity={today && habit.stats.state !== "expired" ? () => { void logToday(habit.id) } : undefined}
+                      detailsHref={`/habits/${habit.id}`} />
+                    {habit.stats.state === "not_started" && <p className="text-body-sm">Not started yet · Starts {formatDate(habit.start_date)}</p>}
+                    {habit.stats.state === "expired" && <p className="text-body-sm">Finished</p>}
+                  </div>
+                ) : <Card className="stack-sm">
                   <h2 className="text-h3 garden-name">
                     <Link className="garden-link" href={`/habits/${habit.id}`}>{habit.name}</Link>
                   </h2>
@@ -94,7 +144,7 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
                   {today && habit.start_date > today && (
                     <p className="text-body-sm">Not started yet · Starts {formatDate(habit.start_date)}</p>
                   )}
-                </Card>
+                </Card>}
               </li>
             ))}
           </ul>
@@ -115,6 +165,8 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
         </Card>
       )}
 
+      {notice && <Toast key={noticeId} message={notice.message} variant={notice.error ? "error" : "success"}
+        onDismiss={() => setNotice(null)} action={!busy && notice.undo ? { label: "Undo", onClick: notice.undo } : undefined} />}
       <footer className="stack-sm">
         <p className="text-body-sm text-secondary">Signed in as {user?.email}</p>
         <Button variant="ghost" className="self-start" onClick={() => void signOut()}>Sign out</Button>
