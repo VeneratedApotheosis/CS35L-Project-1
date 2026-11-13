@@ -29,17 +29,14 @@ export interface PlantCardProps {
   target: number
   /** For example, "This week" or "This month". */
   periodLabel: string
-  onLogActivity?: () => void
-  loggingDisabled?: boolean
-  onViewDetails?: () => void
-  detailsHref?: string
-  onEditHabit?: () => void
+  onLogActivity: () => void
+  onViewDetails: () => void
 }
 
 /** A presentation-only garden item. The parent supplies data and owns all actions. */
 export function PlantCard({
   name, plantType, seed, stage, health, count, target, periodLabel,
-  onLogActivity, onViewDetails, onEditHabit, detailsHref, loggingDisabled = false,
+  onLogActivity, onViewDetails,
 }: PlantCardProps) {
   const hold = useHoldToLog(loggingDisabled ? undefined : onLogActivity)
   const headingId = useId()
@@ -89,10 +86,8 @@ export function PlantCard({
             </summary>
             <Card variant="elevated" className="plant-card__popover">
               <ul className="plant-card__actions">
-                {onLogActivity && <li><Button variant="ghost" icon={Plus} full disabled={loggingDisabled} onClick={() => runAction(onLogActivity)}>Log activity</Button></li>}
-                {detailsHref ? <li><Link className="button button--ghost button--md" href={detailsHref}>View details</Link></li>
-                  : onViewDetails && <li><Button variant="ghost" icon={Eye} full onClick={() => runAction(onViewDetails)}>View details</Button></li>}
-                {onEditHabit && <li><Button variant="ghost" icon={Pencil} full onClick={() => runAction(onEditHabit)}>Edit habit</Button></li>}
+                <li><Button variant="ghost" icon={Plus} full onClick={() => runAction(onLogActivity)}>Log activity</Button></li>
+                <li><Button variant="ghost" icon={Eye} full onClick={() => runAction(onViewDetails)}>View details</Button></li>
               </ul>
             </Card>
           </details>
