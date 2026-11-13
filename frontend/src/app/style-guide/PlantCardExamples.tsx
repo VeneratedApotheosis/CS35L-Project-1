@@ -51,11 +51,10 @@ export function PlantCardExamples() {
               setMessage(`Activity logged for ${plant.label} (demo only)`)
             }}
             onViewDetails={() => setMessage(`View details selected for ${plant.label} (demo only)`)}
-            onEditHabit={() => setMessage(`Edit habit selected for ${plant.label} (demo only)`)}
           />
         ))}
       </div>
-      <p className="text-body-sm text-secondary" role="status">{message || "Open a card’s options to log an activity, view details, or edit the demo habit."}</p>
+      <p className="text-body-sm text-secondary" role="status">{message || "Open a card’s options to log an activity, or view details."}</p>
     </div>
   )
 }

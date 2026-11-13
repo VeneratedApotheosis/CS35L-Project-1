@@ -6,7 +6,7 @@ import { PlantCard, type PlantCardProps } from "./PlantCard"
 const props: PlantCardProps = {
   name: "Read a little", plantType: "pothos", seed: 42, stage: 1,
   health: "healthy", count: 2, target: 3, periodLabel: "This week",
-  onLogActivity: vi.fn(), onViewDetails: vi.fn(), onEditHabit: vi.fn(),
+  onLogActivity: vi.fn(), onViewDetails: vi.fn(),
 }
 
 describe("PlantCard", () => {
@@ -35,9 +35,10 @@ describe("PlantCard", () => {
     expect(markup).toContain('aria-label="View details for Read a little"')
     expect(markup).toContain('aria-label="Read a little: This week"')
     expect(markup).toContain('aria-valuetext="4 of 3 activities, goal met"')
-    for (const action of ["Log activity", "View details", "Edit habit"]) {
+    for (const action of ["Log activity", "View details"]) {
       expect(markup).toContain(`>${action}</span>`)
     }
+    expect(markup).not.toContain("Edit habit")
     expect(props.onLogActivity).not.toHaveBeenCalled()
   })
 })

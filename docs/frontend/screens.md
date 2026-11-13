@@ -49,7 +49,7 @@ All active habits shown as potted plants in a grid.
 - Each plant shows its **name**, a **current period progress bar**, and its **appearance** (growth stage + health).
 - **Click** a plant to open Habit Details.
 - **Press and hold** a plant to log an activity for today.
-- Each plant's options menu: **Log activity**, **View details**, **Edit habit**.
+- Each plant's options menu: **Log activity**, **View details**.
 - **Empty state:** an empty garden prompting the user to create their first habit.
 - **Nav:** Overall Dashboard, Badges, Settings, Add Habit.
 
@@ -95,7 +95,6 @@ A summary of activity across all active habits.
 - **Log activity.** A date picker defaults to today and allows any date in the current period up to today.
 - **Undo** toast for about 5 seconds after logging.
 - **Delete a log** from the current period.
-- **Edit habit:** name, description, and plant type only. Goal, period, and duration are locked after creation.
 - **Delete habit** (with confirmation). Removes the habit and its logs.
 
 ### 5 Create Habit

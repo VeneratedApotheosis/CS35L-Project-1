@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useId, useRef } from "react"
-import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Pencil, Plus } from "lucide-react"
+import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Plus } from "lucide-react"
 import { plantTypeById, type PlantTypeId } from "@/plants/plantTypes"
 import { Button } from "./Button"
 import { Card } from "./Card"
@@ -29,13 +29,12 @@ export interface PlantCardProps {
   periodLabel: string
   onLogActivity: () => void
   onViewDetails: () => void
-  onEditHabit: () => void
 }
 
 /** A presentation-only garden item. The parent supplies data and owns all actions. */
 export function PlantCard({
   name, plantType, seed, stage, health, count, target, periodLabel,
-  onLogActivity, onViewDetails, onEditHabit,
+  onLogActivity, onViewDetails,
 }: PlantCardProps) {
   const headingId = useId()
   const disclosure = useRef<HTMLDetailsElement>(null)
@@ -86,7 +85,6 @@ export function PlantCard({
               <ul className="plant-card__actions">
                 <li><Button variant="ghost" icon={Plus} full onClick={() => runAction(onLogActivity)}>Log activity</Button></li>
                 <li><Button variant="ghost" icon={Eye} full onClick={() => runAction(onViewDetails)}>View details</Button></li>
-                <li><Button variant="ghost" icon={Pencil} full onClick={() => runAction(onEditHabit)}>Edit habit</Button></li>
               </ul>
             </Card>
           </details>
