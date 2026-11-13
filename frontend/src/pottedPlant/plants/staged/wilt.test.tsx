@@ -20,7 +20,7 @@ const SPECIES = [
   POTHOS_SPECIES, PEACE_LILY_SPECIES, PILEA_SPECIES, SNAKE_PLANT_SPECIES, KIMBERLY_QUEEN_SPECIES,
   LILY_SPECIES, ROSE_SPECIES, MONSTERA_SPECIES, PHILODENDRON_SPECIES,
 ] as unknown as Species[]
-const SEEDS = Array.from({ length: 12 }, (_, i) => i + 1)
+const SEEDS = Array.from({ length: 6 }, (_, i) => i + 1)
 
 const mean = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 const lastStage = (species: Species, seed: number, wilt: number) => {
