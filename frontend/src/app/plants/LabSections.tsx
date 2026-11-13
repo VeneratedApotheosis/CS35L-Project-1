@@ -41,20 +41,19 @@ function LabSection({ title, description, action, children }: {
 
 /** #152: every plant type in each health state, side by side, and at any wilt amount in between. */
 export function WiltedLookSection() {
-  const [health, setHealth] = useState<Health | "all" | "custom">("all")
+  const [health, setHealth] = useState<Health | "custom">("wilted")
   const [custom, setCustom] = useState(0.5)
-  const shown = health === "all" ? HEALTH_STATES : HEALTH_STATES.filter((state) => state.id === health)
   const rows = health === "custom"
     ? [{ id: "custom", label: "Wilt amount " + Math.round(custom * 100) + "%", wilt: custom }]
-    : shown.map((state) => ({ id: state.id, label: state.label, wilt: WILT.forHealth[state.id] }))
+    : HEALTH_STATES.filter((state) => state.id === health).map((state) => ({ id: state.id, label: state.label, wilt: WILT.forHealth[state.id] }))
 
   return (
     <LabSection
       title="Wilted look"
-      description="Every plant in the three health states. As a plant wilts its leaves droop, until the average leaf is almost horizontal, and about half of the leaves turn brown, a quarter of them dark brown. The pot never changes. Drooped leaves stay inside the pot's side limits. Lotus is not on the stage engine yet, so it doesn't wilt."
+      description="Every plant in one health state at a time. As a plant wilts its stems bend outward, its leaves droop until the average leaf is almost horizontal, and longer leaves curve toward the ground. About half of the leaves turn brown, a quarter of them dark brown. The pot never changes. Wilted leaves stay inside the side limits. Lotus is not on the stage engine yet, so it doesn't wilt."
       action={
         <div role="group" aria-label="Health state to show" className="flex flex-wrap gap-2">
-          {[{ id: "all", label: "All states" }, ...HEALTH_STATES, { id: "custom", label: "Custom amount" }].map((state) => (
+          {[...HEALTH_STATES, { id: "custom", label: "Custom amount" }].map((state) => (
             <Button key={state.id} size="sm" variant={health === state.id ? "primary" : "secondary"}
               aria-pressed={health === state.id} onClick={() => setHealth(state.id as typeof health)}>
               {state.label}

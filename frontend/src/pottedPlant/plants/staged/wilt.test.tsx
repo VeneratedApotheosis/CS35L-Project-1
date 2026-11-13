@@ -13,7 +13,7 @@ import { ROSE_SPECIES } from "../rose/roseStages"
 import { SNAKE_PLANT_SPECIES } from "../snakePlant/snakePlantStages"
 import { createStagedPlant, leafOutline } from "./generate"
 import type { StagedPlantSpecies } from "./types"
-import { browningOf, wiltForHealth, wiltPlant } from "./wilt"
+import { bendPoint, browningOf, WILT, wiltForHealth, wiltPlant } from "./wilt"
 
 type Species = StagedPlantSpecies<never>
 const SPECIES = [
@@ -45,6 +45,41 @@ describe("wilting a staged plant", () => {
       expect(angles[2], species.config.name).toBeGreaterThan(angles[1])
     }
   }, 60_000)
+
+  it("bends the stems more as the plant wilts, tilting each tip outward", () => {
+    for (const species of SPECIES) {
+      const tilt = (wilt: number) =>
+        mean(SEEDS.flatMap((seed) => lastStage(species, seed, wilt).leaves.map((leaf) => {
+          const { x0, y0, x1, y1 } = leaf.stem
+          return Math.abs((Math.atan2(x1 - x0, y0 - y1) * 180) / Math.PI)
+        })))
+      expect(tilt(0.5), species.config.name).toBeGreaterThan(tilt(0))
+      expect(tilt(1), species.config.name).toBeGreaterThan(tilt(0.5))
+    }
+  })
+
+  it("curves long leaves along their length more as the plant wilts, and short ones less", () => {
+    const bend = (wilt: number) => {
+      const leaves = SEEDS.flatMap((seed) => lastStage(SNAKE_PLANT_SPECIES as unknown as Species, seed, wilt).leaves)
+      return mean(leaves.map((leaf) => Math.abs(leaf.bend ?? 0)))
+    }
+    expect(bend(0.5)).toBeGreaterThan(0)
+    expect(bend(1)).toBeGreaterThan(bend(0.5))
+    const longest = SEEDS.flatMap((seed) => lastStage(KIMBERLY_QUEEN_SPECIES as unknown as Species, seed, 1).leaves)
+    const shortest = SEEDS.flatMap((seed) => lastStage(PILEA_SPECIES as unknown as Species, seed, 1).leaves)
+    expect(mean(longest.map((leaf) => Math.abs(leaf.bend ?? 0)))).toBeGreaterThan(mean(shortest.map((leaf) => Math.abs(leaf.bend ?? 0))))
+    for (const leaf of [...longest, ...shortest]) expect(Math.abs(leaf.bend ?? 0)).toBeLessThanOrEqual(WILT.leafCurve + 1e-9)
+  })
+
+  it("curves a straight leaf along an arc that keeps its length and leaves its stalk alone", () => {
+    expect(bendPoint([0, 0], 50, 60)).toEqual([0, 0])
+    expect(bendPoint([3, -20], 50, 0)).toEqual([3, -20])
+    const [tipX, tipY] = bendPoint([0, -50], 50, 60)
+    expect(Math.hypot(tipX, tipY)).toBeLessThan(50)
+    expect(tipX).toBeGreaterThan(0)
+    const arc = (50 / ((60 * Math.PI) / 180)) * 2 * Math.sin(((60 * Math.PI) / 180) / 2)
+    expect(Math.hypot(tipX, tipY)).toBeCloseTo(arc, 5)
+  })
 
   it("makes the average fully wilted leaf almost horizontal", () => {
     const pothosLike = [POTHOS_SPECIES, PEACE_LILY_SPECIES, PILEA_SPECIES, LILY_SPECIES, ROSE_SPECIES, MONSTERA_SPECIES, PHILODENDRON_SPECIES]

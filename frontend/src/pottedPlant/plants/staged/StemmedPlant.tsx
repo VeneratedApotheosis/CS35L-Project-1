@@ -3,7 +3,7 @@
 import { useId, useMemo, type ReactNode } from "react"
 import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
 import { useWilt } from "./WiltContext"
-import { BROWNING, wiltPlant } from "./wilt"
+import { BROWNING, bendSlices, wiltPlant } from "./wilt"
 
 /** Decimal places kept when writing coordinates into the SVG. */
 const COORDINATE_DECIMALS = 1
@@ -50,6 +50,9 @@ export function stageOf<Spec>(plant: StagedPlant<Spec>, stage: number): PlantSta
   const index = Math.min(Math.max(Math.round(stage), 1), plant.stages.length) - 1
   return plant.stages[index]
 }
+
+/** How far a slice of a curved leaf reaches past its cut, in canvas units, to hide the seam. */
+const SLICE_OVERLAP = 0.8
 
 const fixed = (n: number) => n.toFixed(COORDINATE_DECIMALS)
 
@@ -132,6 +135,7 @@ export function StemmedPlant<Spec>({
       {renderBehindLeaves?.(current, id)}
 
       {current.leaves.map((leaf) => {
+        const slices = leaf.bend ? bendSlices(leaf.length, leaf.bend) : null
         const group = (
           <g
             key={"l" + leaf.index}
@@ -141,7 +145,20 @@ export function StemmedPlant<Spec>({
               ") rotate(" + fixed(leaf.angle) + ")"
             }
           >
-            {renderLeaf(leaf, id + "-l" + leaf.index)}
+            {slices
+              ? /* A curved leaf is the straight leaf cut into slices, each turned onto the arc.
+                   Each slice reaches a little into the next so no seam shows. */
+                slices.map((slice, i) => (
+                  <g key={i}>
+                    <clipPath id={id + "-l" + leaf.index + "-c" + i} clipPathUnits="userSpaceOnUse">
+                      <rect x={-200} y={slice.top - SLICE_OVERLAP} width={400} height={slice.bottom - slice.top + 2 * SLICE_OVERLAP} />
+                    </clipPath>
+                    <g transform={slice.transform} clipPath={"url(#" + id + "-l" + leaf.index + "-c" + i + ")"}>
+                      {renderLeaf(leaf, id + "-l" + leaf.index + "-s" + i)}
+                    </g>
+                  </g>
+                ))
+              : renderLeaf(leaf, id + "-l" + leaf.index)}
           </g>
         )
         if (!planting) return group
