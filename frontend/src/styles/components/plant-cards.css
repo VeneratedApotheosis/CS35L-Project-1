@@ -148,3 +148,14 @@
   max-width: none;
   transform: none;
 }
+
+.plant-card__open { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.plant-card__hold { text-align: center; color: var(--color-text-secondary); }
+.plant-card__hold-track { display: block; height: var(--space-1); overflow: hidden; border-radius: var(--radius-pill); margin-block: var(--space-2); }
+.plant-card__hold-track > span { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--color-primary); }
+.plant-card__hold[data-holding="true"] .plant-card__hold-track { background: var(--color-surface-secondary); }
+.plant-card__hold[data-holding="true"] .plant-card__hold-track > span { width: 100%; transition: width 1s linear; }
+
+@media (min-width: 62rem) {
+  .plant-card__hold-track { height: calc(var(--space-1) * 1.5); }
+}

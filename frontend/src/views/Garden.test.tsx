@@ -89,7 +89,7 @@ describe("Garden", () => {
     expect(screen.getAllByText("Slightly wilted")).toHaveLength(2)
     expect(screen.getAllByTestId("plant-preview")[0].getAttribute("data-stage")).toBe("3")
     expect(screen.getAllByTestId("plant-preview")[0].getAttribute("data-seed")).not.toBe(screen.getAllByTestId("plant-preview")[1].getAttribute("data-seed"))
-    expect(screen.queryByRole("button", { name: "Log activity" })).toBeNull()
+    expect(screen.getAllByRole("button", { name: "Log activity" })).toHaveLength(2)
     expect(screen.getByRole("link", { name: "Read" }).getAttribute("href")).toBe("/habits/habit-1")
     expect(screen.getByRole("progressbar", { name: "Read: Current period" }).getAttribute("aria-valuenow")).toBe("3")
     expect(screen.getAllByText(/Not started yet/)).toHaveLength(1)
@@ -190,3 +190,39 @@ describe("Garden", () => {
 function jsonResponseError() {
   return json({ error: { code: "internal_error", message: "Could not create habit" } }, 500)
 }
+
+it("logs today's profile date from the keyboard menu and undoes only that log", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] })
+  vi.setSystemTime(new Date("2026-11-07T02:00:00Z"))
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url.endsWith("/me")) return Promise.resolve(json({ id: "user-a", timezone: "America/Los_Angeles" }))
+    if (init?.method === "POST") return Promise.resolve(json({ log: { id: "new-log", habit_id: "habit-1", occurred_on: "2026-11-06" }, stats: habit().stats }))
+    if (init?.method === "DELETE") return Promise.resolve(json({ stats: habit().stats }))
+    return Promise.resolve(json(page([habit()])))
+  })
+  render(<QueryProvider><Garden /></QueryProvider>)
+  await screen.findByRole("link", { name: "Read" })
+  fireEvent.click(screen.getByLabelText("Options for Read"))
+  fireEvent.click(screen.getByRole("button", { name: "Log activity" }))
+  await screen.findByText("Activity logged for today.")
+  const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST")
+  expect(post?.[0]).toContain("/habits/habit-1/logs")
+  expect(JSON.parse(post?.[1].body)).toEqual({ occurred_on: "2026-11-06" })
+  fireEvent.click(screen.getByRole("button", { name: "Undo" }))
+  await screen.findByText("Activity removed.")
+  expect(fetchMock.mock.calls.find(([, init]) => init?.method === "DELETE")?.[0]).toContain("/habits/habit-1/logs/new-log")
+})
+
+it("shows a failed log without offering Undo", async () => {
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url.endsWith("/me")) return Promise.resolve(json({ id: "user-a", timezone: "America/Los_Angeles" }))
+    if (init?.method === "POST") return Promise.resolve(json({ message: "Unavailable" }, 500))
+    return Promise.resolve(json(page([habit()])))
+  })
+  render(<QueryProvider><Garden /></QueryProvider>)
+  await screen.findByRole("link", { name: "Read" })
+  fireEvent.click(screen.getByLabelText("Options for Read"))
+  fireEvent.click(screen.getByRole("button", { name: "Log activity" }))
+  expect((await screen.findByRole("alert")).textContent).toContain("Couldn't log activity")
+  expect(screen.queryByRole("button", { name: "Undo" })).toBeNull()
+})

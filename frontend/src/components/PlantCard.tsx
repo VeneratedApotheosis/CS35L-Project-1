@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useHoldToLog } from "./useHoldToLog"
 import { useEffect, useId, useRef } from "react"
 import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Pencil, Plus } from "lucide-react"
 import { plantTypeById, type PlantTypeId } from "@/pottedPlant/plants/plantTypes"
@@ -29,6 +30,7 @@ export interface PlantCardProps {
   /** For example, "This week" or "This month". */
   periodLabel: string
   onLogActivity?: () => void
+  loggingDisabled?: boolean
   onViewDetails?: () => void
   detailsHref?: string
   onEditHabit?: () => void
@@ -37,8 +39,9 @@ export interface PlantCardProps {
 /** A presentation-only garden item. The parent supplies data and owns all actions. */
 export function PlantCard({
   name, plantType, seed, stage, health, count, target, periodLabel,
-  onLogActivity, onViewDetails, onEditHabit, detailsHref,
+  onLogActivity, onViewDetails, onEditHabit, detailsHref, loggingDisabled = false,
 }: PlantCardProps) {
+  const hold = useHoldToLog(loggingDisabled ? undefined : onLogActivity)
   const headingId = useId()
   const disclosure = useRef<HTMLDetailsElement>(null)
   const trigger = useRef<HTMLElement>(null)
@@ -86,7 +89,7 @@ export function PlantCard({
             </summary>
             <Card variant="elevated" className="plant-card__popover">
               <ul className="plant-card__actions">
-                {onLogActivity && <li><Button variant="ghost" icon={Plus} full onClick={() => runAction(onLogActivity)}>Log activity</Button></li>}
+                {onLogActivity && <li><Button variant="ghost" icon={Plus} full disabled={loggingDisabled} onClick={() => runAction(onLogActivity)}>Log activity</Button></li>}
                 {detailsHref ? <li><Link className="button button--ghost button--md" href={detailsHref}>View details</Link></li>
                   : onViewDetails && <li><Button variant="ghost" icon={Eye} full onClick={() => runAction(onViewDetails)}>View details</Button></li>}
                 {onEditHabit && <li><Button variant="ghost" icon={Pencil} full onClick={() => runAction(onEditHabit)}>Edit habit</Button></li>}
@@ -96,14 +99,14 @@ export function PlantCard({
         </div>
         <h3 id={headingId}>
           {detailsHref ? (
-            <Link href={detailsHref} className="plant-card__open">
+            <Link href={detailsHref} className="plant-card__open" {...hold.handlers}>
               <span className="plant-card__illustration" data-health={health} aria-hidden="true">
                 <Preview seed={seed} stage={stage} />
               </span>
               <span className="text-h3 plant-card__name">{name}</span>
             </Link>
           ) : (
-            <button type="button" className="plant-card__open" onClick={onViewDetails}
+            <button type="button" className="plant-card__open" {...hold.handlers} onClick={onViewDetails}
               aria-label={`View details for ${name}`}>
               <span className="plant-card__illustration" data-health={health} aria-hidden="true">
                 <Preview seed={seed} stage={stage} />
@@ -112,6 +115,10 @@ export function PlantCard({
             </button>
           )}
         </h3>
+        {onLogActivity && <div className="plant-card__hold" data-holding={hold.holding}>
+          <span className="text-body-sm">Hold plant to log today</span>
+          <span className="plant-card__hold-track" aria-hidden="true"><span /></span>
+        </div>}
         <ProgressBar label={`${name}: ${periodLabel}`} count={count} target={target} />
       </Card>
     </article>
