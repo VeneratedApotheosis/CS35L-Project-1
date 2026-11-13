@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useHoldToLog } from "./useHoldToLog"
 import { useEffect, useId, useRef } from "react"
-import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Pencil, Plus } from "lucide-react"
+import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Plus } from "lucide-react"
 import { plantTypeById, type PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 import { Button } from "./Button"
 import { Card } from "./Card"
@@ -29,14 +29,16 @@ export interface PlantCardProps {
   target: number
   /** For example, "This week" or "This month". */
   periodLabel: string
-  onLogActivity: () => void
-  onViewDetails: () => void
+  onLogActivity?: () => void
+  loggingDisabled?: boolean
+  onViewDetails?: () => void
+  detailsHref?: string
 }
 
 /** A presentation-only garden item. The parent supplies data and owns all actions. */
 export function PlantCard({
   name, plantType, seed, stage, health, count, target, periodLabel,
-  onLogActivity, onViewDetails,
+  onLogActivity, onViewDetails, detailsHref, loggingDisabled = false,
 }: PlantCardProps) {
   const hold = useHoldToLog(loggingDisabled ? undefined : onLogActivity)
   const headingId = useId()
@@ -86,8 +88,9 @@ export function PlantCard({
             </summary>
             <Card variant="elevated" className="plant-card__popover">
               <ul className="plant-card__actions">
-                <li><Button variant="ghost" icon={Plus} full onClick={() => runAction(onLogActivity)}>Log activity</Button></li>
-                <li><Button variant="ghost" icon={Eye} full onClick={() => runAction(onViewDetails)}>View details</Button></li>
+                {onLogActivity && <li><Button variant="ghost" icon={Plus} full disabled={loggingDisabled} onClick={() => runAction(onLogActivity)}>Log activity</Button></li>}
+                {detailsHref ? <li><Link className="button button--ghost button--md" href={detailsHref}>View details</Link></li>
+                  : onViewDetails && <li><Button variant="ghost" icon={Eye} full onClick={() => runAction(onViewDetails)}>View details</Button></li>}
               </ul>
             </Card>
           </details>
