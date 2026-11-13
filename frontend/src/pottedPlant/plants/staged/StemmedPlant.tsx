@@ -1,7 +1,8 @@
 "use client"
 
-import { useId, useMemo, type ReactNode } from "react"
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react"
 import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
+import { blendStage, GROWTH, springProgress } from "./growth"
 import { useWilt } from "./WiltContext"
 import { BROWNING, bendSlices, wiltPlant } from "./wilt"
 
@@ -34,6 +35,12 @@ export interface StemmedPlantProps<Spec> {
   stage: number
   /** Wilt amount, 0 (healthy) to 1 (fully wilted). Defaults to the nearest WiltProvider's, or 0. */
   wilt?: number
+  /**
+   * Animate moving up a stage: the leaves spring and grow into their new places.
+   * Only a change of the stage while the plant is on screen animates, never the first
+   * draw, and never when the user prefers reduced motion. Defaults to true.
+   */
+  animate?: boolean
   stemStyle: StemStyle
   /** Opt-in: plant the blades in the soil (hidden stems, buried bases). Leave undefined for normal stems. */
   planting?: SoilPlanting
@@ -53,6 +60,10 @@ export function stageOf<Spec>(plant: StagedPlant<Spec>, stage: number): PlantSta
 
 /** How far a slice of a curved leaf reaches past its cut, in canvas units, to hide the seam. */
 const SLICE_OVERLAP = 0.8
+
+/** True when the user has asked their system for less motion. */
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 const fixed = (n: number) => n.toFixed(COORDINATE_DECIMALS)
 
@@ -78,6 +89,7 @@ export function StemmedPlant<Spec>({
   plant: healthy,
   stage,
   wilt,
+  animate = true,
   stemStyle,
   planting,
   renderLeaf,
@@ -88,7 +100,32 @@ export function StemmedPlant<Spec>({
   const contextWilt = useWilt()
   const amount = wilt ?? contextWilt
   const plant = useMemo(() => wiltPlant(healthy, amount), [healthy, amount])
-  const current = stageOf(plant, stage)
+  const target = stageOf(plant, stage)
+
+  // Moving up a stage: remember the stage that was drawn, and grow from it into the new one.
+  const [drawn, setDrawn] = useState(target)
+  const [growth, setGrowth] = useState<{ from: PlantStage<Spec>; to: PlantStage<Spec> } | null>(null)
+  const [progress, setProgress] = useState(0)
+  if (drawn !== target) {
+    setDrawn(target)
+    const grows = animate && target.stage > drawn.stage && !prefersReducedMotion()
+    setGrowth(grows ? { from: drawn, to: target } : null)
+    setProgress(0)
+  }
+  useEffect(() => {
+    if (!growth) return
+    const start = performance.now()
+    let frame = 0
+    const tick = (now: number) => {
+      const seconds = (now - start) / 1000
+      setProgress(springProgress(seconds))
+      if (seconds >= GROWTH.duration) setGrowth(null)
+      else frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [growth])
+  const current = growth ? blendStage(growth.from, growth.to, progress) : target
   const soilClipId = id + "-soil"
 
   return (

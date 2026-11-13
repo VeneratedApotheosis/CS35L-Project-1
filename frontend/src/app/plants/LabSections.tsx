@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { Dices, Leaf, RotateCcw } from "lucide-react"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
@@ -99,22 +99,12 @@ export function StageUpSection() {
   const [plantId, setPlantId] = useState<string>(PLANT_TYPES[0].id)
   const [stage, setStage] = useState<Stage>(1)
   const [seed, setSeed] = useState(SECTION_SEED)
-  const art = useRef<HTMLDivElement>(null)
   const plant = PLANT_TYPES.find((type) => type.id === plantId) ?? PLANT_TYPES[0]
   const { Preview } = plant
 
-  /** Grow from a smaller picture to the new size, from the pot up. */
-  function play() {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
-    art.current?.animate(
-      [{ transform: "scale(0.78)", opacity: 0.6 }, { transform: "scale(1)", opacity: 1 }],
-      { duration: 600, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" },
-    )
-  }
   function logActivity() {
     if (stage === 4) return
     setStage((stage + 1) as Stage)
-    play()
   }
   function reset() {
     setStage(1)
@@ -123,7 +113,7 @@ export function StageUpSection() {
   return (
     <LabSection
       title="Stage-up animation"
-      description="Log an activity to move the plant up a stage. The animation runs only after you press the button, never when the page loads. With reduced motion turned on in your system, the change is instant. This is a stand-in scale effect for #153. The real one grows the plant from its old size to its new size."
+      description="Log an activity to move the plant up a stage. Each leaf springs from its old place into its new one, and new leaves grow out of the soil. The pot and the soil don't move. It runs only after you press the button, never when the page loads. With reduced motion turned on in your system, the change is instant."
       action={
         <div role="group" aria-label="Plant to animate" className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2">
@@ -140,9 +130,7 @@ export function StageUpSection() {
     >
       <Card className="flex flex-col items-center gap-4 sm:flex-row sm:items-end sm:gap-8">
         <div className="w-full max-w-xs">
-          <div ref={art} className="w-full origin-bottom">
-            <Preview seed={seed} stage={stage} />
-          </div>
+          <Preview seed={seed} stage={stage} />
         </div>
         <div className="flex flex-col items-center gap-3 sm:items-start">
           <p className="text-h3">Stage {stage} of 4</p>
