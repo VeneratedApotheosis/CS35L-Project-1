@@ -60,6 +60,27 @@ describe("stage-up accents", () => {
     }
   })
 
+  it("balances the accents of every stage between the left and right sides", () => {
+    const left = (angle: number) => angle > Math.PI / 2
+    for (const [stage, scale] of [[2, 0.28], [3, 0.5], [4, 1]] as const) {
+      for (const seed of [1, 2, 3, 7, 11, 42, 99]) {
+        const full = area(scale)
+        const accents = makeAccents(seed, stage, scale, full, stage === 4)
+        for (const kind of ["line", "pop", "star"] as const) {
+          const angles = accents.filter((accent) => accent.kind === kind).map((accent) => accent.angle)
+          // A kind with two or more accents has some on each side of the plant.
+          if (angles.length >= 2) {
+            expect(angles.some(left), kind + " stage " + stage + " seed " + seed).toBe(true)
+            expect(angles.some((angle) => !left(angle)), kind + " stage " + stage + " seed " + seed).toBe(true)
+          }
+        }
+        // Overall, the accents lean no more to one side than the other.
+        const mean = accents.reduce((sum, accent) => sum + accent.angle, 0) / accents.length
+        expect(Math.abs(mean - Math.PI / 2), "stage " + stage + " seed " + seed).toBeLessThan(Math.PI * 0.14)
+      }
+    }
+  })
+
   it("is the same for the same plant and stage, and different for another seed", () => {
     expect(makeAccents(7, 3, 0.6, area(0.6), false)).toEqual(makeAccents(7, 3, 0.6, area(0.6), false))
     expect(makeAccents(8, 3, 0.6, area(0.6), false)).not.toEqual(makeAccents(7, 3, 0.6, area(0.6), false))

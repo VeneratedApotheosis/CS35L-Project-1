@@ -83,10 +83,11 @@ export function makeAccents(seed: number, stage: number, scale: number, area: Ac
   kinds.forEach((kind, kindIndex) => {
     const count = accentCount(kind, scale)
     for (let i = 0; i < count; i++) {
-      // Spread evenly over the whole half-oval, each kind a little offset from the others so they
-      // interleave, with a little jitter so no two bunch up.
-      const offset = kindIndex / (kinds.length * count)
-      const share = Math.min(Math.max((i + 0.5 + (rng() - 0.5) * 0.6) / count + offset - 0.5 / count, 0), 1)
+      // Spread evenly over the whole half-oval, with a little jitter so no two bunch up. Each kind is
+      // nudged a little to one side or the other of the middle kind so they interleave. The nudges
+      // add up to nothing, so neither side of the plant gets more than the other.
+      const nudge = ((kindIndex - (kinds.length - 1) / 2) * 0.5) / (kinds.length * count)
+      const share = Math.min(Math.max((i + 0.5 + (rng() - 0.5) * 0.6) / count + nudge, 0), 1)
       const angle = Math.PI * (ACCENTS.arc.from + (ACCENTS.arc.to - ACCENTS.arc.from) * share)
       const unit = kind === "line" ? ACCENTS.line.length : kind === "pop" ? ACCENTS.pop.radius : ACCENTS.star.radius
       const palette = ACCENTS.colors[kind]
