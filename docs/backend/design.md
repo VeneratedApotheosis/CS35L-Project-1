@@ -32,6 +32,7 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | Calculations in `domain/` (periods, progress, streak, growth, health, badges) | Built (#191 to #194) |
 | `POST` and `DELETE` for logs | Built (#196, #197) |
 | `GET /dashboard` | Built (#201) |
+| Shared habits: endpoints, group stats, join and leave | Planned (design in #216), see sections 6.6 and 8.11 |
 | Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
@@ -65,6 +66,7 @@ A rule lives in one place: business rules are here, not copied into the frontend
 - **Client.** A per-request Supabase client built with the publishable key and the user's token, so RLS applies.
 - **No admin client.** The secret key is not used. One would be added only for a real job with no user, such as a scheduled task, and each use would need a comment saying why RLS can't be used.
 - **Delete account** is a database function (`delete_my_account`), called as the user.
+- **Shared habits** need a few `security definer` database functions (join, member names, member log dates), because a non-member cannot read a habit and a member cannot read other members' logs under RLS. The backend still calls them as the user. See [the database design](../database/design.md#8-shared-habits-planned).
 - **Edge functions** are on hold.
 - **Only `lib/supabase.ts` creates clients.**
 
@@ -114,14 +116,14 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `POST /habits` | Create a habit | Built (#129) |
 | `GET /habits` | List own habits, each with short `stats` | Built (#130, #199) |
 | `GET /habits/:id` | Get one habit with full `stats` | Built (#130, #200) |
-| `PATCH /habits/:id` | Edit name, description, plant type | #124 (backlog) |
 | `DELETE /habits/:id` | Delete a habit | #125 (backlog) |
 | `POST /habits/:id/logs` | Add a log, current period only | Built (#196) |
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | Calls `delete_my_account` | No issue yet |
+| Shared habit routes | See section 6.6 | Planned (#216) |
 
-Routes have no version prefix.
+Routes have no version prefix. There is no route to edit a habit, because habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
 
 ### 6.1 Create a habit
 
@@ -203,6 +205,44 @@ The list reads the logs of the whole page in one query, not one per habit.
 | `habits` | Every active habit with its `streak`, `consistency`, `health` and `state`, longest streak first |
 | `needs_attention` | Active habits whose plant is not healthy, wilted first. A missed last period always makes the plant at least slightly wilted, so this covers both |
 | `finished` | Expired habits with `end_date`, `progress`, `consistency` and `badge`, most recently ended first. A badge of `none` means the habit failed |
+
+### 6.6 Shared habits (planned)
+
+Not built yet. Route names are provisional. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
+
+| Route | Purpose |
+| --- | --- |
+| `POST /shared-habits` | Create a shared habit. The owner becomes its first member |
+| `GET /shared-habits` | List the shared habits the user is in, each with short group stats |
+| `GET /shared-habits/:id` | One shared habit with the group stats, every member's summary and the caller's own full stats |
+| `PATCH /shared-habits/:id` | The owner edits it, within the rules below |
+| `DELETE /shared-habits/:id` | The owner deletes the habit and everything in it |
+| `GET /shared-habits/preview/:code` | What the join screen shows for a code: name, goal, dates, owner, places left |
+| `POST /shared-habits/join` | Join with a code |
+| `POST /shared-habits/:id/logs` | Add a log for the caller |
+| `DELETE /shared-habits/:id/logs/:logId` | Delete one of the caller's logs |
+| `DELETE /shared-habits/:id/members/me` | Leave. The owner cannot leave until they transfer ownership |
+| `DELETE /shared-habits/:id/members/:userId` | The owner removes a member |
+| `POST /shared-habits/:id/transfer` | The owner hands ownership to a member |
+| `POST /shared-habits/:id/code` and `DELETE /shared-habits/:id/code` | The owner regenerates the join code, or closes joining |
+
+**Creating.** The body has the same goal fields as a personal habit (section 6.1) plus `join_by` and `max_members`. `start_date` must be today or later. `join_by` must be between today and `start_date`. `max_members` is at least 2 and at most the system maximum. The calling user's timezone is copied to their member row.
+
+**Editing (owner only).** Nobody can edit after the start date.
+
+| State | What can change |
+| --- | --- |
+| Owner is the only member, before the start | Everything: goal, dates, `join_by`, `max_members`, name, description, plant |
+| Someone else has joined, before the start | Name, description, plant, `join_by` and `max_members` (not below the member count). The goal and start date are locked |
+| After the start | Nothing |
+
+**Joining.** The join screen first calls the preview route, which returns nothing for a wrong, closed or expired code and never says which. Joining succeeds only while the joiner's own local date is on or before `join_by` and the habit is not full. Joining twice does nothing. Nobody joins after the start date.
+
+**Leaving and removal.** A member leaves with their past logs kept. Group numbers cover current members only. The owner can remove a member, which counts as that member leaving. The owner transfers ownership first if they want to leave. Deleting the habit removes every member and log.
+
+**Logging.** The same rules as section 8.1, with two differences: nobody can log before the start date, and a member only ever adds or deletes their own logs.
+
+**Stats.** The list gives each shared habit the short block from 6.4 with the group values. The detail adds the group `stats` block, a `members` list with each member's summary (`display_name`, `is_owner`, overall progress, current period count, streak and health) and the caller's own full stats. Other members' exact log dates never leave the backend.
 
 ---
 
@@ -305,7 +345,19 @@ With 4 periods, 80% consistency means no misses (3/4 = 75%).
 
 ### 8.10 Scope
 
-`num_periods` is required by the backend for now. What is out of scope for the whole app is listed in [design.md](../design.md#5-out-of-scope).
+`num_periods` is required by the backend for now. What is out of scope for the whole app is listed in [design.md](../design.md#6-out-of-scope).
+
+### 8.11 Shared habits (planned)
+
+The rules for the group numbers. Each member's own numbers use sections 8.2 to 8.9 unchanged, with the shared goal and the member's own logs.
+
+- **Periods are calendar dates, the same for everyone.** Period *k* covers the same dates for every member, and a member logs by their own local date.
+- **The group's "today" is the earliest local date among the current members.** Each member's timezone is the copy saved when they joined, so a profile change later cannot move it. A period counts as completed for the group once that date has passed it, which is when the westernmost member's day has ended. Group numbers use this `today`, and each member's own numbers use their own.
+- **Group progress** is the average of the members' overall progress, each already capped at 100%. A member who never logs counts as 0. The growth stage uses the thresholds in 8.7.
+- **Group health** is the average of the members' health rates (met periods over completed periods, over the last four), turned into a state with the thresholds in 8.8. The three labels are not averaged.
+- **Leaving.** A member who leaves drops out of the averages and their past logs are kept, so the stage can rise or fall when someone leaves.
+- **Completion.** The habit expires when the group's `today` reaches the end date. Each member gets their own badge from their own progress and consistency (8.9). Group badges are not decided yet.
+- **Visibility.** Members see names and progress summaries. The exact log dates of other members are used for the calculation and never returned.
 
 ---
 
@@ -316,7 +368,7 @@ With 4 periods, 80% consistency means no misses (3/4 = 75%).
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_PUBLISHABLE_KEY` | Publishable key. Safe to expose |
 | `PORT` | Defaults to 3000 |
-| `FRONTEND_ORIGIN` | Allowed CORS origin. The frontend runs on port 5173 |
+| `FRONTEND_ORIGIN` | Allowed CORS origin. The frontend runs on port 5173. A trailing slash is removed, because a browser's origin never has one |
 
 - The file is `backend/.env`, loaded by `dotenv/config`.
 - `config/env.ts` validates these at startup, so a missing one fails with a clear message.
@@ -345,4 +397,9 @@ The backend is a normal Node service: `npm run build`, then `npm start`. Set the
 | Item | Notes |
 | --- | --- |
 | Hosting for the backend | Section 11 |
-| Changing timezone mid-habit | Past `occurred_on` dates stay as stored. Not decided otherwise |
+| Changing timezone mid-habit | Past `occurred_on` dates stay as stored. Not decided otherwise. For shared habits the member timezone copy is fixed when they join |
+| Shared habits: member cap maximum | The owner chooses the cap. A system maximum is proposed (50), and whether the owner can change it after the start |
+| Shared habits: join code | Whether the owner can regenerate or close it (proposed: yes to both), and rate limiting of wrong guesses |
+| Shared habits: owner deletes their account | Proposed: ownership goes to the longest-standing member, and the habit is deleted only if nobody else is in it |
+| Shared habits: group badges, group streak | Not decided |
+| Shared habits: removing members | The owner can remove a member. They could remove weak members to raise the plant. Accepted for now |

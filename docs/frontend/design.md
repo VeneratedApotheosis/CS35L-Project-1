@@ -115,7 +115,7 @@ The plant is the main visual. Style reference: the icons in Animal Crossing: New
 - **Containment.** Leaves stay above the soil line and within the pot's width (8px overhang allowed), so plants never overlap neighbors in the grid.
 - **The pot is drawn separately** (`PottedPlant`): the seed also picks the pot's look — palette, band and finish — so any pot can go with any plant.
 
-Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant**, **Kimberly Queen**, **lily**, **rose**, **monstera**, **philodendron** and **lotus** — ids `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`. The create-habit picker, the previews and the backend's `plant_type` validation all read the same list (`frontend/src/plants/plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`). Every plant except the lotus is built on the shared stage engine; the lotus is a water plant with its own drawing.
+Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant**, **Kimberly Queen**, **lily**, **rose**, **monstera**, **philodendron** and **lotus** — ids `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`. The create-habit picker, the previews and the backend's `plant_type` validation all read the same list (`frontend/src/pottedPlant/plants/plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`). Every plant except the lotus is built on the shared stage engine; the lotus is a water plant with its own drawing.
 
 ## 7. Layout
 
@@ -227,10 +227,11 @@ frontend/src/
   app/             routes (Next.js App Router): login, style-guide, plants, home
   views/           full screens used by routes: Garden, Login
   components/      shared UI: Button, Card, Icon
-  plants/          plant drawing and generation (see plant-generation.md)
-    pothos/        the pothos: config, leaf, component
-    pot/           the pot shared by all plants
-    staged/        the stage engine
+  pottedPlant/     plants in pots (see plant-generation.md)
+    plants/        every plant, one folder per species, built on the stage engine
+      staged/      the stage engine
+      pothos/      the pothos: config, leaf, component
+    pots/          the pot and its finishes, shared by all plants
   auth/            Supabase auth context and protected routes
   lib/             Supabase client
   styles/          tokens, themes, component CSS, ThemeProvider

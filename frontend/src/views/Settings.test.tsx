@@ -138,7 +138,10 @@ describe("timezone settings", () => {
     const handleProfile = fetchMock.getMockImplementation()!
     fetchMock.mockImplementation((url: string, init: RequestInit) => url.includes("/habits")
       ? Promise.resolve(json({ habits: [{ id: "habit-a", name: "Read", target_count: 3,
-        interval_count: 1, interval_unit: "week", num_periods: 4, start_date: "2026-11-07" }], total: 1, limit: 50, offset: 0 }))
+        interval_count: 1, interval_unit: "week", num_periods: 4, start_date: "2026-11-07",
+        plant_type: "pothos", stats: { state: savedTimezone === "UTC" ? "active" : "not_started",
+          stage: 1, health: "healthy", overall_progress: 0,
+          current_period: { number: 1, total: 4, start: "2026-11-07", end: "2026-11-14", count: 0, target: 3 } } }], total: 1, limit: 50, offset: 0 }))
       : handleProfile(url, init))
     const view = render(<QueryProvider><Garden /></QueryProvider>)
     await screen.findByText(/Not started yet/)
@@ -149,6 +152,6 @@ describe("timezone settings", () => {
     await screen.findByText("Timezone saved.")
     view.rerender(<QueryProvider><Garden /></QueryProvider>)
     await screen.findByRole("heading", { name: "Read" })
-    expect(screen.queryByText(/Not started yet/)).toBeNull()
+    await waitFor(() => expect(screen.queryByText(/Not started yet/)).toBeNull())
   })
 })

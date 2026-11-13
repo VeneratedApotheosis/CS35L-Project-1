@@ -14,11 +14,15 @@
 @import "./components/forms.css";
 @import "./components/feedback.css";
 @import "./components/cards.css";
+@import "./components/habit-details.css";
+@import "./components/habit-activity.css";
+@import "./components/habit-history.css";
 @import "./components/icons.css";
 @import "./components/navigation.css";
 @import "./components/progress.css";
 @import "./components/plant-cards.css";
 @import "./components/garden.css";
+@import "./components/dashboard.css";
 
 * {
   box-sizing: border-box;

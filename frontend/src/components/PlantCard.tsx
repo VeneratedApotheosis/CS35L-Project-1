@@ -1,8 +1,10 @@
 "use client"
 
+import Link from "next/link"
+import { useHoldToLog } from "./useHoldToLog"
 import { useEffect, useId, useRef } from "react"
-import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Plus } from "lucide-react"
-import { plantTypeById, type PlantTypeId } from "@/plants/plantTypes"
+import { CircleAlert, Droplet, Ellipsis, Eye, Leaf, Pencil, Plus } from "lucide-react"
+import { plantTypeById, type PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 import { Button } from "./Button"
 import { Card } from "./Card"
 import { Icon } from "./Icon"
@@ -36,6 +38,7 @@ export function PlantCard({
   name, plantType, seed, stage, health, count, target, periodLabel,
   onLogActivity, onViewDetails,
 }: PlantCardProps) {
+  const hold = useHoldToLog(loggingDisabled ? undefined : onLogActivity)
   const headingId = useId()
   const disclosure = useRef<HTMLDetailsElement>(null)
   const trigger = useRef<HTMLElement>(null)
@@ -90,14 +93,27 @@ export function PlantCard({
           </details>
         </div>
         <h3 id={headingId}>
-          <button type="button" className="plant-card__open" onClick={onViewDetails}
-            aria-label={`View details for ${name}`}>
-            <span className="plant-card__illustration" data-health={health} aria-hidden="true">
-              <Preview seed={seed} stage={stage} />
-            </span>
-            <span className="text-h3 plant-card__name">{name}</span>
-          </button>
+          {detailsHref ? (
+            <Link href={detailsHref} className="plant-card__open" {...hold.handlers}>
+              <span className="plant-card__illustration" data-health={health} aria-hidden="true">
+                <Preview seed={seed} stage={stage} />
+              </span>
+              <span className="text-h3 plant-card__name">{name}</span>
+            </Link>
+          ) : (
+            <button type="button" className="plant-card__open" {...hold.handlers} onClick={onViewDetails}
+              aria-label={`View details for ${name}`}>
+              <span className="plant-card__illustration" data-health={health} aria-hidden="true">
+                <Preview seed={seed} stage={stage} />
+              </span>
+              <span className="text-h3 plant-card__name">{name}</span>
+            </button>
+          )}
         </h3>
+        {onLogActivity && <div className="plant-card__hold" data-holding={hold.holding}>
+          <span className="text-body-sm">Hold plant to log today</span>
+          <span className="plant-card__hold-track" aria-hidden="true"><span /></span>
+        </div>}
         <ProgressBar label={`${name}: ${periodLabel}`} count={count} target={target} />
       </Card>
     </article>

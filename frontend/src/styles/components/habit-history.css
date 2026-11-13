@@ -1,0 +1,116 @@
+.history-calendar-header, .history-period-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.history-calendar { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.history-calendar th { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.history-calendar td { padding: var(--space-1); vertical-align: top; }
+.history-day {
+  position: relative;
+  width: 100%;
+  max-width: var(--space-12);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-md);
+  background: var(--color-surface-secondary);
+}
+.history-day[data-logged="true"] { background: var(--color-primary); color: var(--color-primary-text); }
+.history-day-count {
+  position: absolute;
+  inset-inline-end: calc(-1 * var(--space-1));
+  inset-block-end: 0;
+  padding-inline: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+.history-periods { list-style: none; padding: 0; margin: 0; }
+.history-period { padding-block: var(--space-3); border-bottom: 1px solid var(--color-border); }
+.history-log-links { display: flex; flex-direction: column; gap: var(--space-2); padding-inline-start: var(--space-5); }
+
+.habit-overview, .habit-tools, .history-layout {
+  display: grid;
+  gap: var(--space-8);
+  align-items: stretch;
+  min-width: 0;
+}
+.habit-overview > *, .habit-tools > *, .history-layout > * { min-width: 0; }
+.history-calendar-panel { width: 100%; }
+.history-calendar { max-width: 28rem; margin-inline: auto; }
+
+@media (min-width: 52rem) {
+  .habit-overview { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+
+}
+
+.habit-overview-plant { display: grid; place-items: center; }
+.habit-overview-plant .habit-plant { max-width: var(--plant-card-art-width); text-align: center; }
+.habit-overview .habit-info > .card { flex: 1; }
+.habit-overview .card, .habit-tools .card, .history-layout > .card { padding: clamp(var(--space-5), 3vw, var(--space-10)); }
+.history-period-panel { min-height: 0; }
+.history-period:first-child { padding-top: 0; }
+.history-period:last-child { border-bottom: 0; }
+
+
+
+.habit-details-page { gap: var(--space-10); }
+.history-calendar-panel, .history-period-panel { gap: var(--space-6); }
+.history-period { padding-block: var(--space-5); }
+
+
+/* Past days recede gently; logged days retain their readable count badges. */
+.history-day[data-past="true"][data-logged="false"] { color: var(--color-text-muted); background: transparent; }
+.history-day[data-past="true"][data-logged="true"] { background: color-mix(in srgb, var(--color-primary) 85%, var(--color-surface)); }
+
+.history-period-heading { align-items: baseline; flex-wrap: nowrap; }
+.history-period-count { text-align: end; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+@media (min-width: 52rem) {
+  .habit-details-page .card .text-h2 { font-size: var(--font-size-xl); }
+  .history-period-heading .text-h3 { font-size: var(--font-size-base); }
+}
+
+/* Independent columns follow the reference: main content is wider than history. */
+.habit-details-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-8);
+  min-width: 0;
+}
+.habit-details-columns > * { min-width: 0; }
+
+@media (min-width: 62rem) {
+  .habit-details-columns { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .habit-details-columns .history-calendar-header { gap: var(--space-1); }
+  .habit-details-columns .history-calendar-header .text-h3 { font-size: var(--font-size-base); }
+}
+
+
+.habit-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  cursor: pointer;
+  list-style: none;
+}
+.habit-disclosure > summary::-webkit-details-marker { display: none; }
+.habit-disclosure > summary::after { content: "+"; font-size: var(--font-size-xl); }
+.habit-disclosure[open] > summary::after { content: "−"; }
+.habit-disclosure[open] > summary { margin-bottom: var(--space-6); }
+.habit-disclosure > summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: var(--space-1);
+  border-radius: var(--radius-sm);
+}
