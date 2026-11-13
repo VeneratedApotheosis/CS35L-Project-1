@@ -1,6 +1,8 @@
 export interface ProgressBarProps {
   /** A descriptive accessible label, e.g. "Reading this week". */
   label: string
+  /** Optional shorter caption; the accessible label stays descriptive. */
+  caption?: string
   /** Logged activities; may exceed the target. */
   count: number
   /** Whole-number goal from 1 to 50. */
@@ -12,7 +14,7 @@ export interface ProgressBarProps {
 const MAX_SEGMENTED_TARGET = 10
 
 /** Segmented small goals and continuous large goals; the count stays uncapped. */
-export function ProgressBar({ label, count, target, className }: ProgressBarProps) {
+export function ProgressBar({ label, caption, count, target, className }: ProgressBarProps) {
   if (!Number.isInteger(target) || target < 1 || target > 50) {
     throw new RangeError("ProgressBar target must be an integer from 1 to 50")
   }
@@ -26,7 +28,7 @@ export function ProgressBar({ label, count, target, className }: ProgressBarProp
   return (
     <div className={["habit-progress", className].filter(Boolean).join(" ")}>
       <div className="habit-progress__caption text-body-sm" aria-hidden="true">
-        <span>{label}</span>
+        <span>{caption ?? label}</span>
         <span className="habit-progress__count">{count}/{target}</span>
       </div>
       <div

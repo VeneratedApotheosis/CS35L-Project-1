@@ -125,6 +125,7 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
                     <PlantCard name={habit.name} plantType={habit.plant_type}
                       seed={habitSeed(habit.id)} stage={habit.stats.stage} health={habit.stats.health}
                       count={habit.stats.current_period.count} target={habit.stats.current_period.target}
+                      periodStart={habit.stats.current_period.start} periodEnd={habit.stats.current_period.end}
                       periodLabel={habit.stats.state === "not_started" ? "First period" : habit.stats.state === "expired" ? "Final period" : "Current period"}
                       loggingDisabled={busy}
                       onLogActivity={today && habit.stats.state !== "expired" ? () => { void logToday(habit.id) } : undefined}
