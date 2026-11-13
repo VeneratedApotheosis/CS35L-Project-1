@@ -2,6 +2,7 @@
 
 import type { HabitWithStats } from "@/lib/habits"
 import { plantTypeById } from "@/pottedPlant/plants/plantTypes"
+import { wiltForHealth } from "@/pottedPlant/plants/staged/wilt"
 import { habitSeed } from "@/pottedPlant/habitSeed"
 
 const healthLabels = { healthy: "Healthy", slightly_wilted: "Slightly wilted", wilted: "Wilted" }
@@ -14,7 +15,7 @@ export function HabitPlant({ habit }: { habit: HabitWithStats }) {
   return (
     <figure className="habit-plant stack-sm">
       <div className="plant-card__illustration habit-plant__illustration" data-health={habit.stats.health} aria-hidden="true">
-        <Preview seed={habitSeed(habit.id)} stage={habit.stats.stage} />
+        <Preview seed={habitSeed(habit.id)} stage={habit.stats.stage} wilt={wiltForHealth(habit.stats.health)} />
       </div>
       <figcaption className="text-body-sm text-secondary">
         {plant.label} · Stage {habit.stats.stage} · {healthLabels[habit.stats.health]}

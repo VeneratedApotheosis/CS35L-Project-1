@@ -210,6 +210,13 @@ export interface PlacedLeaf<Spec> {
   centerY: number
   /** Drawing order, low first. Fixed per leaf. */
   z: number
+  /**
+   * Set on a wilted plant's leaves: how far the leaf curves along its length, in
+   * degrees from stalk to tip. Positive turns right. Missing or 0 is straight.
+   */
+  bend?: number
+  /** Set on a wilted plant's browned leaves: the shade, and how much of it shows (0 to 1). */
+  browning?: { tone: "brown" | "dark"; amount: number }
   stem: { x0: number; y0: number; cx: number; cy: number; x1: number; y1: number }
 }
 
@@ -232,6 +239,8 @@ export interface PlantStage<Spec> {
 export interface StagedPlant<Spec> {
   seed: number
   stages: PlantStage<Spec>[]
+  /** The species the plant was grown from. Wilting uses its limits and leaf outlines. */
+  species?: StagedPlantSpecies<Spec>
 }
 
 export interface StagedPlantOptions {

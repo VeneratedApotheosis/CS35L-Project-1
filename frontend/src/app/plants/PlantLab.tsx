@@ -19,6 +19,7 @@ import { randomLeafSpec } from "@/pottedPlant/plants/pothos/leaf"
 import { STAGES } from "@/pottedPlant/genome"
 import { POT_FINISH_IDS, POT_PALETTES, POT_SHAPE, Pot, potLookFromSeed, type PotFinishId, type PotLook } from "@/pottedPlant/pots"
 import { mulberry32 } from "@/pottedPlant/rng"
+import { DarkThemeSection, StageUpSection, WiltedLookSection } from "./LabSections"
 
 const GALLERY_SEEDS = [3, 11, 24, 42, 57, 86, 101, 2025]
 const COMPARE_SCALES = [0.4, 0.6, 0.8, 1]
@@ -266,6 +267,12 @@ export default function PlantLab() {
             </select>
           </label>
         </header>
+
+        <WiltedLookSection />
+
+        <StageUpSection />
+
+        <DarkThemeSection />
 
         <Section title={plant.label + ": four stages"} description={plant.description} action={growPicker}>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
