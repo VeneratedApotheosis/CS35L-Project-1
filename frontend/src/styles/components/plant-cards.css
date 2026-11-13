@@ -1,20 +1,34 @@
 .plant-card {
+  container-type: inline-size;
   min-width: 0;
 }
 
 .plant-card__surface {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-2);
+  aspect-ratio: 1;
+  padding: clamp(var(--space-4), 5cqw, var(--space-10));
+}
+.plant-card__surface > .plant-card__art {
+  flex: 1;
+  min-height: 0;
+}
+.plant-card__surface > .plant-card__art .plant-card__open { height: 100%; }
+.plant-card__surface .plant-card__illustration {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  transform: none;
+}
+.plant-card__surface .plant-card__illustration > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  padding: var(--space-5);
-  padding-bottom: calc(var(--space-5) + var(--space-2));
 }
-
-.plant-card__surface > .habit-progress {
-  /* Transfer a little space from above the progress bar to the card's foot. */
-  margin-top: calc(-1 * var(--space-2));
-}
+.plant-card__surface .plant-card__name { flex-shrink: 0; }
 
 .plant-card__toolbar {
   display: flex;
@@ -93,7 +107,7 @@
 .plant-card__illustration {
   display: block;
   width: 100%;
-  max-width: calc(var(--plant-card-art-width) + var(--space-8));
+  max-width: calc((var(--plant-card-art-width) + var(--space-8)) * 1.5);
   /* A smaller upward offset keeps the pot closer to the habit title. */
   transform: translateY(calc(-1 * var(--space-2)));
 }
@@ -106,14 +120,15 @@
 
 .plant-card-grid {
   display: grid;
-  gap: var(--space-4);
-  grid-template-columns: 1fr;
+  gap: clamp(var(--space-6), 2.5vw, var(--space-10));
+  grid-template-columns: minmax(0, 1fr);
 }
 
-@media (min-width: 30rem) {
-  .plant-card-grid {
-    grid-template-columns: repeat(auto-fit, minmax(var(--plant-card-min-width), 1fr));
-  }
+@media (min-width: 44rem) {
+  .plant-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 72rem) {
+  .plant-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -128,7 +143,13 @@
 }
 
 /* Match the list semantics without letting .garden-list force a flex layout. */
-.garden-list.plant-card-grid { display: grid; }
+.garden-list.plant-card-grid {
+  display: grid;
+  gap: clamp(var(--space-6), 2.5vw, var(--space-10));
+}
+.plant-card-grid > li { min-width: 0; }
+.plant-card-grid > li > .stack-sm { height: 100%; }
+.plant-card-grid .plant-card { flex: 1; }
 
 .habit-plant {
   width: 100%;
@@ -142,11 +163,43 @@
 
 .plant-card__open { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .plant-card__hold { text-align: center; color: var(--color-text-secondary); }
-.plant-card__hold-track { display: block; height: var(--space-1); overflow: hidden; border-radius: var(--radius-pill); margin-block: var(--space-2); }
+.plant-card__hold-track { display: block; height: var(--space-1); overflow: hidden; border-radius: var(--radius-pill); margin-block: var(--space-1) 0; }
 .plant-card__hold-track > span { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--color-primary); }
 .plant-card__hold[data-holding="true"] .plant-card__hold-track { background: var(--color-surface-secondary); }
 .plant-card__hold[data-holding="true"] .plant-card__hold-track > span { width: 100%; transition: width 1s linear; }
 
 @media (min-width: 62rem) {
   .plant-card__hold-track { height: calc(var(--space-1) * 1.5); }
+}
+
+
+/* Compact corner controls leave the center for the habit and its plant. */
+.plant-card__surface { gap: clamp(var(--space-1), 1.1cqw, var(--space-2)); }
+.plant-card__toolbar {
+  position: relative;
+  min-height: clamp(var(--space-6), 6.7cqw, var(--space-10));
+  margin-top: calc(-1 * var(--space-1));
+  align-items: center;
+}
+.plant-card__health { font-size: clamp(var(--font-size-xs), 3.1cqw, var(--font-size-base)); gap: var(--space-1); }
+.plant-card__options { position: absolute; right: calc(-1 * var(--space-2)); top: calc(-1 * var(--space-2)); z-index: 1; }
+.plant-card__surface > .plant-card__name { text-align: center; font-size: clamp(var(--font-size-lg), 5.55cqw, 2rem); }
+.plant-card__surface .plant-card__illustration > svg {
+  transform: scale(1.22);
+  transform-origin: center;
+}
+.plant-card__hold .text-body-sm { font-size: clamp(var(--font-size-sm), 3.4cqw, var(--font-size-lg)); }
+.plant-card__hold-track { margin-block: 2px 0; }
+.plant-card__hold + .habit-progress { gap: var(--space-1); }
+
+/* Scale card typography and controls with the card, not the viewport column count. */
+.plant-card__surface .habit-progress__caption {
+  font-size: clamp(var(--font-size-md), 3.9cqw, var(--font-size-lg));
+}
+.plant-card__health .icon, .plant-card__trigger .icon {
+  width: clamp(1rem, 4.4cqw, 1.5rem);
+  height: clamp(1rem, 4.4cqw, 1.5rem);
+}
+.plant-card__surface .habit-progress__track {
+  height: clamp(var(--space-3), 4.4cqw, var(--space-6));
 }

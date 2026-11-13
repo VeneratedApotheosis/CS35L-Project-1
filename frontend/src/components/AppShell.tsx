@@ -12,7 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <a href="#page-content" className="app-shell__skip">Skip to content</a>
       <NavBar currentPath={pathname} />
-      <div id="page-content" tabIndex={-1} className="app-shell__content">
+      <div id="page-content" tabIndex={-1} className={`app-shell__content${pathname === "/" ? " app-shell__content--garden" : ""}`}>
         {children}
       </div>
     </div>
