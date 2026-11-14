@@ -1,0 +1,106 @@
+.login {
+  display: grid;
+  min-height: 100dvh;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.login__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-8) var(--page-padding);
+}
+
+.login__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.login__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.login__content {
+  width: 100%;
+  max-width: 28rem;
+  margin: auto;
+}
+
+.login__description {
+  max-width: 24rem;
+}
+
+.login__google-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+}
+
+.login .button > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.login__error {
+  margin: 0;
+  color: var(--color-danger-text);
+  background: var(--color-danger);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+}
+
+.login__garden {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--color-surface-secondary);
+  overflow: hidden;
+}
+
+/* The plants fill about half of this panel: two overlapping rows. */
+.login__plants {
+  width: 100%;
+  max-width: 64rem;
+}
+
+.login__row {
+  display: flex;
+  justify-content: center;
+}
+
+.login__row--front {
+  margin-top: -14%;
+}
+
+.login__plant {
+  flex: 0 0 38%;
+  min-width: 0;
+  margin: 0 -2%;
+}
+
+.login__plant svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 64rem) {
+  .login {
+    grid-template-columns: minmax(0, 32rem) 1fr;
+  }
+  .login__panel {
+    padding: var(--space-10) var(--space-16);
+  }
+}

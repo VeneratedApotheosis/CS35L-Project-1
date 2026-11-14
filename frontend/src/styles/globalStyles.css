@@ -22,6 +22,7 @@
 @import "./components/progress.css";
 @import "./components/plant-cards.css";
 @import "./components/garden.css";
+@import "./components/login.css";
 @import "./components/dashboard.css";
 
 * {
