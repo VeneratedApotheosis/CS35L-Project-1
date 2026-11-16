@@ -5,8 +5,10 @@ import type { StagedPlantConfig } from "../staged/types"
 /*
  * Every number behind the fiddle-leaf fig. Its leaves use the shared stage
  * engine, so this is a StagedPlantConfig (fields are documented on that type).
- * It is the tallest plant: a slim trunk rises from the soil and carries a few
- * large leaves in its upper half. The engine's stems are not drawn. Instead
+ * It is the tallest plant: a slim trunk rises from the soil and carries a
+ * layered crown of up to 14 large leaves (the lower ones spread out, the higher
+ * ones more upright; see fiddleLeafFigCrown.ts). The engine's stems are not
+ * drawn. Instead
  * FiddleLeafFig draws one trunk with short branches, between the leaf bases the
  * engine places, so the stems here only decide how high each leaf sits.
  * validateConfig checks these fit together.
@@ -18,13 +20,13 @@ const SIDE_OVERHANG = 8
 export const FIDDLE_LEAF_FIG_CONFIG: StagedPlantConfig = {
   name: "fiddleLeafFig",
 
-  // Up to 7 big leaves. Each leaf is large, so the cap stays low.
+  // Up to 14 leaves (4, 6, 10, 14 over four stages): a full, layered crown.
   stages: {
     default: 4,
     max: 9,
-    minLeaves: 2,
-    maxLeaves: 7,
-    leafCountCurve: 1.15,
+    minLeaves: 4,
+    maxLeaves: 14,
+    leafCountCurve: 1.45,
     growthRatio: 3.6,
   },
 
@@ -54,17 +56,18 @@ export const FIDDLE_LEAF_FIG_CONFIG: StagedPlantConfig = {
 
   layers: {
     bands: [
-      { start: 0, width: 0.4 },
+      { start: 0, width: 0.35 },
+      { start: 0.3, width: 0.35 },
       { start: 0.6, width: 0.4 },
     ],
     spreadStep: 0.7549,
   },
 
-  // The stems set the height of each leaf up the trunk. The lowest leaf is well
-  // above the soil, so the bottom of the trunk is bare.
+  // The stems set the height of each leaf up the trunk. The lowest leaf sits a
+  // little above the soil, so only a short stretch of trunk is bare.
   stems: {
-    lengthRange: [0.28, 0.6],
-    minLength: 0.24,
+    lengthRange: [0.15, 0.6],
+    minLength: 0.12,
     reachMultiplier: 1.5,
     headroomShare: 1,
     leafHeadroomShare: 0.85,
@@ -75,9 +78,10 @@ export const FIDDLE_LEAF_FIG_CONFIG: StagedPlantConfig = {
     shrinkStep: 0.94,
   },
 
-  // Large leaves held up and out from the trunk.
+  // Large leaves. Their direction is set from their layer by fiddleLeafFigCrown.ts
+  // (jitter still varies each one a little); curl and heading are replaced there.
   leaves: {
-    lengthRange: [0.3, 0.46],
+    lengthRange: [0.24, 0.4],
     lengthFactor: [0.9, 1.1],
     curl: [8, 24],
     jitter: [-6, 6],
@@ -85,11 +89,10 @@ export const FIDDLE_LEAF_FIG_CONFIG: StagedPlantConfig = {
     shrinkStep: 0.9,
   },
 
-  // The canopy is the upper part of the dome only (the trunk is bare below it),
-  // and a few big leaves cover only part of it.
+  // The canopy is the dome above its lowest 15%, and the leaves cover about half of it.
   coverage: {
     target: 0.5,
-    canopyFloor: 0.3,
+    canopyFloor: 0.15,
     gridX: 22,
     gridY: 16,
     maxOverlap: 1.6,
