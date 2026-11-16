@@ -34,20 +34,22 @@ describe("Login", () => {
     expect(container.querySelector(".card, [class*='card']")).toBeNull()
   })
 
-  it("draws the greenhouse picture at once, and keeps it out of the accessibility tree", () => {
+  it("draws the shelf wall at once, and keeps it out of the accessibility tree", () => {
     auth.loading = true
     const { container } = render(<Login />)
-    const scene = container.querySelector("svg.login__scene")
-    expect(scene).not.toBeNull()
-    expect(scene?.getAttribute("aria-hidden")).toBe("true")
+    const wall = container.querySelector(".wall")
+    expect(wall).not.toBeNull()
+    expect(wall?.getAttribute("aria-hidden")).toBe("true")
     // While the sign-in state loads, the words wait.
     expect(screen.queryByRole("heading")).toBeNull()
   })
 
-  it("draws every plant of the scene", async () => {
-    const { SCENE_PLANTS } = await import("./login/scene/plants")
+  it("draws all eight plants in each of the two layouts", () => {
     const { container } = render(<Login />)
-    expect(container.querySelectorAll("[data-plant]").length).toBe(SCENE_PLANTS.length)
+    expect(container.querySelectorAll(".wall__svg--wide [data-plant]").length).toBe(8)
+    expect(container.querySelectorAll(".wall__svg--tall [data-plant]").length).toBe(8)
+    expect(container.querySelectorAll(".wall__svg--wide [data-shelf]").length).toBe(2)
+    expect(container.querySelectorAll(".wall__svg--tall [data-shelf]").length).toBe(3)
   })
 
   it("starts Google sign-in and disables the button while it connects", async () => {

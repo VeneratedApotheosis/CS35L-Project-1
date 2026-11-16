@@ -5,6 +5,7 @@ import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
 import { ACCENTS_END, makeAccents, type AccentArea } from "./accents"
 import { blendStage, GROWTH, springProgress } from "./growth"
 import { GrowthAccents } from "./GrowthAccents"
+import { useShrinkSeconds } from "./ShrinkContext"
 import { useWilt } from "./WiltContext"
 import { BROWNING, bendSlices, wiltPlant } from "./wilt"
 
@@ -111,33 +112,45 @@ export function StemmedPlant<Spec>({
   const target = stageOf(plant, stage)
 
   // Moving up a stage: remember the stage that was drawn, and grow from it into the new one.
+  // Moving down a stage plays the same move backwards, only inside a ShrinkProvider and only within one plant.
+  // It can start while a move is still going: the plant then shrinks from the way it looks at that moment.
+  const shrinkSeconds = useShrinkSeconds()
   const [drawn, setDrawn] = useState(target)
-  const [growth, setGrowth] = useState<{ from: PlantStage<Spec>; to: PlantStage<Spec> } | null>(null)
+  const [growth, setGrowth] = useState<{ from: PlantStage<Spec>; to: PlantStage<Spec>; backwards: boolean } | null>(null)
   const [clock, setClock] = useState({ progress: 0, time: 0 })
   if (drawn !== target) {
     setDrawn(target)
-    const grows = animate && target.stage > drawn.stage && !prefersReducedMotion()
-    setGrowth(grows ? { from: drawn, to: target } : null)
+    const calm = !animate || prefersReducedMotion()
+    if (!calm && target.stage > drawn.stage) setGrowth({ from: drawn, to: target, backwards: false })
+    else if (!calm && shrinkSeconds !== null && target.stage < drawn.stage && plant.stages.includes(drawn)) {
+      // Start from what is on screen now, so a plant caught part-way through growing shrinks from there, with no jump.
+      const visible = growth ? blendStage(growth.from, growth.to, growth.backwards ? 1 - clock.progress : clock.progress) : drawn
+      setGrowth({ from: target, to: visible, backwards: true })
+    }
+    else setGrowth(null)
     setClock({ progress: 0, time: 0 })
   }
   useEffect(() => {
     if (!growth) return
     const start = performance.now()
     let frame = 0
+    const length = growth.backwards ? (shrinkSeconds ?? 0) : accents ? Math.max(GROWTH.duration, ACCENTS_END) : GROWTH.duration
     const tick = (now: number) => {
       const seconds = (now - start) / 1000
-      setClock({ progress: springProgress(seconds), time: seconds })
-      if (seconds >= (accents ? Math.max(GROWTH.duration, ACCENTS_END) : GROWTH.duration)) setGrowth(null)
+      // Going down is a plain ease-out over the time it was given: no spring, so it never swings past the small stage.
+      const progress = growth.backwards ? 1 - (1 - Math.min(seconds / Math.max(shrinkSeconds ?? 0, 0.001), 1)) ** 2 : springProgress(seconds)
+      setClock({ progress, time: seconds })
+      if (seconds >= length) setGrowth(null)
       else frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [growth, accents])
-  const current = growth ? blendStage(growth.from, growth.to, clock.progress) : target
+  }, [growth, accents, shrinkSeconds])
+  const current = growth ? blendStage(growth.from, growth.to, growth.backwards ? 1 - clock.progress : clock.progress) : target
 
   // The accents of the move: made once per move, from the plant's seed and the stage it grows to.
   const burst = useMemo(() => {
-    if (!growth || !accents) return null
+    if (!growth || growth.backwards || !accents) return null
     const { to } = growth
     const foot = plant.species?.config.dome.anchor ?? { x: to.leaves[0].stem.x0, y: to.leaves[0].stem.y0 }
     const area: AccentArea = { x: foot.x, y: foot.y, halfWidth: to.halfWidth, height: to.height, scale: to.scale }

@@ -1,73 +1,49 @@
 /*
- * The login screen: a full-screen greenhouse picture with the words on top.
- * There are no cards, so the picture is never covered. The text sits on the
- * left, where the scene keeps clear (see SAFE_ZONE in the scene's room.ts).
+ * The login screen. On wide screens the words take the left third and the
+ * shelf wall the right two thirds (grid areas below). Below 64rem the wall
+ * moves to the top and the words follow it. The wall's pieces are drawn by
+ * views/login/wall/ShelfWall.tsx and colored here with the theme tokens.
  */
 
 .login {
-  position: relative;
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "brand wall"
+    "content wall";
   min-height: 100dvh;
-  overflow: hidden;
-  background: #d9ecc3;
+  background: var(--color-background);
   color: var(--color-text);
 }
 
-.login__scene {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* A soft warm glow behind the words so they stay readable. It fades out with no edge, so it is not a card. */
-.login__haze {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 44% 44% at 19% 43%,
-    rgba(255, 251, 236, 0.82) 0%,
-    rgba(255, 251, 236, 0.56) 42%,
-    rgba(255, 251, 236, 0) 76%
-  );
-}
-
 .login__brand {
-  position: absolute;
-  top: var(--space-8);
-  right: var(--page-padding);
-  z-index: 1;
+  grid-area: brand;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   margin: 0;
-  color: var(--ink);
-  text-shadow: 0 0 0.75rem rgba(255, 251, 236, 0.9);
+  padding: var(--space-8) var(--page-padding) 0;
 }
 
 .login__logo {
-  color: var(--action-green-selected);
+  color: var(--color-primary-selected);
 }
 
 .login__content {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 31rem;
-  padding: var(--space-16) var(--page-padding);
-  margin-left: clamp(0rem, 5vw, 5rem);
+  grid-area: content;
+  align-self: center;
+  max-width: 28rem;
+  padding: var(--space-8) var(--page-padding) var(--space-16);
 }
 
-.login__title,
-.login__description {
-  color: var(--ink);
-  text-shadow: 0 0 0.9rem rgba(255, 251, 236, 0.85);
+.login__title {
+  /* A third of the screen is narrow: step the headline down from the h1 size so it breaks in two lines, not four. */
+  font-size: clamp(2.25rem, 3.1vw, 3.5rem);
 }
 
 .login__description {
+  color: var(--color-text-secondary);
   max-width: 26rem;
 }
 
@@ -86,154 +62,92 @@
 .login .button--secondary {
   align-self: flex-start;
   min-width: 14rem;
-  box-shadow: 0 0.15rem 0.6rem rgba(52, 47, 41, 0.18);
 }
 
 .login__error {
   margin: 0;
-  color: var(--danger-red-dark);
+  color: var(--color-danger-text);
   font-weight: 700;
-  text-shadow: 0 0 0.6rem rgba(255, 251, 236, 0.9);
 }
 
-/* Below the desktop layout the words move to the bottom of the picture. The scene is refined for small screens later. */
+/* The wall: sage plaster with the shelves drawn on it. */
+.wall {
+  grid-area: wall;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  background: var(--color-wall);
+}
+
+.wall__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: calc(100dvh - 2 * var(--space-8));
+}
+
+.wall__svg--tall {
+  display: none;
+}
+
+.wall__board {
+  fill: var(--color-shelf);
+}
+
+.wall__board-top {
+  fill: var(--color-shelf-top);
+}
+
+.wall__bracket {
+  fill: var(--color-shelf-edge);
+}
+
+.wall__grain {
+  fill: none;
+  stroke: var(--color-shelf-edge);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+
+.wall__shadow {
+  fill: var(--color-wall-shade);
+  opacity: 0.5;
+}
+
 @media (max-width: 63.99rem) {
   .login {
-    align-items: flex-end;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-content: start;
+    grid-template-areas:
+      "brand"
+      "wall"
+      "content";
   }
-  .login__haze {
-    background: linear-gradient(to top, rgba(255, 251, 236, 0.85) 0%, rgba(255, 251, 236, 0.55) 45%, rgba(255, 251, 236, 0) 80%);
+  .login__brand {
+    padding-bottom: var(--space-4);
+  }
+  .wall {
+    padding: var(--space-4);
+  }
+  .wall__svg--wide {
+    display: none;
+  }
+  .wall__svg--tall {
+    display: block;
+    height: clamp(18rem, 50dvh, 36rem);
+    max-height: none;
   }
   .login__content {
-    margin-left: 0;
-    max-width: 36rem;
-    margin-inline: auto;
+    align-self: start;
+    max-width: none;
+    padding-top: var(--space-8);
   }
-}
-
-/*
- * The dev tools panel (only shown with /login?dev in development). It is a plain
- * tool window, docked to either side. On the right it sits under the logo.
- */
-.login-dev {
-  position: fixed;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 100;
-  width: 19.5rem;
-  max-height: calc(100dvh - 5.25rem);
-  overflow-y: auto;
-  padding: var(--space-3);
-  border: 1px solid #b9b2a4;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 253, 246, 0.96);
-  color: #342f29;
-  font: 500 0.78rem/1.35 var(--font-family);
-  box-shadow: 0 0.4rem 1.2rem rgba(52, 47, 41, 0.25);
-}
-
-.login-dev--right {
-  top: 4.5rem;
-  right: 0.75rem;
-}
-
-.login-dev--left {
-  top: 0.75rem;
-  left: 0.75rem;
-}
-
-.login-dev__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.login-dev *,
-.login-dev *::before,
-.login-dev *::after {
-  box-sizing: border-box;
-}
-
-.login-dev__title {
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.login-dev__hint,
-.login-dev__status {
-  margin: var(--space-1) 0;
-  color: #6f665c;
-}
-
-.login-dev__group {
-  min-width: 0;
-  margin: var(--space-2) 0;
-  padding: var(--space-2);
-  border: 1px solid #d8d1c3;
-  border-radius: var(--radius-sm);
-}
-
-.login-dev__group legend {
-  padding: 0 var(--space-1);
-  font-weight: 700;
-}
-
-.login-dev__check {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0.1rem 0;
-}
-
-.login-dev__field {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  flex-direction: column;
-  gap: 0.15rem;
-  margin: 0.2rem 0;
-}
-
-.login-dev__field input,
-.login-dev__field select {
-  width: 100%;
-  min-width: 0;
-  padding: 0.25rem 0.4rem;
-  border: 1px solid #b9b2a4;
-  border-radius: 0.3rem;
-  background: #fff;
-  font: inherit;
-}
-
-.login-dev__row {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-2);
-  margin: 0.2rem 0;
-}
-
-.login-dev button {
-  padding: 0.3rem 0.6rem;
-  border: 1px solid #b9b2a4;
-  border-radius: 0.3rem;
-  background: #f0ebde;
-  font: 700 0.75rem/1.2 var(--font-family);
-}
-
-.login-dev button:hover {
-  background: #e6dfcf;
-}
-
-.login-dev__problems {
-  margin: var(--space-2) 0;
-  padding: var(--space-2);
-  border-radius: var(--radius-sm);
-  background: #fdecea;
-  color: #6e211e;
-}
-
-.login-dev__problems ul {
-  margin: 0.25rem 0 0;
-  padding-left: 1.1rem;
+  .login__title {
+    font-size: var(--font-size-3xl);
+  }
 }

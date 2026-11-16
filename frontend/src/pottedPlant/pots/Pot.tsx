@@ -31,7 +31,7 @@ export function Pot({
     <g>
       <ellipse
         cx={S.shadow.cx}
-        cy={S.shadow.cy}
+        cy={S.shadow.cy - (look.shadowLift ?? 0)}
         rx={S.shadow.rx}
         ry={S.shadow.ry}
         style={{

@@ -18,6 +18,11 @@ export interface PotLook {
    * It is for one-off art, such as the login scene.
    */
   colors?: PotPalette
+  /**
+   * Optional: raise the pot's shadow by this many canvas units, so the pot can sit lower on
+   * a surface while its shadow stays where it was. Habits never set it.
+   */
+  shadowLift?: number
 }
 
 /**
