@@ -5,10 +5,11 @@ import type { StagedPlantConfig } from "../staged/types"
 /*
  * Every number behind the calathea (a prayer plant). Its leaves use the shared
  * stage engine, so this is a StagedPlantConfig (fields are documented on that
- * type). It is a medium-height, full, lush clump of broad oval leaves on stems:
- * lower and wider than the pilea's mound, with the leaves held fairly upright and
- * overlapping a little. There are no flowers and no fan. validateConfig checks
- * these fit together.
+ * type). It is a medium-height, full, lush clump of broad oval leaves on stems,
+ * laid out in vertical tiers like a peace lily: tall leaves in the back and
+ * middle, mid-height leaves around them, and smaller drooping leaves low on the
+ * sides (the outer leaves fan outward). There are no flowers. validateConfig
+ * checks these fit together.
  */
 
 /** How far a leaf may reach past either end of the rim. */
@@ -22,7 +23,7 @@ export const CALATHEA_CONFIG: StagedPlantConfig = {
     default: 4,
     max: 9,
     minLeaves: 2,
-    maxLeaves: 7,
+    maxLeaves: 10,
     leafCountCurve: 1.1,
     growthRatio: 3.6,
   },
@@ -48,19 +49,22 @@ export const CALATHEA_CONFIG: StagedPlantConfig = {
     spreadStep: 0.618,
   },
 
+  // Three tiers, used by leaf 0, 1, 2, 0, ...: tall (high stems), mid, then low
+  // leaves that sit near the rim. The stems below turn the layer into height.
   layers: {
     bands: [
-      { start: 0, width: 0.4 },
-      { start: 0.6, width: 0.4 },
+      { start: 0.7, width: 0.3 },
+      { start: 0.35, width: 0.3 },
+      { start: 0, width: 0.25 },
     ],
     spreadStep: 0.7549,
   },
 
-  // Fairly short stems that lean out a little, so the leaves sit close and full.
+  // Stems from short (low leaves by the rim) to tall (the leaves in the back and middle).
   stems: {
-    lengthRange: [0.16, 0.5],
-    minLength: 0.12,
-    reachMultiplier: 1.4,
+    lengthRange: [0.08, 0.5],
+    minLength: 0.06,
+    reachMultiplier: 1.5,
     headroomShare: 0.94,
     leafHeadroomShare: 0.92,
     headingSpread: 30,
@@ -70,11 +74,11 @@ export const CALATHEA_CONFIG: StagedPlantConfig = {
     shrinkStep: 0.94,
   },
 
-  // Broad ovals, held fairly upright with a gentle outward turn.
+  // Broad ovals. Leaf sizes vary more than before, so the tall ones tower over the rest.
   leaves: {
-    lengthRange: [0.34, 0.62],
-    lengthFactor: [0.88, 1.1],
-    curl: [6, 20],
+    lengthRange: [0.26, 0.66],
+    lengthFactor: [0.86, 1.12],
+    curl: [4, 16],
     jitter: [-8, 8],
     drawOrderNoise: 0.05,
     shrinkStep: 0.9,
@@ -95,6 +99,13 @@ export const CALATHEA_CONFIG: StagedPlantConfig = {
     measureSegments: 6,
     fitAttempts: 40,
     stemSteps: 40,
+  },
+
+  // The outer leaves fan outward like a peace lily's: they bend away from the middle and droop.
+  fan: {
+    outerThreshold: 0.5,
+    strength: [0.75, 1],
+    turn: [4, 12],
   },
 
   rngStreams: { leaf: 227 }, // must be unique across plants
