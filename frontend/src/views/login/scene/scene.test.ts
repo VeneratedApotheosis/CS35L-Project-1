@@ -210,7 +210,7 @@ describe("validateScene", () => {
         if (across > 10 && down > 10) overlapping++
       }
     }
-    expect(overlapping).toBeGreaterThanOrEqual(40)
+    expect(overlapping).toBeGreaterThanOrEqual(30)
   })
 
   it("fills the back-right corner with big plants", () => {
@@ -226,8 +226,25 @@ describe("validateScene", () => {
     expect(Math.min(...onShelves.map((p) => p.size))).toBeGreaterThanOrEqual(108)
   })
 
-  it("has some very big plants: the biggest is at least 50% bigger than the first version's 430", () => {
-    expect(Math.max(...SCENE_PLANTS.map((p) => p.size))).toBeGreaterThanOrEqual(645)
+  it("keeps the biggest plant at about 460, which is 30% under the earlier 660", () => {
+    const biggest = Math.max(...SCENE_PLANTS.map((p) => p.size))
+    expect(biggest).toBeLessThanOrEqual(465)
+    expect(biggest).toBeGreaterThanOrEqual(400)
+  })
+
+  it("fills the top-left corner with a high shelf of plants, above the text", () => {
+    const topLeft = SCENE_PLANTS.filter((p) => p.id.startsWith("left-upper"))
+    expect(topLeft.length).toBeGreaterThanOrEqual(4)
+    expect(topLeft.filter((p) => p.size >= 150).length).toBeGreaterThanOrEqual(2)
+    // They stand above the text area's top edge.
+    expect(topLeft.every((p) => p.y <= SAFE_ZONE.y)).toBe(true)
+  })
+
+  it("keeps a single row of plants on the floor, with no second row in front", () => {
+    const floor = SCENE_PLANTS.filter((p) => p.id.startsWith("wall-back"))
+    expect(floor.length).toBeGreaterThanOrEqual(10)
+    expect(Math.max(...floor.map((p) => p.y)) - Math.min(...floor.map((p) => p.y))).toBeLessThan(15)
+    expect(SCENE_PLANTS.some((p) => p.id.startsWith("floor-front"))).toBe(false)
   })
 
   it("is mostly leafy plants, with the flowering ones as a pop of color", () => {

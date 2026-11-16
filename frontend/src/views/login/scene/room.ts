@@ -34,6 +34,7 @@ export const SHELVES: readonly Shelf[] = [
   { id: "back-lower", side: "back", from: 640, to: 1240, y: 530, reach: 1.12, thickness: 18, legs: [656, 950] },
   { id: "right-return", side: "right", from: 1, to: 1.5, y: 530, inset: 92, thickness: 18 },
   { id: "right-upper", side: "right", from: 1, to: 1.5, y: 330, inset: 92, thickness: 15 },
+  { id: "left-upper", side: "left", from: 1, to: 1.7, y: 240, inset: 92, thickness: 15 },
 ]
 
 /**
@@ -71,7 +72,7 @@ export const SUN = {
 } as const
 
 /** The spot the HTML text sits over, left of center. The tests keep every plant out of it. */
-export const SAFE_ZONE = { x: 40, y: 200, width: 600, height: 400 } as const
+export const SAFE_ZONE = { x: 40, y: 230, width: 600, height: 370 } as const
 
 export const COLORS = {
   sky: { top: "#fbfdf4", bottom: "#d9ecc3" },

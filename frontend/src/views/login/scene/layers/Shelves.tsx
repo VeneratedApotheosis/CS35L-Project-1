@@ -1,5 +1,5 @@
 import { pointsText, project, round1, type Point } from "../geometry"
-import { shelfFaces } from "../placement"
+import { shelfFaces, sideWallX } from "../placement"
 import { COLORS, ROOM, SHELVES } from "../room"
 
 /** One steel bracket: a short upright against the wall and a brace under the board. */
@@ -15,7 +15,7 @@ function Bracket({ wall, board, width }: { wall: Point; board: Point; width: num
 
 /**
  * The shelves: a long upper shelf and a lower one on the back wall, turning the
- * corner along the right wall. Each board is a lit top, a darker front edge and
+ * corner along the right wall, and a high one on each side wall. Each board is a lit top, a darker front edge and
  * a faint shadow on the wall below it. The lower shelf stands on wooden legs.
  */
 export function Shelves() {
@@ -32,8 +32,9 @@ export function Shelves() {
             return { key: i, wall, board: project({ x, y: shelf.y + shelf.thickness }, shelf.reach ?? 1.05), width: 5 }
           }
           const factor = shelf.from + (shelf.to - shelf.from) * share
-          const wall = project({ x: ROOM.right, y: shelf.y + shelf.thickness + 4 }, factor)
-          const board = project({ x: ROOM.right - (shelf.inset ?? 70), y: shelf.y + shelf.thickness }, factor)
+          const edges = sideWallX(shelf)
+          const wall = project({ x: edges.wall, y: shelf.y + shelf.thickness + 4 }, factor)
+          const board = project({ x: edges.free, y: shelf.y + shelf.thickness }, factor)
           return { key: i, wall, board, width: round1(4 * factor) }
         })
         return (
