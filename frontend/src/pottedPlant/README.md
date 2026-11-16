@@ -20,6 +20,7 @@ The folder has two halves that are drawn and styled separately: `plants/` (every
 | `plants/monstera/` | The Monstera deliciosa: a few large, broad, glossy heart leaves with fenestrations (holes near the midrib and splits cut in from the edge; no flowers) |
 | `plants/philodendron/` | The Philodendron 'Sun Red' / Rojo Congo: broad, rounded paddle leaves in an upright crown on thick reddish-maroon petioles; the newest, most upright leaves are deep burgundy-red, the older outer ones glossy green and arching (no flowers) |
 | `plants/pilea/` | The pilea (Pilea peperomioides): round, flat coin leaves on thin stalks that radiate from the base, with baby "pups" beside the main plant (no flowers) |
+| `plants/stringOfPearls/` | The string of pearls: a trailing plant whose "leaves" are strands (a curve with a row of round beads) that rise from the soil, arch over the pot rim and hang below the soil line (the engine's opt-in `hang`) |
 | `plants/lotus/` | The lotus: a water plant with lily pads floating on the pot's water, and round leaves and pink flowers held above on thin stems |
 | `plants/plantTypes.tsx` | The list of plant types the app offers, with each one's component |
 | `pots/` | The pot, separate from the plants: palettes, shape, the pot's look (`potLookFromSeed`) and the finish registry |
@@ -105,6 +106,7 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
 | `lily/lily.test.tsx` | Flower stages, the leaf cap and fan, and the stage rules for the lily |
 | `rose/rose.test.tsx` | Flower stages, the leaf cap, and the stage rules for the rose |
 | `monstera/monstera.test.tsx` | The stage rules for the monstera: stage counts, containment, coverage, roots, leaf identity, scaling, and scale-invariance |
+| `stringOfPearls/stringOfPearls.test.tsx` | The stage rules for the string of pearls: counts, containment inside the dome and hang depth, hanging strands, mirroring, beads, scaling and wilting |
 | `pilea/pilea.test.tsx` | The stage rules for the pilea: stage counts, containment, coverage, roots, leaf identity, scaling, scale-invariance, and that pups appear from stage 2 |
 | `philodendron/philodendron.test.tsx` | The stage rules for the philodendron: stage counts, containment, coverage, roots, leaf identity, scaling, scale-invariance, red stems, and that the newest upright leaves are burgundy |
 | `pots/pot.test.tsx` | Pot geometry, `potLookFromSeed`, palettes, bands (including that no dots are drawn), and the band odds |

@@ -33,6 +33,11 @@ export function validateConfig(config: StagedPlantConfig): void {
   )
   check(dome.anchor.y <= limits.floor, "the dome's anchor must sit on or above limits.floor")
 
+  if (config.hang) {
+    check(config.hang.depth > 0, "hang.depth must be above 0")
+    check(dome.anchor.y + config.hang.depth <= limits.floor, "limits.floor must be at least hang.depth below the dome's anchor")
+  }
+
   check(pot.rimLeft < pot.rimRight, "pot.rimLeft must be left of pot.rimRight")
 
   check(ordered(roots.range) && roots.range[0] < roots.range[1], "roots.range must run from low to high")

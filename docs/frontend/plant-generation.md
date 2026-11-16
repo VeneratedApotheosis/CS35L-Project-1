@@ -18,6 +18,7 @@ Status:
 | Monstera deliciosa | Stage engine (leaf-only, fenestrated leaves) | Current |
 | Pilea peperomioides | Stage engine (leaf-only, round coins, with pups) | Current |
 | Philodendron 'Sun Red' / Rojo Congo | Stage engine (leaf-only, broad paddles, red stems, burgundy newest leaves) | Current |
+| String of pearls | Stage engine (leaf-only; each "leaf" is a hanging strand of beads; opts into `hang`) | Current |
 
 ---
 
@@ -32,9 +33,10 @@ Status:
 - [4. Pothos](#4-pothos)
 - [5. Peace lily](#5-peace-lily)
 - [6. Pilea peperomioides](#6-pilea-peperomioides)
-- [7. Tests](#7-tests)
-- [8. Open items](#8-open-items)
-- [9. History](#9-history)
+- [7. String of pearls](#7-string-of-pearls)
+- [8. Tests](#8-tests)
+- [9. Open items](#9-open-items)
+- [10. History](#10-history)
 
 ---
 
@@ -77,7 +79,7 @@ pottedPlant/
       flowers.ts               flower placement, the flower dome and the bud/bloom stages
       Flower.tsx               draws flower stalks, buds and open flowers
     (and a folder for each other species: snakePlant, kimberlyQueen, lily, rose,
-     monstera, philodendron, pilea, lotus)
+     monstera, philodendron, pilea, stringOfPearls, lotus)
   pots/                    the pot, separate from every plant
     palettes.ts            the color palettes, the band names and the band odds
     shape.ts               every measurement of the drawing, plus the rim and soil points
@@ -339,9 +341,32 @@ Code: `frontend/src/pottedPlant/plants/pilea/`. It uses the stage engine for its
 - Pups are built once at full size from their own random streams, so adding them never moves the main coins. They are drawn through the engine's `renderBehindLeaves` slot and scaled about the soil point with each stage, so they grow with the plant.
 - **Stages:** none in stage 1; pups appear from stage 2 (`PILEA_PUPS.fromStage`) and grow with later stages.
 
-## 7. Tests
+## 7. String of pearls
 
-Over 60 seeds unless noted.
+Code: `frontend/src/pottedPlant/plants/stringOfPearls/`. A trailing plant on the stage engine. Its engine "leaf" is a **strand**: a thin curve that rises a little from the soil, arches over and hangs straight down, with a row of round pale-green beads on a thread (a tiny pale window line on each bead). Its numbers are in `stringOfPearlsConfig.ts`, and `strandLeaf.ts` holds the strand's curve, outline, random look and colors.
+
+**Differences from the pothos**
+
+| Setting | Pothos | String of pearls |
+| --- | --- | --- |
+| Leaf shape | Heart | Strand: a ribbon polygon around a curve, as wide as the beads (`strandPolygon`) |
+| Leaf length | 16% to 55% of the dome height | 140% to 240% (a strand's length is the length of its curve) |
+| Dome | 56 by 101.4 | 56 by 44 above the soil, plus `hang.depth` 42 below it |
+| Leaves | 2 to 6 | 2 to 8 (2, 4, 6, 8 over four stages) |
+| Stems | 16% to 62%, 34 degrees of lean | 6% to 30%, 30 degrees of lean (short, so strands start near the soil) |
+| Leaf turn | 10 to 28 degrees | 5 to 14 degrees |
+| Below the soil | Never | A strand may hang past the soil line, over the pot, down to `limits.floor` (soil + 42) |
+| Wilting | Leaves droop and curve | Strands keep their shape and direction; they brown and their stems tilt (`droops: false`) |
+
+**It is allowed to hang.** Every other plant stays above the soil line. This one sets the engine's opt-in `hang: { depth }`: the dome is then the usual half-ellipse above the soil, and below the soil a box as wide as the dome and `depth` deep (also scaled by stage). `limits.floor` is the soil line plus `depth`, so the limit tests, wilting and the fitting all read the same floor. Plants without `hang` behave exactly as before.
+
+**A strand reads its direction.** The engine's `outline()` gets the leaf's `angle` as an extra last argument (ignored by every other leaf). A strand's curve turns in the canvas's own directions, from its angle to `hang` (168 to 186 degrees, almost straight down), through the outside, with a small sway. So it ends hanging down whichever way it leans, and a strand leaning left is the mirror of one leaning right. Its stalk end is at (0,0), but its far end is not at (0,-length).
+
+**Look.** Beads are 10 to 13 per strand, a flat circle each (base fill, one soft light patch, a tiny pale window line), shrinking to 72% of their size at the tip. The count is the same at every stage, so each stage is a scaled copy.
+
+## 8. Tests
+
+Over 60 seeds unless noted. The string of pearls runs over 40 seeds (`stringOfPearls/stringOfPearls.test.tsx`): stage counts, containment inside the dome and the hang depth, that the full plant hangs below the soil and each strand ends hanging down, mirroring, bead counts and taper, and wilting.
 
 **Engine and pothos** (`pothos/pothosStages.test.tsx`, `staged/engine.test.ts`):
 
@@ -397,12 +422,12 @@ Over 60 seeds unless noted.
 - other leaves are exactly as they were, a leaf's bend is the same at every stage, and the pothos does not fan,
 - scale changes nothing but the picture size.
 
-## 8. Open items
+## 9. Open items
 
 - **Stage count.** The backend's growth rules ([8.7](../backend/design.md#87-plant-growth)) have **five** stages (0 to 24%, 25 to 49%, 50 to 74%, 75 to 99%, 100%). The plants default to four. Either map five onto four, or set the default to five and decide when the peace lily blooms.
 - **Flower config** is not covered by `validateConfig`. Only the leaf config is checked; the flower numbers are protected by the tests.
 
-## 9. History
+## 10. History
 
 - The first pothos was a trailing plant with long vines, then a compact ball built from radiating vines, both driven by a continuous growth value. These were replaced by the stage engine because the old design could not guarantee containment, a leaf cap, or even growth.
 - A later draft spread leaf centers evenly over the dome (Lloyd relaxation) and hung every leaf from a stem rising from one point. It looked like a bouquet, so placement was changed to roots spread across 25% to 75% of the pot and stems of different lengths, which puts leaves in layers at different distances from the origin.
