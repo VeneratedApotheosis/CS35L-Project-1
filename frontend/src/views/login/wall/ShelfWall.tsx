@@ -9,6 +9,7 @@ import { Pilea } from "@/pottedPlant/plants/pilea"
 import { Pothos } from "@/pottedPlant/plants/pothos"
 import { Rose } from "@/pottedPlant/plants/rose"
 import { SnakePlant } from "@/pottedPlant/plants/snakePlant"
+import { EmergeProvider } from "@/pottedPlant/plants/staged/EmergeContext"
 import { ShrinkProvider } from "@/pottedPlant/plants/staged/ShrinkContext"
 import { PottedPlant } from "@/pottedPlant/PottedPlant"
 import { POT_SHAPE, potLookFromSeed, type PotLook } from "@/pottedPlant/pots"
@@ -84,9 +85,7 @@ export const SHRINK_MS = 100
 /** How long after that the plant is swapped, so the un-grow has surely finished, in milliseconds. */
 const SWAP_MARGIN_MS = 40
 /** How long the pot is left bare, with just soil in it, between the old plant and the new one, in milliseconds. */
-const BARE_MS = 120
-/** How long the new plant is drawn at its first stage before it starts to grow: just long enough to be drawn once, in milliseconds. */
-const SPROUT_FRAME_MS = 40
+const BARE_MS = 250
 /** How long the grow animation (the stage-up leaf movement and its bursts) takes before the plant can be replanted again. */
 const REGROW_MS = 1700
 
@@ -177,8 +176,8 @@ const SPECIES = WALL_PLANTS.map((plant) => plant.type)
  * backwards, very fast (SHRINK_MS), down to a sprout, which then goes away and
  * leaves the pot bare (BARE_MS). The plant is swapped for a new random plant (a
  * random species and seed, in the same pot) while the pot is bare, so there is
- * never a visible jump from one plant to another. Then the new plant starts as a
- * sprout and grows straight from stage 1 to the last stage in one stage-up animation.
+ * never a visible jump from one plant to another. Then the new plant grows out of
+ * the soil, with no leaves at first, to the last stage in one stage-up animation.
  *
  * The pointer always works, even in the middle of an animation: a plant that is
  * growing un-grows from the way it looks at that moment, and one that is a sprout
@@ -193,6 +192,8 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
   const [changing, setChanging] = useState(false)
   // The pot has no plant in it for a moment, between the old plant and the new one.
   const [bare, setBare] = useState(false)
+  // Set when a plant is brought into a bare pot, so it grows out of the soil instead of appearing.
+  const [emerge, setEmerge] = useState(false)
   const [hit, setHit] = useState<HitBox>(HIT_DEFAULT)
   const frameRef = useRef<SVGSVGElement>(null)
   // What the plant is doing, and the stage it was last told to be, for the pointer handler to read.
@@ -243,6 +244,7 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
     if (prefersReducedMotion()) {
       newPlant()
       setBare(false)
+      setEmerge(false)
       show(LAST_STAGE)
       phase.current = "idle"
       setChanging(false)
@@ -253,20 +255,21 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
       phase.current = "idle"
       setChanging(false)
     }
-    // The new plant is the same in every case: a sprout for a moment, then one move from the first stage to the last.
-    const growNew = (wait: number) => {
-      later(() => show(LAST_STAGE), wait + SPROUT_FRAME_MS)
-      later(done, wait + SPROUT_FRAME_MS + REGROW_MS)
+    // The new plant grows out of the soil of the bare pot, straight to the last stage, in one stage-up animation.
+    const plantIn = () => {
+      setBare(false)
+      setEmerge(true)
+      show(LAST_STAGE)
     }
     if (shown.current === 1) {
-      // Already as small as it gets (a sprout or a bare pot): the new plant starts at once.
+      // Already as small as it gets (a bare pot): the new plant goes in at once.
       phase.current = "growing"
       newPlant()
-      setBare(false)
-      growNew(0)
+      plantIn()
+      later(done, REGROW_MS)
       return
     }
-    // Un-grow, take the plant away, swap it while the pot is bare, then bring in the new plant and grow it.
+    // Un-grow, take the plant away, swap it while the pot is bare, then let the new plant grow out of the soil.
     phase.current = "shrinking"
     show(1)
     const swapAt = SHRINK_MS + SWAP_MARGIN_MS
@@ -275,8 +278,8 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
       setBare(true)
       newPlant()
     }, swapAt)
-    later(() => setBare(false), swapAt + BARE_MS)
-    growNew(swapAt + BARE_MS)
+    later(plantIn, swapAt + BARE_MS)
+    later(done, swapAt + BARE_MS + REGROW_MS)
   }
 
   const base = y + POT_SINK
@@ -301,9 +304,11 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
               {null}
             </PottedPlant>
           ) : (
-            <ShrinkProvider seconds={SHRINK_MS / 1000}>
-              <Species type={type} seed={seed} stage={stage} pot={wallPot(plant.seed, slot.size)} />
-            </ShrinkProvider>
+            <EmergeProvider emerge={emerge}>
+              <ShrinkProvider seconds={SHRINK_MS / 1000}>
+                <Species type={type} seed={seed} stage={stage} pot={wallPot(plant.seed, slot.size)} />
+              </ShrinkProvider>
+            </EmergeProvider>
           )}
         </svg>
       </g>

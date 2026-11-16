@@ -5,6 +5,7 @@ import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
 import { ACCENTS_END, makeAccents, type AccentArea } from "./accents"
 import { blendStage, GROWTH, springProgress } from "./growth"
 import { GrowthAccents } from "./GrowthAccents"
+import { useEmerge } from "./EmergeContext"
 import { useShrinkSeconds } from "./ShrinkContext"
 import { useWilt } from "./WiltContext"
 import { BROWNING, bendSlices, wiltPlant } from "./wilt"
@@ -116,7 +117,11 @@ export function StemmedPlant<Spec>({
   // It can start while a move is still going: the plant then shrinks from the way it looks at that moment.
   const shrinkSeconds = useShrinkSeconds()
   const [drawn, setDrawn] = useState(target)
-  const [growth, setGrowth] = useState<{ from: PlantStage<Spec>; to: PlantStage<Spec>; backwards: boolean } | null>(null)
+  // A plant that is asked to emerge starts with no leaves, so every leaf grows out of the soil.
+  const emerge = useEmerge()
+  const [growth, setGrowth] = useState<{ from: PlantStage<Spec>; to: PlantStage<Spec>; backwards: boolean } | null>(
+    emerge && animate && !prefersReducedMotion() ? { from: { ...target, leaves: [] }, to: target, backwards: false } : null,
+  )
   const [clock, setClock] = useState({ progress: 0, time: 0 })
   if (drawn !== target) {
     setDrawn(target)
