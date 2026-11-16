@@ -17,6 +17,7 @@ import { Monstera } from "@/pottedPlant/plants/monstera"
 import { Philodendron } from "@/pottedPlant/plants/philodendron"
 import { Calathea } from "@/pottedPlant/plants/calathea"
 import { StringOfPearls } from "@/pottedPlant/plants/stringOfPearls"
+import { FiddleLeafFig } from "@/pottedPlant/plants/fiddleLeafFig"
 import { Pothos } from "@/pottedPlant/plants/pothos/Pothos"
 import { randomLeafSpec } from "@/pottedPlant/plants/pothos/leaf"
 import { STAGES } from "@/pottedPlant/genome"
@@ -128,6 +129,13 @@ const PLANTS = [
       "A trailing plant on the same stage engine as the pothos, but its leaves are hanging strands: each rises a little from the soil, curves over the pot rim and falls, as a row of round beads on a thread. Strands may hang below the soil line, over the pot. No flowers.",
     stageNames: ["Sprout", "Trailing", "Spilling", "Cascading"],
   },
+  {
+    id: "fiddleLeafFig",
+    label: "Fiddle-leaf fig",
+    description:
+      "The tallest plant: a slim woody trunk, bare at the bottom, carrying a few large, glossy, violin-shaped leaves with pale veins. The leaves come from the same stage engine as the pothos; the trunk and its short branches are drawn behind them. No flowers.",
+    stageNames: ["Sprout", "Young", "Growing tall", "Full crown"],
+  },
 ] as const
 type PlantId = (typeof PLANTS)[number]["id"]
 
@@ -207,6 +215,7 @@ export default function PlantLab() {
     philodendron: FIRST_SEED,
     calathea: FIRST_SEED,
     stringOfPearls: FIRST_SEED,
+    fiddleLeafFig: FIRST_SEED,
   })
   const [chosen, setChosen] = useState<PlantId>("pothos")
   const [scale, setScale] = useState(1)
@@ -258,6 +267,8 @@ export default function PlantLab() {
     if (chosen === "calathea") return <Calathea seed={seeds.calathea} stage={stage} scale={scale} pot={potFor(seeds.calathea)} />
     if (chosen === "stringOfPearls")
       return <StringOfPearls seed={seeds.stringOfPearls} stage={stage} scale={scale} pot={potFor(seeds.stringOfPearls)} />
+    if (chosen === "fiddleLeafFig")
+      return <FiddleLeafFig seed={seeds.fiddleLeafFig} stage={stage} scale={scale} pot={potFor(seeds.fiddleLeafFig)} />
     return <Pilea seed={seeds.pilea} stage={stage} scale={scale} pot={potFor(seeds.pilea)} />
   }
 
