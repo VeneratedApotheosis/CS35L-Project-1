@@ -15,8 +15,8 @@ const LIMITS = CONFIG.limits
 const ANCHOR = CONFIG.dome.anchor
 
 describe("stage ladder", () => {
-  it("gives 2, 4, 7, 10 leaves for four stages", () => {
-    expect(stageLeafCounts(4)).toEqual([2, 4, 7, 10])
+  it("gives 2, 5, 8, 11 leaves for four stages", () => {
+    expect(stageLeafCounts(4)).toEqual([2, 5, 8, 11])
   })
 
   it("never exceeds the leaf cap for any stage count", () => {
@@ -111,7 +111,7 @@ describe("generated calathea", () => {
     }
   })
 
-  it("roots every stem between 25% and 75% of the way across the pot", () => {
+  it("roots every stem between 36% and 64% of the way across the pot", () => {
     const width = CONFIG.pot.rimRight - CONFIG.pot.rimLeft
     const [lo, hi] = CONFIG.roots.range
     for (const seed of SEEDS) {
@@ -159,6 +159,42 @@ describe("generated calathea", () => {
     }
     expect(fanned).toBeGreaterThan(0)
     expect(straight).toBeGreaterThan(0)
+  })
+
+  it("layers the leaves: a low skirt pointing out on both sides, a middle ring, and an upright top", () => {
+    const { outward, upright } = CONFIG.layerAngle!
+    const height = (leaf: { baseY: number }) => ANCHOR.y - leaf.baseY
+    let skirt = 0
+    let ring = 0
+    let top = 0
+    let skirtLeft = 0
+    let skirtRight = 0
+    let skirtHeight = 0
+    let topHeight = 0
+    for (const seed of SEEDS) {
+      const last = createCalathea(seed).stages.at(-1)!
+      for (const leaf of last.leaves) {
+        const tilt = Math.abs(leaf.angle)
+        // Every leaf stays between the lowest and highest layer angles (jitter allowed).
+        expect(tilt).toBeLessThanOrEqual(outward + 25)
+        if (tilt >= 70) {
+          skirt++
+          skirtHeight += height(leaf) / last.scale
+          if (leaf.angle < 0) skirtLeft++
+          else skirtRight++
+        } else if (tilt >= 30) ring++
+        else if (tilt <= upright + 20) {
+          top++
+          topHeight += height(leaf) / last.scale
+        }
+      }
+    }
+    expect(skirtLeft).toBeGreaterThan(0)
+    expect(skirtRight).toBeGreaterThan(0)
+    expect(ring).toBeGreaterThan(0)
+    expect(top).toBeGreaterThan(0)
+    // The skirt hangs low and the upright leaves rise on long stems.
+    expect(skirtHeight / skirt).toBeLessThan(topHeight / top - 10)
   })
 
   it("draws striped leaves clipped to the leaf, with no flowers", () => {
