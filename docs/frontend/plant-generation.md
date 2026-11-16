@@ -13,6 +13,7 @@ Status:
 | Snake plant | Stage engine (leaf-only) | Current |
 | Kimberly Queen fern | Stage engine (leaf-only, arching feathery fronds) | Current |
 | Dracaena 'Golden Heart' | Stage engine (leaf-only, arching leaves) | Current |
+| Spider plant | Stage engine (leaf-only, many thin arching blades with a cream stripe) | Current |
 | Lily | Stage engine, reuses the peace lily's flower engine | Current |
 | Rose | Stage engine, reuses the peace lily's flower engine | Current |
 | Monstera deliciosa | Stage engine (leaf-only, fenestrated leaves) | Current |
@@ -76,7 +77,7 @@ pottedPlant/
       shape.ts                 the pointed blade outline shared by leaf and flower hood
       flowers.ts               flower placement, the flower dome and the bud/bloom stages
       Flower.tsx               draws flower stalks, buds and open flowers
-    (and a folder for each other species: snakePlant, kimberlyQueen, lily, rose,
+    (and a folder for each other species: snakePlant, kimberlyQueen, spiderPlant, lily, rose,
      monstera, philodendron, pilea, lotus)
   pots/                    the pot, separate from every plant
     palettes.ts            the color palettes, the band names and the band odds

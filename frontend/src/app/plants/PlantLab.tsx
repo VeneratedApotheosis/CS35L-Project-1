@@ -10,6 +10,7 @@ import { PeaceLily } from "@/pottedPlant/plants/peaceLily"
 import { Lotus } from "@/pottedPlant/plants/lotus"
 import { SnakePlant } from "@/pottedPlant/plants/snakePlant"
 import { KimberlyQueen } from "@/pottedPlant/plants/kimberlyQueen"
+import { SpiderPlant } from "@/pottedPlant/plants/spiderPlant"
 import { Lily } from "@/pottedPlant/plants/lily"
 import { Rose } from "@/pottedPlant/plants/rose"
 import { Monstera } from "@/pottedPlant/plants/monstera"
@@ -68,6 +69,13 @@ const PLANTS = [
     description:
       "An upright crown of tall, gently arching sword fronds on the same stage engine as the snake plant. Each frond is a slim lance of many small rounded pinnae alternating up a central rachis, fresh medium-green and lighter on one side. No flowers.",
     stageNames: ["Sprout", "Young", "Fuller", "Full crown"],
+  },
+  {
+    id: "spiderPlant",
+    label: "Spider plant",
+    description:
+      "A full fountain of many long, thin, grass-like blades on the same stage engine as the snake plant. Every blade arches outward and droops at the tip, mid to bright green with a cream stripe down the middle. No flowers.",
+    stageNames: ["Sprout", "Young", "Fuller", "Full fountain"],
   },
   // {
   //   id: "dracaena",
@@ -176,6 +184,7 @@ export default function PlantLab() {
     lotus: FIRST_SEED,
     snakePlant: FIRST_SEED,
     kimberlyQueen: FIRST_SEED,
+    spiderPlant: FIRST_SEED,
     lily: FIRST_SEED,
     rose: FIRST_SEED,
     monstera: FIRST_SEED,
@@ -221,6 +230,8 @@ export default function PlantLab() {
     if (chosen === "snakePlant") return <SnakePlant seed={seeds.snakePlant} stage={stage} scale={scale} pot={potFor(seeds.snakePlant)} />
     if (chosen === "kimberlyQueen")
       return <KimberlyQueen seed={seeds.kimberlyQueen} stage={stage} scale={scale} pot={potFor(seeds.kimberlyQueen)} />
+    if (chosen === "spiderPlant")
+      return <SpiderPlant seed={seeds.spiderPlant} stage={stage} scale={scale} pot={potFor(seeds.spiderPlant)} />
     if (chosen === "lily") return <Lily seed={seeds.lily} stage={stage} scale={scale} pot={potFor(seeds.lily)} />
     if (chosen === "rose") return <Rose seed={seeds.rose} stage={stage} scale={scale} pot={potFor(seeds.rose)} />
     if (chosen === "monstera") return <Monstera seed={seeds.monstera} stage={stage} scale={scale} pot={potFor(seeds.monstera)} />
