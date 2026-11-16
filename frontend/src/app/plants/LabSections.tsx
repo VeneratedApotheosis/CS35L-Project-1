@@ -15,7 +15,7 @@ const HEALTH_STATES = [
   { id: "slightly_wilted", label: "Slightly wilted" },
   { id: "wilted", label: "Wilted" },
 ] as const
-type Health = (typeof HEALTH_STATES)[number]["id"]
+const ALL_PLANTS = "all"
 
 const SECTION_SEED = 42
 
@@ -26,7 +26,7 @@ function LabSection({ title, description, action, children }: {
   children: React.ReactNode
 }) {
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-4">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="text-h2">{title}</h2>
@@ -39,54 +39,51 @@ function LabSection({ title, description, action, children }: {
   )
 }
 
-/** #152: every plant type in each health state, side by side, and at any wilt amount in between. */
+function PlantCell({ label, children }: { label: string, children: React.ReactNode }) {
+  return (
+    <Card className="flex flex-col items-center gap-2 !p-4">
+      <div className="w-full">{children}</div>
+      <p className="text-caption">{label}</p>
+    </Card>
+  )
+}
+
+/** #152: one plant in its three health states, or every plant fully wilted. */
 export function WiltedLookSection() {
-  const [health, setHealth] = useState<Health | "custom">("wilted")
-  const [custom, setCustom] = useState(0.5)
-  const rows = health === "custom"
-    ? [{ id: "custom", label: "Wilt amount " + Math.round(custom * 100) + "%", wilt: custom }]
-    : HEALTH_STATES.filter((state) => state.id === health).map((state) => ({ id: state.id, label: state.label, wilt: WILT.forHealth[state.id] }))
+  const [plantId, setPlantId] = useState<string>(PLANT_TYPES[0].id)
+  const single = PLANT_TYPES.find((type) => type.id === plantId)
 
   return (
     <LabSection
       title="Wilted look"
-      description="Every plant in one health state at a time. As a plant wilts its stems bend outward, its leaves droop until the average leaf is almost horizontal, and longer leaves curve toward the ground. About half of the leaves turn brown, a quarter of them dark brown. The pot never changes. Wilted leaves stay inside the side limits. Lotus is not on the stage engine yet, so it doesn't wilt."
+      description="A wilting plant bends its stems and droops its leaves until they hang almost flat. About half of the leaves turn brown. The pot never changes."
       action={
-        <div role="group" aria-label="Health state to show" className="flex flex-wrap gap-2">
-          {[...HEALTH_STATES, { id: "custom", label: "Custom amount" }].map((state) => (
-            <Button key={state.id} size="sm" variant={health === state.id ? "primary" : "secondary"}
-              aria-pressed={health === state.id} onClick={() => setHealth(state.id as typeof health)}>
-              {state.label}
-            </Button>
-          ))}
-        </div>
+        <label className="flex items-center gap-2">
+          <span className="text-body-sm text-muted">Plant</span>
+          <select className="select" value={plantId} onChange={(event) => setPlantId(event.target.value)}>
+            {PLANT_TYPES.map((type) => <option key={type.id} value={type.id}>{type.label}</option>)}
+            <option value={ALL_PLANTS}>All plants (wilted)</option>
+          </select>
+        </label>
       }
     >
-      {health === "custom" && (
-        <label className="flex max-w-sm flex-col gap-3">
-          <span className="text-caption">Wilt amount {Math.round(custom * 100)}%</span>
-          <input type="range" min={0} max={1} step={0.05} value={custom}
-            onChange={(event) => setCustom(Number(event.target.value))}
-            className="w-full accent-[var(--color-primary-selected)]" />
-        </label>
+      {single ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {HEALTH_STATES.map(({ id, label }) => (
+            <PlantCell key={id} label={label}>
+              <single.Preview seed={SECTION_SEED} stage={4} wilt={WILT.forHealth[id]} />
+            </PlantCell>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {PLANT_TYPES.map(({ id, label, Preview }) => (
+            <PlantCell key={id} label={label}>
+              <Preview seed={SECTION_SEED} stage={4} wilt={WILT.forHealth.wilted} />
+            </PlantCell>
+          ))}
+        </div>
       )}
-      <div className="flex flex-col gap-6">
-        {rows.map((row) => (
-          <div key={row.id} className="flex flex-col gap-3">
-            <h3 className="text-h3">{row.label}</h3>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-              {PLANT_TYPES.map(({ id, label, Preview }) => (
-                <Card key={id} className="flex flex-col items-center gap-2 !p-4">
-                  <div className="w-full">
-                    <Preview seed={SECTION_SEED} stage={4} wilt={row.wilt} />
-                  </div>
-                  <p className="text-caption">{label}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
     </LabSection>
   )
 }
@@ -103,19 +100,15 @@ export function StageUpSection() {
   const { Preview } = plant
 
   function logActivity() {
-    if (stage === 4) return
-    setStage((stage + 1) as Stage)
-  }
-  function reset() {
-    setStage(1)
+    if (stage < 4) setStage((stage + 1) as Stage)
   }
 
   return (
     <LabSection
       title="Stage-up animation"
-      description="Log an activity to move the plant up a stage. Each leaf springs from its old place into its new one, and new leaves grow out of the soil, with lines and pops bursting around the plant, and stars on the last stage. A bigger plant gets more accents, and larger ones. The pot and the soil don't move. It runs only after you press the button, never when the page loads. With reduced motion turned on in your system, the change is instant."
+      description="Press Log activity to move up a stage. The leaves spring into their new places, with bursts around the plant. It runs only on your action, and is instant if reduced motion is on."
       action={
-        <div role="group" aria-label="Plant to animate" className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2">
             <span className="text-body-sm text-muted">Plant</span>
             <select className="select" value={plantId} onChange={(event) => { setPlantId(event.target.value); setStage(1) }}>
@@ -139,7 +132,7 @@ export function StageUpSection() {
           </p>
           <div className="flex flex-wrap gap-2">
             <Button icon={Leaf} onClick={logActivity} disabled={stage === 4}>Log activity</Button>
-            <Button variant="secondary" icon={RotateCcw} onClick={reset} disabled={stage === 1}>Reset</Button>
+            <Button variant="secondary" icon={RotateCcw} onClick={() => setStage(1)} disabled={stage === 1}>Reset</Button>
           </div>
         </div>
       </Card>
@@ -155,30 +148,22 @@ export function DarkThemeSection() {
   return (
     <LabSection
       title="Dark theme"
-      description="Every plant and every pot palette on the dark surfaces, whatever theme the page is using. Check that no color disappears, and that the pot's shadow is still visible."
+      description="Every plant and pot palette on the dark surfaces, whatever theme the page uses. Each pot keeps a visible shadow."
     >
-      <div data-theme="dark" className="flex flex-col gap-8 rounded-[var(--radius-md)] bg-[var(--color-background)] p-6 text-[var(--color-text)]">
-        <div className="flex flex-col gap-3">
-          <h3 className="text-h3">Plants</h3>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {PLANT_TYPES.map(({ id, label, Preview }) => (
-              <Card key={id} className="flex flex-col items-center gap-2 !p-4">
-                <div className="w-full"><Preview seed={SECTION_SEED} stage={4} /></div>
-                <p className="text-caption">{label}</p>
-              </Card>
-            ))}
-          </div>
+      <div data-theme="dark" className="flex flex-col gap-6 rounded-[var(--radius-md)] bg-[var(--color-background)] p-6 text-[var(--color-text)]">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {PLANT_TYPES.map(({ id, label, Preview }) => (
+            <PlantCell key={id} label={label}>
+              <Preview seed={SECTION_SEED} stage={4} />
+            </PlantCell>
+          ))}
         </div>
-        <div className="flex flex-col gap-3">
-          <h3 className="text-h3">Pot palettes</h3>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-            {POT_PALETTES.map((palette, index) => (
-              <Card key={palette.name} className="flex flex-col items-center gap-2 !p-4">
-                <Pothos seed={SECTION_SEED} stage={3} pot={{ ...potLookFromSeed(SECTION_SEED), palette: index }} className="w-full" />
-                <p className="text-caption">{palette.name}</p>
-              </Card>
-            ))}
-          </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+          {POT_PALETTES.map((palette, index) => (
+            <PlantCell key={palette.name} label={palette.name}>
+              <Pothos seed={SECTION_SEED} stage={3} pot={{ ...potLookFromSeed(SECTION_SEED), palette: index }} className="w-full" />
+            </PlantCell>
+          ))}
         </div>
       </div>
     </LabSection>
