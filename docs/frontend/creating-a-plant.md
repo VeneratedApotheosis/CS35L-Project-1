@@ -275,6 +275,14 @@ so a bad config fails here with a list of exactly what doesn't fit.
 - **Flowers or other parts.** `StemmedPlant` has two slots, `renderBehindLeaves`
   (between stems and leaves) and `renderAboveLeaves` (on top). Reuse the peace
   lily's flower placement in `peaceLily/flowers.ts`. See the lily and rose.
+- **Point leaves by their height** (a layered plant, like the fiddle-leaf fig and
+  the calathea). Add an opt-in `layerAngle: { outward, upright, curve }` to the
+  config. A leaf at the lowest layer (0) points `outward` degrees from straight
+  up (above 90 dips below level), a leaf at the highest layer (1) points
+  `upright` degrees, and `curve` above 1 keeps the lower layers spread out.
+  Without it a leaf's direction is its stem's heading plus a random curl, which
+  has nothing to do with how high it sits. Use `layers.bands` and
+  `stems.lengthRange` to make low layers sit low.
 - **Hanging below the soil** (a trailing plant, like the string of pearls). Add an
   opt-in `hang: { depth }` to the config and set `limits.floor` to the soil line
   plus `depth`. Leaves may then fall past the soil, over the pot, as far as

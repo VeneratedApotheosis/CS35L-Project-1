@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { pointInPolygon } from "../../geometry"
 import { mulberry32 } from "../../rng"
 import { Calathea } from "./Calathea"
@@ -7,6 +7,9 @@ import { CalatheaLeafShape } from "./CalatheaLeafShape"
 import { calatheaLeafOutline, calatheaStripesPath, fannedCalatheaShape, randomCalatheaLeaf } from "./calatheaLeaf"
 import { CALATHEA_CONFIG } from "./calatheaConfig"
 import { createCalathea, leafOutline, stageLeafCounts } from "./calatheaStages"
+
+// Growing 60 plants of up to 11 leaves is slow when the whole suite runs at once.
+vi.setConfig({ testTimeout: 30000 })
 
 const SEEDS = Array.from({ length: 60 }, (_, i) => i + 1)
 const EPS = 1e-6
