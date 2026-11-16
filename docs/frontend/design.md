@@ -204,7 +204,7 @@ Still to build: Modal, toast (for the undo after logging).
 ## 10. Motion
 
 - Motion answers a person's action: logging an activity, a plant moving up a stage, a menu opening, a toast appearing.
-- **One orchestrated moment:** when a log moves a plant to the next stage, the plant grows from the old size to the new one. This is the one place where motion is the main event.
+- **One orchestrated moment:** when a log moves a plant to the next stage, each leaf springs from its old place to its new one, new leaves grow out of the soil, and lines, pops and (on the last stage) stars burst around the plant. The pot and soil do not move. This is the one place where motion is the main event. Details are in [plant-generation.md section 3.10](plant-generation.md#310-moving-up-a-stage).
 - No entrance animation on every section, no hover animation on every card.
 - Respect `prefers-reduced-motion`: replace movement with an instant change.
 
@@ -249,10 +249,10 @@ frontend/src/
 - Supabase auth with protected routes.
 - Procedural plants and pots (ten plant types on the shared stage engine, plus the water lotus), and the `/plants` prototype page.
 - Create-habit form with the full plant picker and a live, seeded preview.
+- Wilted look for every plant on the stage engine, and the stage-up animation (see [plant-generation.md](plant-generation.md#39-health-the-wilted-look)). Both can be tried on `/plants`.
+- Plants checked on the dark theme; the pot's shadow is a theme token.
 
 **Open**
 - **Login and Garden pages** are placeholders and are not yet on the design system.
 - **Missing components:** Modal, toast, input wrappers.
-- **Plants on dark surfaces.** Check the pot and leaf colors against the dark theme.
-- **Stage-up animation** is described in section 10 but not built.
-- **Health look.** The rules (backend-design.md section 8.8) describe a wilting plant; how the drawing changes for health is not decided yet.
+- **Lotus** is not on the stage engine, so it does not wilt or animate yet.
