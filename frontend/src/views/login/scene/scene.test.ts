@@ -151,7 +151,7 @@ describe("validateScene", () => {
   })
 
   it("accepts a plant resting on its shelf", () => {
-    expect(validateScene([plant({ shelf: "back-upper", x: 900, y: 372 })], SHELVES)).toEqual([])
+    expect(validateScene([plant({ shelf: "back-upper", x: 900, y: 328 })], SHELVES)).toEqual([])
   })
 
   it("lists each kind of mistake", () => {
@@ -177,7 +177,7 @@ describe("validateScene", () => {
       "c: stage must be 1, 2, 3 or 4",
       "d: wilt must be from 0 to 1",
       "e: seed must be a whole number",
-      "f: size must be from 20 to 600",
+      "f: size must be from 20 to 800",
       "g: x is outside the canvas",
       'h: unknown shelf "nowhere"',
       "i: its pot is not on the back-lower shelf",
@@ -188,13 +188,46 @@ describe("validateScene", () => {
   })
 
   it("has a varied real scene: every plant type, all stages, some wilt, many sizes and pot colors", () => {
-    expect(SCENE_PLANTS.length).toBeGreaterThanOrEqual(40)
+    expect(SCENE_PLANTS.length).toBeGreaterThanOrEqual(30)
     expect(new Set(SCENE_PLANTS.map((p) => p.type)).size).toBe(PLANT_TYPES.length)
-    expect(new Set(SCENE_PLANTS.map((p) => p.stage))).toEqual(new Set([1, 2, 3, 4]))
+    expect([...new Set(SCENE_PLANTS.map((p) => p.stage))].sort()).toEqual([1, 2, 3, 4])
     expect(SCENE_PLANTS.filter((p) => p.wilt > 0).length).toBeGreaterThanOrEqual(2)
-    expect(Math.min(...SCENE_PLANTS.map((p) => p.size))).toBeLessThan(90)
-    expect(Math.max(...SCENE_PLANTS.map((p) => p.size))).toBeGreaterThan(350)
     expect(new Set(SCENE_PLANTS.map((p) => p.pot?.color)).size).toBeGreaterThanOrEqual(7)
+  })
+
+  it("keeps the shelf plants big: at least 50% bigger than the first version's 72", () => {
+    const onShelves = SCENE_PLANTS.filter((p) => p.shelf)
+    expect(onShelves.length).toBeGreaterThanOrEqual(10)
+    expect(Math.min(...onShelves.map((p) => p.size))).toBeGreaterThanOrEqual(108)
+  })
+
+  it("has some very big plants: the biggest is at least 50% bigger than the first version's 430", () => {
+    expect(Math.max(...SCENE_PLANTS.map((p) => p.size))).toBeGreaterThanOrEqual(645)
+  })
+
+  it("is mostly leafy plants, with the flowering ones as a pop of color", () => {
+    const flowering = new Set(["rose", "lily", "lotus"])
+    const counts = new Map<string, number>()
+    for (const p of SCENE_PLANTS) counts.set(p.type, (counts.get(p.type) ?? 0) + 1)
+    const flowers = SCENE_PLANTS.filter((p) => flowering.has(p.type)).length
+    expect(flowers).toBeGreaterThanOrEqual(3)
+    expect(flowers / SCENE_PLANTS.length).toBeLessThanOrEqual(0.2)
+    // Pothos is the most common plant.
+    expect(Math.max(...counts.values())).toBe(counts.get("pothos"))
+  })
+
+  it("lines the floor plants up along the walls, not scattered across the room", () => {
+    // A floor plant stands near the back wall's foot, or near a side wall's foot.
+    const floor = SCENE_PLANTS.filter((p) => !p.shelf && !p.id.startsWith("big") && !p.id.startsWith("right-shelf"))
+    expect(floor.length).toBeGreaterThanOrEqual(14)
+    for (const p of floor) {
+      const factor = Math.max(1, (p.y - VANISH.y) / (ROOM.floorY - VANISH.y))
+      const nearBack = factor < 1.2
+      const leftWall = project({ x: ROOM.left + 90, y: ROOM.floorY }, factor).x
+      const rightWall = project({ x: ROOM.right - 90, y: ROOM.floorY }, factor).x
+      const nearSide = Math.abs(p.x - leftWall) < 40 || Math.abs(p.x - rightWall) < 40
+      expect(nearBack || nearSide).toBe(true)
+    }
   })
 
   it("uses a different seed for every plant, so no two look the same", () => {

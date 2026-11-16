@@ -45,7 +45,7 @@ export function validateScene(plants: readonly ScenePlant[], shelves: readonly S
     if (![1, 2, 3, 4].includes(plant.stage)) problems.push(at + "stage must be 1, 2, 3 or 4")
     if (!(plant.wilt >= 0 && plant.wilt <= 1)) problems.push(at + "wilt must be from 0 to 1")
     if (!Number.isInteger(plant.seed) || plant.seed < 0) problems.push(at + "seed must be a whole number, 0 or more")
-    if (!(plant.size >= 20 && plant.size <= 600)) problems.push(at + "size must be from 20 to 600")
+    if (!(plant.size >= 20 && plant.size <= 800)) problems.push(at + "size must be from 20 to 800")
     if (plant.pot?.color && !colors.has(plant.pot.color)) problems.push(at + 'unknown pot color "' + plant.pot.color + '"')
 
     if (plant.x < 0 || plant.x > CANVAS.width) problems.push(at + "x is outside the canvas (0 to " + CANVAS.width + ")")
