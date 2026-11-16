@@ -20,7 +20,7 @@ Status:
 | Pilea peperomioides | Stage engine (leaf-only, round coins, with pups) | Current |
 | Philodendron 'Sun Red' / Rojo Congo | Stage engine (leaf-only, broad paddles, red stems, burgundy newest leaves) | Current |
 | Calathea (prayer plant) | Stage engine (leaf-only, broad oval leaves with herringbone stripes and a purple rim) | Current |
-| String of pearls | Stage engine (leaf-only; each "leaf" is a hanging strand of beads; opts into ) | Current |
+| String of pearls | Stage engine (leaf-only; each "leaf" is a hanging strand of beads; opts into `hang`) | Current |
 
 ---
 
