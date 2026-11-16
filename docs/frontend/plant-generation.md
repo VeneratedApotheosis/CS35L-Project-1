@@ -18,6 +18,7 @@ Status:
 | Monstera deliciosa | Stage engine (leaf-only, fenestrated leaves) | Current |
 | Pilea peperomioides | Stage engine (leaf-only, round coins, with pups) | Current |
 | Philodendron 'Sun Red' / Rojo Congo | Stage engine (leaf-only, broad paddles, red stems, burgundy newest leaves) | Current |
+| Fiddle-leaf fig | Stage engine (leaf-only, violin leaves high on one trunk drawn behind the leaves; the tallest plant) | Current |
 
 ---
 
@@ -32,6 +33,7 @@ Status:
 - [4. Pothos](#4-pothos)
 - [5. Peace lily](#5-peace-lily)
 - [6. Pilea peperomioides](#6-pilea-peperomioides)
+- [6b. Fiddle-leaf fig](#6b-fiddle-leaf-fig)
 - [7. Tests](#7-tests)
 - [8. Open items](#8-open-items)
 - [9. History](#9-history)
@@ -77,7 +79,7 @@ pottedPlant/
       flowers.ts               flower placement, the flower dome and the bud/bloom stages
       Flower.tsx               draws flower stalks, buds and open flowers
     (and a folder for each other species: snakePlant, kimberlyQueen, lily, rose,
-     monstera, philodendron, pilea, lotus)
+     monstera, philodendron, fiddleLeafFig, pilea, lotus)
   pots/                    the pot, separate from every plant
     palettes.ts            the color palettes, the band names and the band odds
     shape.ts               every measurement of the drawing, plus the rim and soil points
@@ -338,6 +340,26 @@ Code: `frontend/src/pottedPlant/plants/pilea/`. It uses the stage engine for its
 - A plant has 1 to 2 pup clusters, each a small group of 2 to 3 coins on short stalks, set at the soil beside the main plant (`PILEA_PUPS`).
 - Pups are built once at full size from their own random streams, so adding them never moves the main coins. They are drawn through the engine's `renderBehindLeaves` slot and scaled about the soil point with each stage, so they grow with the plant.
 - **Stages:** none in stage 1; pups appear from stage 2 (`PILEA_PUPS.fromStage`) and grow with later stages.
+
+## 6b. Fiddle-leaf fig
+
+Code: `frontend/src/pottedPlant/plants/fiddleLeafFig/`. It uses the stage engine for its leaves, so it follows every rule in [Design rules](#design-rules). Its own numbers are in `fiddleLeafFigConfig.ts`.
+
+It is the **tallest plant**: its dome is 118 high, the most the shared frame allows (the soil is at y 148 and the frame starts at y 30), and 50 half-wide. It is a slim trunk with a crown of up to 7 large, glossy, violin-shaped leaves.
+
+| Setting | Value |
+| --- | --- |
+| Leaf shape | Broad at the tip, a waist at 38% of the length, wider again into two lobes near the stalk (one width profile in `fiddleLeafFigLeaf.ts`, shared by the drawing and the outline) |
+| Leaf length | 30% to 46% of the dome height |
+| Leaves | 2 to 7 (2, 3, 5, 7 over four stages) |
+| Roots | 40% to 60% across the pot, so every leaf comes from near one trunk |
+| Stems | 28% to 60% of the dome height, so the lowest leaves are well above the soil and the trunk is bare at the bottom |
+| Fan | Off |
+| Extra parts | The trunk and a branch under each leaf |
+
+**The trunk.** The engine hangs every leaf from a stem that starts at the soil, which would draw a bundle of stalks. The fiddle-leaf fig turns the engine's stems off (the opt-in `planting` option with nothing buried, as the snake plant does) and draws its own trunk and branches through `renderBehindLeaves` (`fiddleLeafFigTrunk.ts`). The engine's stems only decide how high each leaf sits. The trunk is worked out from the stage being drawn: it rises from the soil to a little under the highest leaf base, leaning toward the middle of the leaf bases, and each leaf gets a short branch from the trunk to its base. Because it reads the stage, it grows with each stage, follows a wilted plant's leaves, and needs no change to the engine.
+
+**Look.** Each leaf is a deep green with a lighter right half, a pale midrib, five pairs of pale side veins and one soft white highlight. The trunk is woody brown with a lighter right half.
 
 ## 7. Tests
 
