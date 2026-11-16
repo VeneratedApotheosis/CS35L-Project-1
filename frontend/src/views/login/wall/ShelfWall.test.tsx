@@ -46,6 +46,24 @@ describe("replanting a plant by touching it with the pointer", () => {
     expect(plant.dataset.changing).toBe("false")
   })
 
+  it("leaves the pot bare between the old plant and the new one, so the swap is never seen", () => {
+    const { container } = render(<ShelfWall />)
+    const plant = plants(container)[0]
+    advance(5000)
+    const bare = () => plant.querySelector('[aria-label="Empty pot"]') !== null
+    const before = plant.dataset.seed
+
+    fireEvent.pointerEnter(plant)
+    expect(bare()).toBe(false)
+    advance(SHRINK_MS + 40 + 20)
+    // The old plant is gone and the swap has happened, but the pot shows only soil.
+    expect(bare()).toBe(true)
+    expect(plant.dataset.seed).not.toBe(before)
+
+    advance(1000)
+    expect(bare()).toBe(false)
+  })
+
   it("works in the middle of the grow animation: the plant un-grows at once and is replaced by another new one", () => {
     const { container } = render(<ShelfWall />)
     const plant = plants(container)[0]

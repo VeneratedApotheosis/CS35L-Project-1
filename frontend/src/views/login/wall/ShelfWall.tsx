@@ -10,6 +10,7 @@ import { Pothos } from "@/pottedPlant/plants/pothos"
 import { Rose } from "@/pottedPlant/plants/rose"
 import { SnakePlant } from "@/pottedPlant/plants/snakePlant"
 import { ShrinkProvider } from "@/pottedPlant/plants/staged/ShrinkContext"
+import { PottedPlant } from "@/pottedPlant/PottedPlant"
 import { POT_SHAPE, potLookFromSeed, type PotLook } from "@/pottedPlant/pots"
 import { BOARD, TALL_LAYOUT, WALL_PLANTS, WIDE_LAYOUT, type Shelf, type Slot, type WallLayout, type WallPlant } from "./layouts"
 
@@ -82,8 +83,10 @@ export function plantFrame(x: number, y: number, size: number) {
 export const SHRINK_MS = 100
 /** How long after that the plant is swapped, so the un-grow has surely finished, in milliseconds. */
 const SWAP_MARGIN_MS = 40
-/** How long the new plant is left as a sprout before it grows, in milliseconds. */
-const BABY_HOLD_MS = 150
+/** How long the pot is left bare, with just soil in it, between the old plant and the new one, in milliseconds. */
+const BARE_MS = 120
+/** How long the new plant is drawn at its first stage before it starts to grow: just long enough to be drawn once, in milliseconds. */
+const SPROUT_FRAME_MS = 40
 /** How long the grow animation (the stage-up leaf movement and its bursts) takes before the plant can be replanted again. */
 const REGROW_MS = 1700
 
@@ -171,14 +174,15 @@ const SPECIES = WALL_PLANTS.map((plant) => plant.type)
  * each plant a little after the one before.
  *
  * Touch it with the pointer and it un-grows: the stage-up animation plays
- * backwards, very fast (SHRINK_MS), down to a sprout. At that smallest size it is
- * swapped for a new random plant (a random species and seed, in the same pot), so
- * it looks as if the plant un-grew itself into a new one. A moment later the new
- * plant grows straight from stage 1 to the last stage in one stage-up animation.
+ * backwards, very fast (SHRINK_MS), down to a sprout, which then goes away and
+ * leaves the pot bare (BARE_MS). The plant is swapped for a new random plant (a
+ * random species and seed, in the same pot) while the pot is bare, so there is
+ * never a visible jump from one plant to another. Then the new plant starts as a
+ * sprout and grows straight from stage 1 to the last stage in one stage-up animation.
  *
  * The pointer always works, even in the middle of an animation: a plant that is
- * growing un-grows from the way it looks at that moment, and one that is still a
- * sprout is swapped at once. Only a plant already un-growing is left to finish.
+ * growing un-grows from the way it looks at that moment, and one that is a sprout
+ * or a bare pot gets its new plant at once. Only a plant already un-growing is left to finish.
  * On a touch screen, a touch does the same. People who prefer reduced motion get
  * the new plant fully grown, with no animation.
  */
@@ -187,6 +191,8 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
   const [type, setType] = useState(plant.type)
   const [seed, setSeed] = useState(plant.seed)
   const [changing, setChanging] = useState(false)
+  // The pot has no plant in it for a moment, between the old plant and the new one.
+  const [bare, setBare] = useState(false)
   const [hit, setHit] = useState<HitBox>(HIT_DEFAULT)
   const frameRef = useRef<SVGSVGElement>(null)
   // What the plant is doing, and the stage it was last told to be, for the pointer handler to read.
@@ -236,6 +242,7 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
     clear()
     if (prefersReducedMotion()) {
       newPlant()
+      setBare(false)
       show(LAST_STAGE)
       phase.current = "idle"
       setChanging(false)
@@ -248,25 +255,28 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
     }
     // The new plant is the same in every case: a sprout for a moment, then one move from the first stage to the last.
     const growNew = (wait: number) => {
-      later(() => show(LAST_STAGE), wait + BABY_HOLD_MS)
-      later(done, wait + BABY_HOLD_MS + REGROW_MS)
+      later(() => show(LAST_STAGE), wait + SPROUT_FRAME_MS)
+      later(done, wait + SPROUT_FRAME_MS + REGROW_MS)
     }
     if (shown.current === 1) {
-      // Already as small as it gets (a sprout waiting to grow): swap it at once.
+      // Already as small as it gets (a sprout or a bare pot): the new plant starts at once.
       phase.current = "growing"
       newPlant()
+      setBare(false)
       growNew(0)
       return
     }
-    // Un-grow, swap the plant while it is smallest, then grow the new one.
+    // Un-grow, take the plant away, swap it while the pot is bare, then bring in the new plant and grow it.
     phase.current = "shrinking"
     show(1)
     const swapAt = SHRINK_MS + SWAP_MARGIN_MS
     later(() => {
       phase.current = "growing"
+      setBare(true)
       newPlant()
     }, swapAt)
-    growNew(swapAt)
+    later(() => setBare(false), swapAt + BARE_MS)
+    growNew(swapAt + BARE_MS)
   }
 
   const base = y + POT_SINK
@@ -286,9 +296,15 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
           fill="transparent"
         />
         <svg ref={frameRef} x={frame.x} y={frame.y} width={frame.width} height={frame.height} overflow="visible" pointerEvents="none">
-          <ShrinkProvider seconds={SHRINK_MS / 1000}>
-            <Species type={type} seed={seed} stage={stage} pot={wallPot(plant.seed, slot.size)} />
-          </ShrinkProvider>
+          {bare ? (
+            <PottedPlant look={wallPot(plant.seed, slot.size)} title="Empty pot">
+              {null}
+            </PottedPlant>
+          ) : (
+            <ShrinkProvider seconds={SHRINK_MS / 1000}>
+              <Species type={type} seed={seed} stage={stage} pot={wallPot(plant.seed, slot.size)} />
+            </ShrinkProvider>
+          )}
         </svg>
       </g>
     </g>
