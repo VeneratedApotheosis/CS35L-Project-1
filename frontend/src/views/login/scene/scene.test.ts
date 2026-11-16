@@ -3,7 +3,7 @@ import { VIEWBOX } from "@/pottedPlant/genome"
 import { PLANT_TYPES } from "@/pottedPlant/plants/plantTypes"
 import { CANVAS, VANISH, convexHull, exitPoint, project } from "./geometry"
 import { PLANT_VIEW, insidePolygon, plantBounds, plantFrame, shelfFaces, sunPatches } from "./placement"
-import { ROOM, SAFE_ZONE, SHELVES } from "./room"
+import { ROOM, SAFE_ZONE, SHELVES, SUN } from "./room"
 import { SCENE_PLANTS } from "./plants"
 import { SCENE_POT_COLORS, resolvePot } from "./scenePots"
 import type { ScenePlant } from "./types"
@@ -73,6 +73,21 @@ describe("sunlight", () => {
       // The glass has real width and height. Sunlight from a point would have none.
       expect(Math.max(...xs) - Math.min(...xs) + (Math.max(...ys) - Math.min(...ys))).toBeGreaterThan(40)
       expect(new Set(patch.glass.map((p) => p.x + "," + p.y)).size).toBe(4)
+    }
+  })
+
+  it("lands every patch on the floor of the room, between its side walls", () => {
+    for (const row of SUN.rows) {
+      expect(row.from).toBeGreaterThanOrEqual(0)
+      expect(row.to).toBeLessThanOrEqual(ROOM.right - ROOM.left)
+    }
+    for (const patch of sunPatches()) {
+      for (const point of patch.outer) {
+        // Below the left wall's base line and the right wall's, so on the floor and not behind the glass.
+        const leftBase = ROOM.floorY + Math.max(0, ROOM.left - point.x) * 0.5909
+        const rightBase = ROOM.floorY + Math.max(0, point.x - ROOM.right) * 0.5909
+        expect(point.y).toBeGreaterThanOrEqual(Math.max(leftBase, rightBase) - 1)
+      }
     }
   })
 
@@ -170,6 +185,20 @@ describe("validateScene", () => {
     ]) {
       expect(messages).toContain(expected)
     }
+  })
+
+  it("has a varied real scene: every plant type, all stages, some wilt, many sizes and pot colors", () => {
+    expect(SCENE_PLANTS.length).toBeGreaterThanOrEqual(40)
+    expect(new Set(SCENE_PLANTS.map((p) => p.type)).size).toBe(PLANT_TYPES.length)
+    expect(new Set(SCENE_PLANTS.map((p) => p.stage))).toEqual(new Set([1, 2, 3, 4]))
+    expect(SCENE_PLANTS.filter((p) => p.wilt > 0).length).toBeGreaterThanOrEqual(2)
+    expect(Math.min(...SCENE_PLANTS.map((p) => p.size))).toBeLessThan(90)
+    expect(Math.max(...SCENE_PLANTS.map((p) => p.size))).toBeGreaterThan(350)
+    expect(new Set(SCENE_PLANTS.map((p) => p.pot?.color)).size).toBeGreaterThanOrEqual(7)
+  })
+
+  it("uses a different seed for every plant, so no two look the same", () => {
+    expect(new Set(SCENE_PLANTS.map((p) => p.seed)).size).toBe(SCENE_PLANTS.length)
   })
 
   it("keeps plants out of the text area", () => {

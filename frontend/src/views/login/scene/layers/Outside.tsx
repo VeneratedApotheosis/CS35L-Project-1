@@ -62,7 +62,7 @@ export function Outside() {
           <stop offset="0.55" stopColor={COLORS.sunGlow} stopOpacity="0.4" />
           <stop offset="1" stopColor={COLORS.sunGlow} stopOpacity="0" />
         </radialGradient>
-        <filter id="login-soft" x="-10%" y="-10%" width="120%" height="120%">
+        <filter id="login-soft" filterUnits="userSpaceOnUse" x="-100" y="-100" width={CANVAS.width + 200} height={CANVAS.height + 200}>
           <feGaussianBlur stdDeviation="3.5" />
         </filter>
       </defs>

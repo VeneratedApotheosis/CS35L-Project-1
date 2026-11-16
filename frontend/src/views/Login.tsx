@@ -37,14 +37,23 @@ export default function Login() {
     }
   }
 
-  if (authLoading || user) return null
+  // The picture shows at once, so the page is never blank. The words wait for the sign-in state.
+  const ready = !authLoading && !user
 
   return (
     <main className="login" data-theme="light">
       {/* Decorative: the words on the page say everything the picture does. */}
       <LoginScene />
       <div className="login__haze" aria-hidden="true" />
+      {ready && <LoginWords pending={pending} error={error} onSignIn={() => void handleSignIn()} />}
+    </main>
+  )
+}
 
+/** The logo, the title and description, and the sign-in button, straight on the picture. */
+function LoginWords({ pending, error, onSignIn }: { pending: boolean; error: string; onSignIn: () => void }) {
+  return (
+    <>
       <p className="login__brand text-h3">
         <Icon icon={Sprout} size="lg" className="login__logo" />
         Habit Garden
@@ -59,14 +68,13 @@ export default function Login() {
         </div>
 
         <div className="stack-md">
-          <Button variant="secondary" size="lg" onClick={() => void handleSignIn()}
-            disabled={pending} aria-busy={pending}>
+          <Button variant="secondary" size="lg" onClick={onSignIn} disabled={pending} aria-busy={pending}>
             <GoogleIcon />
             {pending ? "Connecting to Google…" : "Sign in with Google"}
           </Button>
           {error && <p role="alert" className="login__error text-body-sm">{error}</p>}
         </div>
       </div>
-    </main>
+    </>
   )
 }
