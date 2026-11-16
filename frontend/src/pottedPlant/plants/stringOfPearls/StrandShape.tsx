@@ -6,13 +6,13 @@ import { STRAND_STEPS_PER_SEGMENT, strandBeads, strandColors, strandCurve, type 
  */
 export const STRAND_STYLE = {
   /** The thread the beads hang on. */
-  thread: { width: 1.4 },
+  thread: { width: 0.6 },
   /** Points in the thread's polyline. */
   threadSteps: 24,
   /** The lighter patch on each bead: offset from its center and size, as shares of the radius. */
   light: { dx: -0.28, dy: -0.3, size: 0.55, opacity: 0.7 },
-  /** The tiny pale window line along each bead: length and thickness as shares of the radius, and how far it sits off center. */
-  window: { length: 0.9, thickness: 0.16, offset: 0.3, opacity: 0.85 },
+  /** The tiny pale window line along each bead: length and thickness as shares of the radius, and how far it sits off center. It is left out of beads smaller than minRadius, where it would be too thin to see. */
+  window: { length: 0.9, thickness: 0.16, offset: 0.3, opacity: 0.85, minRadius: 2 },
   /** A bead is never drawn smaller than this radius, so the first stage still shows beads. */
   minRadius: 0.5,
 }
@@ -43,16 +43,18 @@ export function StrandShape({ spec, length, angle }: { spec: StrandSpec; length:
           <g key={i}>
             <circle cx={fixed(x)} cy={fixed(y)} r={fixed(r)} fill={c.base} />
             <circle cx={fixed(x + S.light.dx * r)} cy={fixed(y + S.light.dy * r)} r={fixed(S.light.size * r)} fill={c.light} opacity={S.light.opacity} />
-            <rect
-              x={fixed(-S.window.length * r / 2)}
-              y={fixed(-S.window.thickness * r / 2)}
-              width={fixed(S.window.length * r)}
-              height={fixed(S.window.thickness * r)}
-              rx={fixed(S.window.thickness * r / 2)}
-              fill={c.window}
-              opacity={S.window.opacity}
-              transform={"translate(" + fixed(x) + " " + fixed(y) + ") rotate(" + fixed(turn - 90) + ") translate(0 " + fixed(S.window.offset * r) + ")"}
-            />
+            {r >= S.window.minRadius && (
+              <rect
+                x={fixed(-S.window.length * r / 2)}
+                y={fixed(-S.window.thickness * r / 2)}
+                width={fixed(S.window.length * r)}
+                height={fixed(S.window.thickness * r)}
+                rx={fixed(S.window.thickness * r / 2)}
+                fill={c.window}
+                opacity={S.window.opacity}
+                transform={"translate(" + fixed(x) + " " + fixed(y) + ") rotate(" + fixed(turn - 90) + ") translate(0 " + fixed(S.window.offset * r) + ")"}
+              />
+            )}
           </g>
         )
       })}

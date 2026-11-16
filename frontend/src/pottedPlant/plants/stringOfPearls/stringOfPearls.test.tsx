@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { domeAtScale, domeValue } from "../staged/dome"
 import { createStagedPlant } from "../staged/generate"
 import { wiltPlant } from "../staged/wilt"
-import { STRAND_TAPER, strandBeads, strandCurve, strandPolygon } from "./strandLeaf"
+import { STRAND_RANGES, STRAND_TAPER, strandBeads, strandCurve, strandPolygon } from "./strandLeaf"
 import { StringOfPearls } from "./StringOfPearls"
 import { STRING_OF_PEARLS_CONFIG } from "./stringOfPearlsConfig"
 import {
@@ -125,6 +125,27 @@ describe("generated string of pearls", { timeout: TIMEOUT }, () => {
     }
   })
 
+  it("hangs most of every strand's beads straight down", () => {
+    for (const seed of SEEDS.slice(0, 30)) {
+      const last = createStringOfPearls(seed).stages.at(-1)!
+      for (const strand of last.leaves) {
+        const beads = strandBeads(strand.spec, strand.angle)
+        const hanging = beads.filter((b) => Math.abs((b.heading * 180) / Math.PI + strand.angle) > 150)
+        expect(hanging.length / beads.length, "seed " + seed).toBeGreaterThan(0.6)
+      }
+    }
+  })
+
+  it("gives every strand a bead count from the configured range", () => {
+    const [lo, hi] = STRAND_RANGES.beads
+    for (const seed of SEEDS) {
+      for (const strand of createStringOfPearls(seed).stages.at(-1)!.leaves) {
+        expect(strand.spec.beads).toBeGreaterThanOrEqual(lo)
+        expect(strand.spec.beads).toBeLessThanOrEqual(hi)
+      }
+    }
+  })
+
   it("roots every stem within the configured share of the pot", () => {
     const width = CONFIG.pot.rimRight - CONFIG.pot.rimLeft
     const [lo, hi] = CONFIG.roots.range
@@ -169,6 +190,17 @@ describe("the strand shape", { timeout: TIMEOUT }, () => {
       const end = curve[curve.length - 1].heading
       const canvas = ((end * 180) / Math.PI + angle + 360) % 360
       expect(Math.abs(canvas - 180)).toBeLessThanOrEqual(Math.abs(spec.hang - 180) + spec.sway + 1e-6)
+    }
+  })
+
+  it("turns to hang down early: by a third of its length it points almost straight down", () => {
+    for (const seed of SEEDS) {
+      for (const strand of createStringOfPearls(seed).stages.at(-1)!.leaves) {
+        const curve = strandCurve(strand.spec, strand.angle, 60)
+        const heading = curve[Math.round(curve.length / 3)].heading
+        const canvas = Math.abs((heading * 180) / Math.PI + strand.angle)
+        expect(canvas, "seed " + seed).toBeGreaterThan(150)
+      }
     }
   })
 
