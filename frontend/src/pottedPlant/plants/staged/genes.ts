@@ -54,13 +54,18 @@ export function makeGene<Spec>(
   // changes the others. Draw order below is part of the plant's identity.
   const lr = mulberry32(subSeed(seed, index, config.rngStreams.leaf))
   const spec = leaf.randomSpec(lr)
-  const lengthFactor = range(lr, config.leaves.lengthFactor[0], config.leaves.lengthFactor[1])
+  const drawnFactor = range(lr, config.leaves.lengthFactor[0], config.leaves.lengthFactor[1])
 
   // Roots and layers each follow their own golden-ratio sequence, so any run
   // of leaves is spread across the pot and across the layers at once.
   const rootShare = lerp(roots.range[0], roots.range[1], sequence(index, roots.spreadStep, phases.roots))
   const band = layers.bands[index % layers.bands.length]
   const layer = band.start + band.width * sequence(index, layers.spreadStep, phases.layers)
+
+  // A layered plant can make its low leaves smaller (the draw above is kept so no other trait moves).
+  const lengthFactor = config.layerScale
+    ? drawnFactor * lerp(config.layerScale.low, config.layerScale.high, Math.min(Math.max(layer, 0), 1))
+    : drawnFactor
 
   // Stems left of the middle lean left, stems right of it lean right.
   const rootHalfWidth = (roots.range[1] - roots.range[0]) / 2
@@ -70,6 +75,13 @@ export function makeGene<Spec>(
   const side = heading >= 0 ? 1 : -1
   let curl = side * range(lr, config.leaves.curl[0], config.leaves.curl[1])
   const jitter = range(lr, config.leaves.jitter[0], config.leaves.jitter[1])
+
+  // A layered plant points each leaf by the layer it hangs in, not by a random curl (the draws above are kept so its other leaf traits do not move).
+  if (config.layerAngle) {
+    const { outward, upright, curve } = config.layerAngle
+    const spread = (1 - Math.min(Math.max(layer, 0), 1)) ** curve
+    curl = side * lerp(upright, outward, spread) - heading
+  }
 
   // Lower layers are drawn on top; a little noise stops equal layers tying.
   const drawOrder = 1 - layer + lr() * config.leaves.drawOrderNoise
@@ -87,6 +99,8 @@ export function makeGene<Spec>(
     }
   }
 
+  const angle = heading + curl + jitter
+
   return {
     index,
     spec,
@@ -98,7 +112,7 @@ export function makeGene<Spec>(
     jitter,
     drawOrder,
     fan,
-    measureOutline: leaf.outline(spec, 1, search.measureSegments, fan),
-    fitOutline: leaf.outline(spec, 1, search.fitSegments, fan),
+    measureOutline: leaf.outline(spec, 1, search.measureSegments, fan, angle),
+    fitOutline: leaf.outline(spec, 1, search.fitSegments, fan, angle),
   }
 }

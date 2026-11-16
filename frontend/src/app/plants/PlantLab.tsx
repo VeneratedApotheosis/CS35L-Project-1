@@ -10,10 +10,12 @@ import { PeaceLily } from "@/pottedPlant/plants/peaceLily"
 import { Lotus } from "@/pottedPlant/plants/lotus"
 import { SnakePlant } from "@/pottedPlant/plants/snakePlant"
 import { KimberlyQueen } from "@/pottedPlant/plants/kimberlyQueen"
+import { SpiderPlant } from "@/pottedPlant/plants/spiderPlant"
 import { Lily } from "@/pottedPlant/plants/lily"
 import { Rose } from "@/pottedPlant/plants/rose"
 import { Monstera } from "@/pottedPlant/plants/monstera"
 import { Philodendron } from "@/pottedPlant/plants/philodendron"
+import { Calathea } from "@/pottedPlant/plants/calathea"
 import { Pothos } from "@/pottedPlant/plants/pothos/Pothos"
 import { randomLeafSpec } from "@/pottedPlant/plants/pothos/leaf"
 import { STAGES } from "@/pottedPlant/genome"
@@ -69,6 +71,13 @@ const PLANTS = [
       "An upright crown of tall, gently arching sword fronds on the same stage engine as the snake plant. Each frond is a slim lance of many small rounded pinnae alternating up a central rachis, fresh medium-green and lighter on one side. No flowers.",
     stageNames: ["Sprout", "Young", "Fuller", "Full crown"],
   },
+  {
+    id: "spiderPlant",
+    label: "Spider plant",
+    description:
+      "A full fountain of many long, thin, grass-like blades on the same stage engine as the snake plant. Every blade arches outward and droops at the tip, mid to bright green with a cream stripe down the middle. No flowers.",
+    stageNames: ["Sprout", "Young", "Fuller", "Full fountain"],
+  },
   // {
   //   id: "dracaena",
   //   label: "Dracaena",
@@ -103,6 +112,13 @@ const PLANTS = [
     description:
       "Broad, rounded paddle leaves in an upright crown on the same stage engine as the pothos, on thick reddish-maroon petioles. The newest, most upright leaves are deep burgundy-red; the older outer leaves are glossy green and arch outward. No flowers.",
     stageNames: ["Sprout", "Young", "Fuller", "Full crown"],
+  },
+  {
+    id: "calathea",
+    label: "Calathea",
+    description:
+      "Broad oval leaves on stems, on the same stage engine as the pothos. Each is dark green with lighter herringbone stripes running from a pale midrib out to the edge, clipped to the leaf, and a muted purple rim. A fairly full, low clump. No flowers.",
+    stageNames: ["Sprout", "Young", "Fuller", "Full clump"],
   },
 ] as const
 type PlantId = (typeof PLANTS)[number]["id"]
@@ -176,10 +192,12 @@ export default function PlantLab() {
     lotus: FIRST_SEED,
     snakePlant: FIRST_SEED,
     kimberlyQueen: FIRST_SEED,
+    spiderPlant: FIRST_SEED,
     lily: FIRST_SEED,
     rose: FIRST_SEED,
     monstera: FIRST_SEED,
     philodendron: FIRST_SEED,
+    calathea: FIRST_SEED,
   })
   const [chosen, setChosen] = useState<PlantId>("pothos")
   const [scale, setScale] = useState(1)
@@ -221,11 +239,14 @@ export default function PlantLab() {
     if (chosen === "snakePlant") return <SnakePlant seed={seeds.snakePlant} stage={stage} scale={scale} pot={potFor(seeds.snakePlant)} />
     if (chosen === "kimberlyQueen")
       return <KimberlyQueen seed={seeds.kimberlyQueen} stage={stage} scale={scale} pot={potFor(seeds.kimberlyQueen)} />
+    if (chosen === "spiderPlant")
+      return <SpiderPlant seed={seeds.spiderPlant} stage={stage} scale={scale} pot={potFor(seeds.spiderPlant)} />
     if (chosen === "lily") return <Lily seed={seeds.lily} stage={stage} scale={scale} pot={potFor(seeds.lily)} />
     if (chosen === "rose") return <Rose seed={seeds.rose} stage={stage} scale={scale} pot={potFor(seeds.rose)} />
     if (chosen === "monstera") return <Monstera seed={seeds.monstera} stage={stage} scale={scale} pot={potFor(seeds.monstera)} />
     if (chosen === "philodendron")
       return <Philodendron seed={seeds.philodendron} stage={stage} scale={scale} pot={potFor(seeds.philodendron)} />
+    if (chosen === "calathea") return <Calathea seed={seeds.calathea} stage={stage} scale={scale} pot={potFor(seeds.calathea)} />
     return <Pilea seed={seeds.pilea} stage={stage} scale={scale} pot={potFor(seeds.pilea)} />
   }
 

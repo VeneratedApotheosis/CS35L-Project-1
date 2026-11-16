@@ -15,11 +15,13 @@ The folder has two halves that are drawn and styled separately: `plants/` (every
 | `plants/peaceLily/` | The peace lily: wide pointed leaves, fanned outer leaves, and flowers that bud and bloom |
 | `plants/snakePlant/` | The snake plant: tall, upright sword blades with pale-yellow margins and cross-banding (no flowers) |
 | `plants/kimberlyQueen/` | The Kimberly Queen fern: an upright crown of tall, gently arching sword fronds, each a slim lance of small rounded pinnae alternating up a central rachis (no flowers) |
+| `plants/spiderPlant/` | The spider plant: a full mound of up to 22 long, thin, grass-like blades on visible stems of different lengths rooted across the pot, arching in every direction (some back across the middle), with short outer blades drooping over the pot rim (the engine's opt-in `hang`), green with a cream stripe down the middle (no flowers) |
 | `plants/lily/` | The lily: lance leaves that fan, with six-petalled stargazer flowers that bud and bloom |
 | `plants/rose/` | The rose: rounded veined leaves with layered red blooms (rings of petals) that bud and bloom |
 | `plants/monstera/` | The Monstera deliciosa: a few large, broad, glossy heart leaves with fenestrations (holes near the midrib and splits cut in from the edge; no flowers) |
 | `plants/philodendron/` | The Philodendron 'Sun Red' / Rojo Congo: broad, rounded paddle leaves in an upright crown on thick reddish-maroon petioles; the newest, most upright leaves are deep burgundy-red, the older outer ones glossy green and arching (no flowers) |
 | `plants/pilea/` | The pilea (Pilea peperomioides): round, flat coin leaves on thin stalks that radiate from the base, with baby "pups" beside the main plant (no flowers) |
+| `plants/calathea/` | The calathea (a prayer plant): broad oval leaves on stems, dark green with lighter herringbone stripes from a pale midrib and a muted purple rim, in three layers (tall upright leaves, a ring angled out and a low skirt of small leaves that stay at or above level, up to 11 leaves, using the engine's `layerAngle` and `layerScale`) (no flowers) |
 | `plants/lotus/` | The lotus: a water plant with lily pads floating on the pot's water, and round leaves and pink flowers held above on thin stems |
 | `plants/plantTypes.tsx` | The list of plant types the app offers, with each one's component |
 | `pots/` | The pot, separate from the plants: palettes, shape, the pot's look (`potLookFromSeed`) and the finish registry |
@@ -88,7 +90,7 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
 
 ### The `/plants` page
 
-- One four-stages section with a plant picker (pothos, peace lily, pilea, snake plant, Kimberly Queen, lily, rose, monstera, philodendron and lotus) and a Grow another button that regrows the chosen plant. Each plant keeps its own seed, and arrows and a number box step through seeds.
+- One four-stages section with a plant picker (pothos, peace lily, pilea, snake plant, Kimberly Queen, spider plant, lily, rose, monstera, philodendron, calathea and lotus) and a Grow another button that regrows the chosen plant. Each plant keeps its own seed, and arrows and a number box step through seeds.
 - A pot finish picker that overrides the finish of every pot on the page, and a row of consecutive seeds' pots to compare.
 - Galleries of eight seeds for the snake plant, lily, rose and pilea at the last stage.
 - Galleries of eight seeds for the pothos and the peace lily.
@@ -102,11 +104,13 @@ A config is checked by `validateConfig` when a plant is built, and it lists ever
 | `peaceLily/peaceLily.test.tsx` | Flower stages, flower height and spread, the leaf cap, the outer-leaf fan, and scale |
 | `snakePlant/snakePlant.test.tsx` | The stage rules for the snake plant: stage counts, containment, roots, buried bases, scaling, and scale-invariance |
 | `kimberlyQueen/kimberlyQueen.test.tsx` | The stage rules for the Kimberly Queen fern: stage counts, containment, coverage, roots, frond identity, scaling, and scale-invariance |
+| `spiderPlant/spiderPlant.test.tsx` | The stage rules for the spider plant: stage counts, the 22-blade cap, containment, coverage, roots, blade identity, the arch of every blade, scaling, and scale-invariance |
 | `lily/lily.test.tsx` | Flower stages, the leaf cap and fan, and the stage rules for the lily |
 | `rose/rose.test.tsx` | Flower stages, the leaf cap, and the stage rules for the rose |
 | `monstera/monstera.test.tsx` | The stage rules for the monstera: stage counts, containment, coverage, roots, leaf identity, scaling, and scale-invariance |
 | `pilea/pilea.test.tsx` | The stage rules for the pilea: stage counts, containment, coverage, roots, leaf identity, scaling, scale-invariance, and that pups appear from stage 2 |
 | `philodendron/philodendron.test.tsx` | The stage rules for the philodendron: stage counts, containment, coverage, roots, leaf identity, scaling, scale-invariance, red stems, and that the newest upright leaves are burgundy |
+| `calathea/calathea.test.tsx` | The stage rules for the calathea (stage counts, containment, coverage, roots, leaf identity, scaling, scale-invariance), and that every stripe stays inside the leaf outline |
 | `pots/pot.test.tsx` | Pot geometry, `potLookFromSeed`, palettes, bands (including that no dots are drawn), and the band odds |
 | `pots/finishes/finishes.test.tsx` | The finish registry, its weights, the weighted pick and the solid finish |
 | `pots/finishes/addingAFinish.test.tsx` | A finish that exists only in the test is drawn inside the pot's clip |

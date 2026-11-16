@@ -9,7 +9,7 @@ import type { PlacedLeaf, StagedPlantSpecies } from "./types"
  *
  * The stem starts at the leaf's spot across the pot and runs up along its
  * heading for a length set by the leaf's layer. If the leaf would leave the
- * dome or dip below the soil line, the stem is shortened a little and tried
+ * dome or dip below the soil line (past the hang depth, for a plant that hangs), the stem is shortened a little and tried
  * again. If it still does not fit once the stem is as short as it may go, the
  * leaf itself is shortened and the whole fit starts over.
  *
@@ -65,7 +65,7 @@ export function placeLeaf<Spec>(
         const out = domeValue(dome, x, y)
         if (out > farthestOut) farthestOut = out
       }
-      if (lowestPoint <= anchor.y && farthestOut <= 1) {
+      if (lowestPoint <= anchor.y + (dome.depth ?? 0) && farthestOut <= 1) {
         return describePlacement(gene, species, rootX, rootY, stem, heading, length, angle)
       }
       stem *= stems.shrinkStep
@@ -93,8 +93,20 @@ function describePlacement<Spec>(
 
   // The stem rises along its heading, then bends toward the leaf. The bend
   // point is kept above the soil line.
-  const bendX = rootX + Math.sin(heading) * stem * config.stems.bendPoint
-  const bendY = Math.min(config.dome.anchor.y, rootY - Math.cos(heading) * stem * config.stems.bendPoint)
+  let bendX = rootX + Math.sin(heading) * stem * config.stems.bendPoint
+  let bendY = Math.min(config.dome.anchor.y, rootY - Math.cos(heading) * stem * config.stems.bendPoint)
+
+  // A stem that leans toward its leaf arrives pointing between its heading and the leaf's direction,
+  // so the leaf does not meet it at a sharp corner. The bend point sits back along that arrival direction.
+  const lean = config.stems.leafLean ?? 0
+  if (lean > 0 && stem > 0) {
+    const arriveX = (1 - lean) * Math.sin(heading) + lean * Math.sin(a)
+    const arriveY = -((1 - lean) * Math.cos(heading) + lean * Math.cos(a))
+    const norm = Math.hypot(arriveX, arriveY) || 1
+    const back = stem * (1 - config.stems.bendPoint)
+    bendX = baseX - (arriveX / norm) * back
+    bendY = Math.min(config.dome.anchor.y, baseY - (arriveY / norm) * back)
+  }
 
   return {
     index: gene.index,

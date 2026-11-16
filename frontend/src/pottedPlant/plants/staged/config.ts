@@ -33,6 +33,11 @@ export function validateConfig(config: StagedPlantConfig): void {
   )
   check(dome.anchor.y <= limits.floor, "the dome's anchor must sit on or above limits.floor")
 
+  if (config.hang) {
+    check(config.hang.depth > 0, "hang.depth must be above 0")
+    check(dome.anchor.y + config.hang.depth <= limits.floor, "limits.floor must be at least hang.depth below the dome's anchor")
+  }
+
   check(pot.rimLeft < pot.rimRight, "pot.rimLeft must be left of pot.rimRight")
 
   check(ordered(roots.range) && roots.range[0] < roots.range[1], "roots.range must run from low to high")
@@ -56,6 +61,17 @@ export function validateConfig(config: StagedPlantConfig): void {
   check(ordered(leaves.curl) && ordered(leaves.jitter), "leaves.curl and leaves.jitter must run from low to high")
   check(leaves.shrinkStep > 0 && leaves.shrinkStep < 1, "leaves.shrinkStep must be in (0, 1)")
 
+  if (config.stems.leafLean !== undefined) {
+    check(config.stems.leafLean >= 0 && config.stems.leafLean <= 1, "stems.leafLean must be between 0 and 1")
+  }
+  if (config.layerScale) {
+    check(config.layerScale.low > 0 && config.layerScale.high > 0, "layerScale.low and layerScale.high must be above 0")
+  }
+  if (config.layerAngle) {
+    const { outward, upright, curve } = config.layerAngle
+    check(outward >= 0 && outward <= 180 && upright >= 0 && upright <= 180, "layerAngle.outward and layerAngle.upright must be between 0 and 180")
+    check(curve > 0, "layerAngle.curve must be above 0")
+  }
   if (config.fan) {
     check(inUnit(config.fan.outerThreshold), "fan.outerThreshold must be between 0 and 1")
     check(ordered(config.fan.strength), "fan.strength must run from low to high")
