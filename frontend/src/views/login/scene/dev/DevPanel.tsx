@@ -38,7 +38,12 @@ function NumberField({ label, value, step = 1, min, max, onChange }: {
   )
 }
 
+/** Which side of the screen the panel sits on. */
+export type PanelSide = "left" | "right"
+
 export interface DevPanelProps {
+  side: PanelSide
+  onSide: (side: PanelSide) => void
   plants: readonly ScenePlant[]
   selected: ScenePlant | undefined
   show: DevShow
@@ -61,8 +66,13 @@ export interface DevPanelProps {
 export function DevPanel(props: DevPanelProps) {
   const { selected } = props
   return (
-    <aside className="login-dev" aria-label="Login scene dev tools">
-      <h2 className="login-dev__title">Scene dev tools</h2>
+    <aside className={"login-dev login-dev--" + props.side} aria-label="Login scene dev tools">
+      <div className="login-dev__head">
+        <h2 className="login-dev__title">Scene dev tools</h2>
+        <button type="button" onClick={() => props.onSide(props.side === "right" ? "left" : "right")}>
+          Move to {props.side === "right" ? "left" : "right"}
+        </button>
+      </div>
       <p className="login-dev__hint">{props.plants.length} plants. Click a plant to edit it. Arrow keys nudge it (Shift for 10).</p>
 
       <fieldset className="login-dev__group">

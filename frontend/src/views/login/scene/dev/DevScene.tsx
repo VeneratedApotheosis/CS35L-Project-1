@@ -8,7 +8,7 @@ import { SHELVES } from "../room"
 import type { ScenePlant, ScenePotColor } from "../types"
 import { validateScene } from "../validate"
 import { DevLayer, type DevShow } from "./DevLayer"
-import { DevPanel } from "./DevPanel"
+import { DevPanel, type PanelSide } from "./DevPanel"
 import { formatPlant, formatPlants } from "./plantLine"
 
 /** Keys that nudge the selected plant, and which way each one moves it. */
@@ -24,6 +24,17 @@ function typingInField(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName)
 }
 
+const SIDE_KEY = "login-dev-panel-side"
+
+/** The side the panel was last put on. This only runs in the browser, because the dev tools load after the page does. */
+function savedSide(): PanelSide {
+  try {
+    return window.localStorage.getItem(SIDE_KEY) === "left" ? "left" : "right"
+  } catch {
+    return "right"
+  }
+}
+
 /**
  * The login scene with the dev tools on: a copy of the plant list that can be
  * edited, labels and guides drawn on the scene, and a panel to change the plant
@@ -35,6 +46,7 @@ export default function DevScene({ hideText, onHideText }: { hideText: boolean; 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [show, setShow] = useState<DevShow>({ labels: true, bounds: false, shelves: false, grid: false, safeZone: false, sunlight: true })
   const [status, setStatus] = useState("")
+  const [side, setSide] = useState<PanelSide>(savedSide)
 
   const selected = plants.find((plant) => plant.id === selectedId)
   const problems = useMemo(() => validateScene(plants, SHELVES), [plants])
@@ -75,6 +87,15 @@ export default function DevScene({ hideText, onHideText }: { hideText: boolean; 
     }
   }
 
+  function moveTo(next: PanelSide) {
+    setSide(next)
+    try {
+      window.localStorage.setItem(SIDE_KEY, next)
+    } catch {
+      // The panel still moves. It just will not remember the side next time.
+    }
+  }
+
   function setPot(patch: { color?: ScenePotColor | ""; band?: "none" | "stripe" | "" }) {
     if (!selected) return
     const pot = { ...selected.pot }
@@ -97,6 +118,8 @@ export default function DevScene({ hideText, onHideText }: { hideText: boolean; 
         overlay={<DevLayer plants={plants} selectedId={selectedId} onSelect={setSelectedId} show={show} />}
       />
       <DevPanel
+        side={side}
+        onSide={moveTo}
         plants={plants}
         selected={selected}
         show={show}

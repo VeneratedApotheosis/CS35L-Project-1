@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 import Login from "./Login"
 import { SCENE_PLANTS } from "./login/scene/plants"
 
@@ -12,8 +12,11 @@ const auth = vi.hoisted(() => ({
 vi.mock("@/auth/useAuth", () => ({ useAuth: () => auth }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }))
 
-// The first test loads the dev tools, which can take several seconds the first time.
+// The dev tools load lazily and are slow to load the first time, so load them once up front.
 vi.setConfig({ testTimeout: 20000 })
+beforeAll(async () => {
+  await import("./login/scene/dev/DevScene")
+}, 60000)
 
 const writeText = vi.fn().mockResolvedValue(undefined)
 
@@ -23,6 +26,7 @@ beforeEach(() => {
   writeText.mockClear()
   Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true })
   window.history.pushState({}, "", "/login?dev")
+  window.localStorage.clear()
 })
 afterEach(() => {
   cleanup()
@@ -47,6 +51,25 @@ describe("login dev tools", () => {
     render(<Login />)
     expect(screen.queryByRole("complementary", { name: "Login scene dev tools" })).toBeNull()
     expect(document.querySelector("[data-label]")).toBeNull()
+  })
+
+  it("sit on the right at first, and can be moved to the left and back, remembering the side", async () => {
+    const first = render(<Login />)
+    let tools = await panel()
+    expect(tools.className).toContain("login-dev--right")
+    fireEvent.click(within(tools).getByRole("button", { name: "Move to left" }))
+    expect(tools.className).toContain("login-dev--left")
+    expect(tools.className).not.toContain("login-dev--right")
+    expect(window.localStorage.getItem("login-dev-panel-side")).toBe("left")
+
+    // A new visit starts on the side it was left on.
+    first.unmount()
+    render(<Login />)
+    tools = await panel()
+    expect(tools.className).toContain("login-dev--left")
+    fireEvent.click(within(tools).getByRole("button", { name: "Move to right" }))
+    expect(tools.className).toContain("login-dev--right")
+    expect(window.localStorage.getItem("login-dev-panel-side")).toBe("right")
   })
 
   it("label every plant, and the labels can be turned off", async () => {

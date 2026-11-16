@@ -113,11 +113,11 @@
 
 /*
  * The dev tools panel (only shown with /login?dev in development). It is a plain
- * tool window, docked at the right under the logo, so it never covers the words.
+ * tool window, docked to either side. On the right it sits under the logo.
  */
 .login-dev {
   position: fixed;
-  top: 4.5rem;
+  top: 0.75rem;
   right: 0.75rem;
   z-index: 100;
   width: 19.5rem;
@@ -132,6 +132,23 @@
   box-shadow: 0 0.4rem 1.2rem rgba(52, 47, 41, 0.25);
 }
 
+.login-dev--right {
+  top: 4.5rem;
+  right: 0.75rem;
+}
+
+.login-dev--left {
+  top: 0.75rem;
+  left: 0.75rem;
+}
+
+.login-dev__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
 .login-dev *,
 .login-dev *::before,
 .login-dev *::after {
@@ -139,7 +156,7 @@
 }
 
 .login-dev__title {
-  margin: 0 0 var(--space-1);
+  margin: 0;
   font-size: 0.95rem;
 }
 
