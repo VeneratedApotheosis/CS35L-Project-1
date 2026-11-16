@@ -16,13 +16,14 @@ import { SPIDER_PLANT_CONFIG } from "./spiderPlantConfig"
  * The spider plant: a staged plant (see ../staged) with many long, thin blades
  * that arch outward and droop at the tip. Every blade fans, so the bend is
  * passed into the blade's outline (and so into the fitted, measured
- * silhouette). It has no flowers.
+ * silhouette). So is the blade's angle: the outermost blades are short and
+ * droop low, over the pot rim. It has no flowers.
  */
 
 /** Thin blades with the stalk end at the base; the tip arches out and down when fanned. */
 const SPIDER_LEAF: LeafShapeModel<SpiderLeafSpec> = {
   randomSpec: randomSpiderLeaf,
-  outline: (spec, length, perSegment, fan) => spiderLeafOutline(spec, length, perSegment, fan),
+  outline: (spec, length, perSegment, fan, angle) => spiderLeafOutline(spec, length, perSegment, fan, angle),
   middle: 0.45,
 }
 

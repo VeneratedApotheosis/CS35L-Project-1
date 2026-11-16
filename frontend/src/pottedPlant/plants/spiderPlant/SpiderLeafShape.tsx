@@ -27,7 +27,8 @@ const pathOf = (pts: Pt[]) => pts.map(([x, y], i) => (i === 0 ? "M" : "L") + px(
 
 /**
  * One blade in local coordinates: base at (0,0), the blade rising and arching
- * to its tip. fan is how far it arches, -1 to 1 (positive arches right). An
+ * to its tip. fan is how far it arches, -1 to 1 (positive arches right), and
+ * angle is the way it points, the same two the outline is given. An
  * arching blade shows its inner face, so its lighter half is on the side
  * toward the middle of the plant.
  */
@@ -36,20 +37,23 @@ export function SpiderLeafShape({
   length,
   clipId,
   fan = 0,
+  angle,
 }: {
   spec: SpiderLeafSpec
   length: number
   clipId: string
   fan?: number
+  /** The way the blade points, in degrees from straight up. It sets the blade's length and arch, as in the outline. */
+  angle?: number
 }) {
   const S = SPIDER_LEAF_STYLE
   const steps = SPIDER_LEAF_DRAW_STEPS
   const c = spiderLeafColors(spec)
-  const { left, right, mid, half, heading } = spiderBladeSides(spec, length, steps, fan)
+  const { left, right, mid, half, heading, turn } = spiderBladeSides(spec, length, steps, fan, angle)
   const blade = pathOf([...left, ...[...right].reverse()])
 
   // A blade that arches right shows its inner (left) face, so the lighter half is the left one.
-  const lightSide = fan > 0 ? left : right
+  const lightSide = turn > 0 ? left : right
   const lightHalf = pathOf([...mid, ...[...lightSide].reverse()])
 
   // The cream stripe follows the midrib, narrowing with the blade toward its tip.
@@ -66,7 +70,7 @@ export function SpiderLeafShape({
 
   const H = S.highlight
   const hi = Math.round(H.t * steps)
-  const side = fan > 0 ? -1 : 1
+  const side = turn > 0 ? -1 : 1
   const ha = (heading[hi] * Math.PI) / 180
   const hx = mid[hi][0] + Math.cos(ha) * half[hi] * H.offset * side * 2
   const hy = mid[hi][1] + Math.sin(ha) * half[hi] * H.offset * side * 2

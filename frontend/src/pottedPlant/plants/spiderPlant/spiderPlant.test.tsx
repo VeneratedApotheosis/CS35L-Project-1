@@ -2,12 +2,12 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 import { SpiderLeafShape } from "./SpiderLeafShape"
 import { SpiderPlant } from "./SpiderPlant"
-import { SPIDER_LEAF_RANGES, randomSpiderLeaf, spiderBladeSides, spiderLeafOutline } from "./spiderLeaf"
+import { SPIDER_BLADE, SPIDER_LEAF_RANGES, randomSpiderLeaf, spiderBladeSides, spiderLeafOutline } from "./spiderLeaf"
 import { SPIDER_PLANT_CONFIG } from "./spiderPlantConfig"
 import { createSpiderPlant, leafOutline, stageLeafCounts } from "./spiderPlantStages"
 import { mulberry32 } from "../../rng"
 
-// Growing 40 plants of up to 14 blades is slow when the whole suite runs at once.
+// Growing 40 plants of up to 22 blades is slow when the whole suite runs at once.
 vi.setConfig({ testTimeout: 30000 })
 
 const SEEDS = Array.from({ length: 40 }, (_, i) => i + 1)
@@ -19,12 +19,12 @@ const ANCHOR = CONFIG.dome.anchor
 const lastStage = (seed: number) => createSpiderPlant(seed).stages.at(-1)!
 
 describe("stage ladder", () => {
-  it("gives 3, 7, 10, 14 blades for four stages", () => {
-    expect(stageLeafCounts(4)).toEqual([3, 7, 10, 14])
+  it("gives 3, 9, 16, 22 blades for four stages", () => {
+    expect(stageLeafCounts(4)).toEqual([3, 9, 16, 22])
   })
 
-  it("caps the full plant at fourteen blades", () => {
-    expect(CONFIG.stages.maxLeaves).toBe(14)
+  it("caps the full plant at twenty-two blades", () => {
+    expect(CONFIG.stages.maxLeaves).toBe(22)
   })
 
   it("never exceeds the blade cap for any stage count", () => {
@@ -51,7 +51,7 @@ describe("generated spider plant", () => {
       for (const st of createSpiderPlant(seed).stages) {
         expect(st.leaves.length).toBeLessThanOrEqual(CONFIG.stages.maxLeaves)
       }
-      expect(lastStage(seed).leaves.length).toBeGreaterThanOrEqual(12)
+      expect(lastStage(seed).leaves.length).toBeGreaterThanOrEqual(20)
     }
   })
 
@@ -94,7 +94,7 @@ describe("generated spider plant", () => {
     }
   })
 
-  it("keeps every blade above the soil and within the side limits", () => {
+  it("keeps every blade above the hang floor and within the side limits", () => {
     for (const seed of SEEDS) {
       for (const st of createSpiderPlant(seed).stages) {
         for (const leaf of st.leaves) {
@@ -108,9 +108,37 @@ describe("generated spider plant", () => {
     }
   })
 
-  it("fills the fountain at full size", () => {
+  it("fills the mound at full size", () => {
     for (const seed of SEEDS) {
       expect(lastStage(seed).coverage).toBeGreaterThanOrEqual(0.15)
+    }
+  })
+
+  it("lets the outer blades hang below the soil line, over the pot rim", () => {
+    expect(LIMITS.floor).toBeGreaterThan(ANCHOR.y)
+    expect(LIMITS.floor).toBe(ANCHOR.y + CONFIG.hang!.depth)
+    for (const seed of SEEDS) {
+      const lowest = Math.max(...lastStage(seed).leaves.flatMap((leaf) => leafOutline(leaf).map(([, y]) => y)))
+      expect(lowest).toBeGreaterThan(ANCHOR.y + 6)
+      expect(lowest).toBeLessThanOrEqual(LIMITS.floor + EPS)
+    }
+  })
+
+  it("has several short, low outer blades on both sides, and no gap in the middle", () => {
+    for (const seed of SEEDS) {
+      const leaves = lastStage(seed).leaves
+      const outer = leaves.filter((leaf) => Math.abs(leaf.angle) >= 55)
+      expect(outer.length).toBeGreaterThanOrEqual(3)
+      expect(outer.some((leaf) => leaf.angle < 0)).toBe(true)
+      expect(outer.some((leaf) => leaf.angle > 0)).toBe(true)
+      const hanging = outer.filter((leaf) => Math.max(...leafOutline(leaf).map(([, y]) => y)) > ANCHOR.y + 4)
+      expect(hanging.length).toBeGreaterThanOrEqual(1)
+
+      // Blades pass over the middle of the pot, well above the soil, not just to either side of it.
+      const crossing = leaves.filter((leaf) =>
+        leafOutline(leaf).some(([x, y]) => Math.abs(x - ANCHOR.x) < 8 && ANCHOR.y - y > 25),
+      )
+      expect(crossing.length).toBeGreaterThanOrEqual(2)
     }
   })
 
@@ -173,6 +201,12 @@ describe("spider blade", () => {
     }
   })
 
+  it("draws a blade at its full length and full arch when no angle is given", () => {
+    const spec = randomSpiderLeaf(mulberry32(5))
+    expect(spiderBladeSides(spec, 100, 20, 0).mid.at(-1)![1]).toBeCloseTo(-100, 6)
+    expect(spiderBladeSides(spec, 100, 20, 1).turn).toBeCloseTo(SPIDER_BLADE.bend * spec.droop, 9)
+  })
+
   it("leaves a blade with fan 0 exactly as it was", () => {
     const spec = randomSpiderLeaf(mulberry32(5))
     expect(spiderLeafOutline(spec, 1, 8, 0)).toEqual(spiderLeafOutline(spec, 1, 8))
@@ -189,15 +223,38 @@ describe("blade arch", () => {
     }
   })
 
-  it("bends each blade away from the middle, tip and all", () => {
+  it("bends each blade away from the middle, tip and all, except an inward blade near the middle", () => {
     for (const seed of SEEDS) {
       for (const leaf of lastStage(seed).leaves) {
         expect(Math.abs(leaf.fan)).toBeGreaterThanOrEqual(fan.strength[0])
         expect(Math.abs(leaf.fan)).toBeLessThanOrEqual(fan.strength[1])
-        const outline = spiderLeafOutline(leaf.spec, 1, 8, leaf.fan)
+        if (leaf.spec.inward && Math.abs(leaf.angle) < SPIDER_BLADE.inwardUntil) continue
+        const outline = spiderLeafOutline(leaf.spec, 1, 8, leaf.fan, leaf.angle)
         const farthest = outline.reduce((a, b) => (Math.abs(b[0]) > Math.abs(a[0]) ? b : a))
         expect(Math.sign(farthest[0])).toBe(Math.sign(leaf.fan))
       }
+    }
+  })
+
+  it("turns an inward blade that points nearly straight up back across the middle", () => {
+    const spec = { ...randomSpiderLeaf(mulberry32(4)), inward: true }
+    const outward = { ...spec, inward: false }
+    const inward = spiderBladeSides(spec, 100, 40, 0.8, 4)
+    const away = spiderBladeSides(outward, 100, 40, 0.8, 4)
+    expect(Math.sign(inward.turn)).toBe(-Math.sign(away.turn))
+    // Past inwardUntil the two are the same blade.
+    expect(spiderBladeSides(spec, 100, 40, 0.8, 50)).toEqual(spiderBladeSides(outward, 100, 40, 0.8, 50))
+  })
+
+  it("draws the outermost blades shorter than the middle ones, and curls them over harder", () => {
+    for (const seed of SEEDS.slice(0, 10)) {
+      const spec = randomSpiderLeaf(mulberry32(seed))
+      const middle = spiderBladeSides(spec, 100, 40, 0.8, 38)
+      const outer = spiderBladeSides(spec, 100, 40, 0.8, 80)
+      const reach = (mid: [number, number][]) => Math.hypot(mid.at(-1)![0], mid.at(-1)![1])
+      expect(reach(outer.mid)).toBeLessThan(reach(middle.mid) * 0.6)
+      // By the tip the outer blade points down (heading from straight up, plus its own angle, is past 90).
+      expect(80 + Math.abs(outer.turn)).toBeGreaterThan(130)
     }
   })
 

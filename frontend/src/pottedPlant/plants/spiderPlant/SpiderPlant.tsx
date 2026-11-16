@@ -47,7 +47,7 @@ export function SpiderPlant({
         stage={stage}
         stemStyle={SPIDER_STEM}
         renderLeaf={(leaf: PlacedSpiderLeaf, clipId) => (
-          <SpiderLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} fan={leaf.fan} />
+          <SpiderLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} fan={leaf.fan} angle={leaf.angle} />
         )}
       />
     </PottedPlant>

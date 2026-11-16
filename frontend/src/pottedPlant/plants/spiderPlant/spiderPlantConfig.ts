@@ -16,30 +16,37 @@ import type { StagedPlantConfig } from "../staged/types"
 /** How far a blade may reach past either end of the rim. */
 const SIDE_OVERHANG = 8
 
+/** How far below the soil a drooping blade may hang at the full size. The rim is 24 tall. */
+const HANG_DEPTH = 24
+
 export const SPIDER_PLANT_CONFIG: StagedPlantConfig = {
   name: "spider-plant",
 
-  // A full fountain: 3, 7, 10, 14 blades over four stages.
+  // A full mound: 3, 9, 16, 22 blades over four stages.
   stages: {
     default: 4,
     max: 9,
     minLeaves: 3,
-    maxLeaves: 14,
+    maxLeaves: 22,
     leafCountCurve: 1,
     growthRatio: 3.6,
   },
 
-  // Medium height and wide, so the arching blades have room to spill outward.
+  // Wide and low, so the plant is a rounded mound and the outer blades have
+  // room to spill sideways.
   dome: {
     anchor: { x: SOIL.x, y: SOIL.y },
     halfWidth: 56,
-    height: 104,
+    height: 66,
   },
+
+  // The outer blades hang below the soil line, down over the pot rim.
+  hang: { depth: HANG_DEPTH },
 
   limits: {
     left: POT_RIM.left - SIDE_OVERHANG,
     right: POT_RIM.right + SIDE_OVERHANG,
-    floor: SOIL.y,
+    floor: SOIL.y + HANG_DEPTH,
   },
 
   pot: { rimLeft: POT_RIM.left, rimRight: POT_RIM.right },
@@ -66,8 +73,8 @@ export const SPIDER_PLANT_CONFIG: StagedPlantConfig = {
     reachMultiplier: 1.2,
     headroomShare: 0.95,
     leafHeadroomShare: 0.95,
-    headingSpread: 22,
-    headingJitter: [-5, 5],
+    headingSpread: 70,
+    headingJitter: [-10, 10],
     bendPoint: 0.5,
     shrinkFloor: 0.55,
     shrinkStep: 0.94,
@@ -76,8 +83,8 @@ export const SPIDER_PLANT_CONFIG: StagedPlantConfig = {
   // Long blades that rise, then arch over toward the rim.
   leaves: {
     lengthRange: [0.8, 1.5],
-    lengthFactor: [0.85, 1.1],
-    curl: [0, 6],
+    lengthFactor: [0.55, 1.1],
+    curl: [0, 2],
     jitter: [-5, 5],
     drawOrderNoise: 0.05,
     shrinkStep: 0.92,
@@ -101,11 +108,12 @@ export const SPIDER_PLANT_CONFIG: StagedPlantConfig = {
   },
 
   // Every blade arches (outerThreshold 0): it bends away from the middle, and
-  // the bend carries the tip down into a droop.
+  // the bend carries the tip down into a droop. The blade's own shape (see
+  // SPIDER_BLADE.byAngle) keeps the middle blades gentle and the outer ones low.
   fan: {
     outerThreshold: 0,
-    strength: [0.45, 1],
-    turn: [4, 10],
+    strength: [0.35, 1],
+    turn: [0, 6],
   },
 
   rngStreams: { leaf: 223 },
