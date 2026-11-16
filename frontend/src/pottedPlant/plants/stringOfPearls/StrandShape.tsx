@@ -9,6 +9,8 @@ export const STRAND_STYLE = {
   thread: { width: 0.6 },
   /** Points in the thread's polyline. */
   threadSteps: 24,
+  /** The darker rim of each bead: the base circle is this share of the radius and sits this far up and left (as a share of the radius), so a thin darker crescent shows at the lower right. */
+  rim: { size: 0.84, shift: 0.1 },
   /** The lighter patch on each bead: offset from its center and size, as shares of the radius. */
   light: { dx: -0.28, dy: -0.3, size: 0.55, opacity: 0.7 },
   /** The tiny pale window line along each bead: length and thickness as shares of the radius, and how far it sits off center. It is left out of beads smaller than minRadius, where it would be too thin to see. */
@@ -41,7 +43,8 @@ export function StrandShape({ spec, length, angle }: { spec: StrandSpec; length:
         const turn = (bead.heading * 180) / Math.PI
         return (
           <g key={i}>
-            <circle cx={fixed(x)} cy={fixed(y)} r={fixed(r)} fill={c.base} />
+            <circle cx={fixed(x)} cy={fixed(y)} r={fixed(r)} fill={c.shade} />
+            <circle cx={fixed(x - S.rim.shift * r)} cy={fixed(y - S.rim.shift * r)} r={fixed(S.rim.size * r)} fill={c.base} />
             <circle cx={fixed(x + S.light.dx * r)} cy={fixed(y + S.light.dy * r)} r={fixed(S.light.size * r)} fill={c.light} opacity={S.light.opacity} />
             {r >= S.window.minRadius && (
               <rect

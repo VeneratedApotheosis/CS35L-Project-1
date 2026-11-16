@@ -115,6 +115,22 @@ describe("generated string of pearls", { timeout: TIMEOUT }, () => {
     }
   })
 
+  it("keeps only a tiny hump above the soil: nothing rises more than 14 above it at the full stage", () => {
+    for (const seed of SEEDS) {
+      const last = createStringOfPearls(seed).stages.at(-1)!
+      const highest = Math.min(...last.leaves.flatMap((strand) => strandOutline(strand).map(([, y]) => y)))
+      expect(ANCHOR.y - highest, "seed " + seed).toBeLessThan(14)
+    }
+  })
+
+  it("hangs the full plant well down the pot: some strand reaches within 8 of the floor", () => {
+    for (const seed of SEEDS) {
+      const last = createStringOfPearls(seed).stages.at(-1)!
+      const lowest = Math.max(...last.leaves.flatMap((strand) => strandOutline(strand).map(([, y]) => y)))
+      expect(lowest, "seed " + seed).toBeGreaterThan(LIMITS.floor - 8)
+    }
+  })
+
   it("hangs every strand: it ends below where it starts, and lower than the rest of it", () => {
     for (const seed of SEEDS.slice(0, 30)) {
       const last = createStringOfPearls(seed).stages.at(-1)!

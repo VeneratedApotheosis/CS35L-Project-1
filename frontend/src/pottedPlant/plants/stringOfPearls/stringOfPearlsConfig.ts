@@ -15,7 +15,7 @@ import type { StagedPlantConfig } from "../staged/types"
 const SIDE_OVERHANG = 8
 
 /** How far below the soil a strand may hang at the last stage. The pot body ends at about 52 below the soil. */
-const HANG_DEPTH = 42
+const HANG_DEPTH = 56
 
 export const STRING_OF_PEARLS_CONFIG: StagedPlantConfig = {
   name: "string_of_pearls",
@@ -32,7 +32,7 @@ export const STRING_OF_PEARLS_CONFIG: StagedPlantConfig = {
   dome: {
     anchor: { x: SOIL.x, y: SOIL.y },
     halfWidth: 56,
-    height: 44,
+    height: 18,
   },
 
   hang: { depth: HANG_DEPTH },
@@ -46,7 +46,7 @@ export const STRING_OF_PEARLS_CONFIG: StagedPlantConfig = {
   pot: { rimLeft: POT_RIM.left, rimRight: POT_RIM.right },
 
   roots: {
-    range: [0.1, 0.9],
+    range: [0.04, 0.96],
     middle: 0.5,
     spreadStep: 0.618,
   },
@@ -60,7 +60,7 @@ export const STRING_OF_PEARLS_CONFIG: StagedPlantConfig = {
   },
 
   stems: {
-    lengthRange: [0.06, 0.3],
+    lengthRange: [0.06, 0.25],
     minLength: 0.05,
     reachMultiplier: 1.5,
     headroomShare: 0.9,
@@ -73,8 +73,8 @@ export const STRING_OF_PEARLS_CONFIG: StagedPlantConfig = {
   },
 
   leaves: {
-    lengthRange: [1.4, 2.4],
-    lengthFactor: [0.8, 1.15],
+    lengthRange: [4.2, 4.2],
+    lengthFactor: [0.85, 1.1],
     curl: [5, 14],
     jitter: [-3, 3],
     drawOrderNoise: 0.05,
@@ -82,7 +82,7 @@ export const STRING_OF_PEARLS_CONFIG: StagedPlantConfig = {
   },
 
   coverage: {
-    target: 0.6,
+    target: 0,
     canopyFloor: 0,
     gridX: 22,
     gridY: 16,

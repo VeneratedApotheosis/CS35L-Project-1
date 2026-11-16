@@ -48,17 +48,17 @@ export interface StrandRanges {
 
 export const STRAND_RANGES: StrandRanges = {
   beads: [30, 39],
-  beadSize: [0.54, 0.6],
-  rise: [0.03, 0.08],
-  arc: [0.14, 0.24],
+  beadSize: [0.66, 0.74],
+  rise: [0, 0.02],
+  arc: [0.07, 0.12],
   hang: [168, 186],
-  sway: [2, 6],
+  sway: [4, 9],
   swayWaves: [0.8, 1.6],
   swayPhase: [0, 1],
 }
 
 /** How the bead size shrinks toward the strand's tip: the last bead is this share of the first. */
-export const STRAND_TAPER = 0.8
+export const STRAND_TAPER = 0.85
 
 /** Curve samples per outline point, so a curve has this many times `perSegment` steps. */
 export const STRAND_STEPS_PER_SEGMENT = 3
@@ -165,14 +165,16 @@ export function strandPolygon(spec: StrandSpec, length: number, perSegment: numb
 /** Green of the beads, in HSL. Hue and lightness slide with `spec.shade`, so a plant's strands are related but not identical. */
 export const STRAND_PALETTE = {
   hue: { middle: 104, swing: 14 },
-  lightness: { pale: 58, swing: 10 },
-  base: { saturation: 38 },
+  lightness: { pale: 48, swing: 8 },
+  base: { saturation: 40 },
+  /** The darker rim of each bead, relative to the base. */
+  shade: { saturation: 46, lightnessDrop: 14 },
   /** The lighter patch on each bead, relative to the base. */
-  light: { hueShift: 6, saturation: 46, lightnessBoost: 14 },
+  light: { hueShift: 6, saturation: 52, lightnessBoost: 22 },
   /** The tiny pale window line on each bead, relative to the base. */
   window: { hueShift: 10, saturation: 60, lightnessBoost: 28 },
   /** The thread the beads hang on (also the stems), a little darker than the beads. */
-  thread: "hsl(100 30% 42%)",
+  thread: "hsl(100 32% 32%)",
 }
 
 const round = (n: number) => String(Math.round(n * 10) / 10)
@@ -183,6 +185,7 @@ export function strandColors(spec: StrandSpec) {
   const l = P.lightness.pale + spec.shade * P.lightness.swing
   return {
     base: "hsl(" + round(hue) + " " + P.base.saturation + "% " + round(l) + "%)",
+    shade: "hsl(" + round(hue) + " " + P.shade.saturation + "% " + round(l - P.shade.lightnessDrop) + "%)",
     light: "hsl(" + round(hue + P.light.hueShift) + " " + P.light.saturation + "% " + round(l + P.light.lightnessBoost) + "%)",
     window: "hsl(" + round(hue + P.window.hueShift) + " " + P.window.saturation + "% " + round(l + P.window.lightnessBoost) + "%)",
     thread: P.thread,
