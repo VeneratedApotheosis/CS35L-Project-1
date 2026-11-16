@@ -5,6 +5,8 @@ import type { PlacedLeaf, PlantStage, StagedPlant } from "./types"
 import { ACCENTS_END, makeAccents, type AccentArea } from "./accents"
 import { blendStage, GROWTH, springProgress } from "./growth"
 import { GrowthAccents } from "./GrowthAccents"
+import { useEmerge } from "./EmergeContext"
+import { useShrinkSeconds } from "./ShrinkContext"
 import { useWilt } from "./WiltContext"
 import { BROWNING, bendSlices, wiltPlant } from "./wilt"
 
@@ -31,6 +33,18 @@ export interface SoilPlanting {
   soilY: number
 }
 
+/**
+ * How a move between two stages is going, for what a species draws besides leaves (flowers
+ * that bud and open). The from and to stages are the numbers the move goes between, and 0
+ * is a plant with nothing yet. The t value is how far along the move is, from 0 to 1, and
+ * it runs the right way for a move down a stage too.
+ */
+export interface StageMotion {
+  from: number
+  to: number
+  t: number
+}
+
 export interface StemmedPlantProps<Spec> {
   plant: StagedPlant<Spec>
   /** 1 to the number of stages. Values outside that range are clamped. */
@@ -54,9 +68,9 @@ export interface StemmedPlantProps<Spec> {
   /** Draw one leaf with its stalk end at (0,0) and tip at (0,-length). `clipId` is unique to this leaf. */
   renderLeaf: (leaf: PlacedLeaf<Spec>, clipId: string) => ReactNode
   /** Extra drawing between the stems and the leaves, such as flower stalks. `id` is unique to this plant. */
-  renderBehindLeaves?: (stage: PlantStage<Spec>, id: string) => ReactNode
+  renderBehindLeaves?: (stage: PlantStage<Spec>, id: string, motion: StageMotion | null) => ReactNode
   /** Extra drawing on top of the leaves, such as flower heads. `id` is unique to this plant. */
-  renderAboveLeaves?: (stage: PlantStage<Spec>, id: string) => ReactNode
+  renderAboveLeaves?: (stage: PlantStage<Spec>, id: string, motion: StageMotion | null) => ReactNode
 }
 
 /** The stage a caller asked for, kept inside the plant's range. */
@@ -111,33 +125,51 @@ export function StemmedPlant<Spec>({
   const target = stageOf(plant, stage)
 
   // Moving up a stage: remember the stage that was drawn, and grow from it into the new one.
+  // Moving down a stage plays the same move backwards, only inside a ShrinkProvider and only within one plant.
+  // It can start while a move is still going: the plant then shrinks from the way it looks at that moment.
+  const shrinkSeconds = useShrinkSeconds()
   const [drawn, setDrawn] = useState(target)
-  const [growth, setGrowth] = useState<{ from: PlantStage<Spec>; to: PlantStage<Spec> } | null>(null)
+  // A plant that is asked to emerge starts with no leaves, so every leaf grows out of the soil.
+  const emerge = useEmerge()
+  const [growth, setGrowth] = useState<{ from: PlantStage<Spec>; to: PlantStage<Spec>; backwards: boolean } | null>(
+    emerge && animate && !prefersReducedMotion() ? { from: { ...target, stage: 0, leaves: [] }, to: target, backwards: false } : null,
+  )
   const [clock, setClock] = useState({ progress: 0, time: 0 })
   if (drawn !== target) {
     setDrawn(target)
-    const grows = animate && target.stage > drawn.stage && !prefersReducedMotion()
-    setGrowth(grows ? { from: drawn, to: target } : null)
+    const calm = !animate || prefersReducedMotion()
+    if (!calm && target.stage > drawn.stage) setGrowth({ from: drawn, to: target, backwards: false })
+    else if (!calm && shrinkSeconds !== null && target.stage < drawn.stage && plant.stages.includes(drawn)) {
+      // Start from what is on screen now, so a plant caught part-way through growing shrinks from there, with no jump.
+      const visible = growth ? blendStage(growth.from, growth.to, growth.backwards ? 1 - clock.progress : clock.progress) : drawn
+      setGrowth({ from: target, to: visible, backwards: true })
+    }
+    else setGrowth(null)
     setClock({ progress: 0, time: 0 })
   }
   useEffect(() => {
     if (!growth) return
     const start = performance.now()
     let frame = 0
+    const length = growth.backwards ? (shrinkSeconds ?? 0) : accents ? Math.max(GROWTH.duration, ACCENTS_END) : GROWTH.duration
     const tick = (now: number) => {
       const seconds = (now - start) / 1000
-      setClock({ progress: springProgress(seconds), time: seconds })
-      if (seconds >= (accents ? Math.max(GROWTH.duration, ACCENTS_END) : GROWTH.duration)) setGrowth(null)
+      // Going down is a plain ease-out over the time it was given: no spring, so it never swings past the small stage.
+      const progress = growth.backwards ? 1 - (1 - Math.min(seconds / Math.max(shrinkSeconds ?? 0, 0.001), 1)) ** 2 : springProgress(seconds)
+      setClock({ progress, time: seconds })
+      if (seconds >= length) setGrowth(null)
       else frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [growth, accents])
-  const current = growth ? blendStage(growth.from, growth.to, clock.progress) : target
+  }, [growth, accents, shrinkSeconds])
+  const along = growth ? (growth.backwards ? 1 - clock.progress : clock.progress) : 1
+  const current = growth ? blendStage(growth.from, growth.to, along) : target
+  const motion: StageMotion | null = growth ? { from: growth.from.stage, to: growth.to.stage, t: along } : null
 
   // The accents of the move: made once per move, from the plant's seed and the stage it grows to.
   const burst = useMemo(() => {
-    if (!growth || !accents) return null
+    if (!growth || growth.backwards || !accents) return null
     const { to } = growth
     const foot = plant.species?.config.dome.anchor ?? { x: to.leaves[0].stem.x0, y: to.leaves[0].stem.y0 }
     const area: AccentArea = { x: foot.x, y: foot.y, halfWidth: to.halfWidth, height: to.height, scale: to.scale }
@@ -186,7 +218,7 @@ export function StemmedPlant<Spec>({
             )
           })}
 
-      {renderBehindLeaves?.(current, id)}
+      {renderBehindLeaves?.(current, id, motion)}
 
       {current.leaves.map((leaf) => {
         const slices = leaf.bend ? bendSlices(leaf.length, leaf.bend) : null
@@ -223,7 +255,7 @@ export function StemmedPlant<Spec>({
         )
       })}
 
-      {renderAboveLeaves?.(current, id)}
+      {renderAboveLeaves?.(current, id, motion)}
 
       {burst && <GrowthAccents accents={burst.items} area={burst.area} time={clock.time} />}
     </g>

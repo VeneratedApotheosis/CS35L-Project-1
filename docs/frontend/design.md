@@ -123,7 +123,7 @@ Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant
 
 `AppShell` is shared by routes in `app/(signed-in)/`, behind the layout's auth guard. It supplies centered content, a skip link and space for the mobile bar and safe area. `NavBar` marks the current route with `aria-current` and a thin outline around the item. My Garden (`/`), the basic Dashboard (`/dashboard`), Settings (`/settings`, currently timezone only), and Add Habit (`/create`) are available; Badges is disabled until its page exists. Navigation switches to a top bar at 52rem; compact labels (Garden and Add) give the mobile items more room, with full accessible names. The style guide includes contained desktop and phone previews.
 
-**Alignment.** Page content is left aligned in a centered column with a maximum width. Only the login screen and empty states are center aligned, because they hold a single message.
+**Alignment.** Page content is left aligned in a centered column with a maximum width. Only empty states are center aligned, because they hold a single message. The login screen is the exception to the column: its words are left aligned in the left third, beside a picture (see [login-wall.md](login-wall.md)).
 
 **Garden.** An auto-fill grid of plant cards. Each card is a pot, the plant, the habit name and a progress bar.
 
@@ -225,7 +225,7 @@ Every screen meets these before it is merged.
 ```
 frontend/src/
   app/             routes (Next.js App Router): login, style-guide, plants, home
-  views/           full screens used by routes: Garden, Login
+  views/           full screens used by routes: Garden, Login (its shelf wall is in views/login/wall/, see login-wall.md)
   components/      shared UI: Button, Card, Icon
   pottedPlant/     plants in pots (see plant-generation.md)
     plants/        every plant, one folder per species, built on the stage engine
@@ -253,6 +253,6 @@ frontend/src/
 - Plants checked on the dark theme; the pot's shadow is a theme token.
 
 **Open**
-- **Login and Garden pages** are placeholders and are not yet on the design system.
+- **Garden page** is not yet fully on the design system. The login screen is: see [login-wall.md](login-wall.md).
 - **Missing components:** Modal, toast, input wrappers.
 - **Lotus** is not on the stage engine, so it does not wilt or animate yet.

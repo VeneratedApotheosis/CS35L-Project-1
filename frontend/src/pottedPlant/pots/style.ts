@@ -1,7 +1,7 @@
 import { subSeed } from "../genome"
 import { int, mulberry32, type Rng } from "../rng"
 import type { PotFinishId } from "./finishes"
-import { POT_BAND_ODDS, POT_PALETTES, type PotBand } from "./palettes"
+import { POT_BAND_ODDS, POT_PALETTES, type PotBand, type PotPalette } from "./palettes"
 
 /** Everything that makes one pot look the way it does. Any look can go with any plant. */
 export interface PotLook {
@@ -12,6 +12,17 @@ export interface PotLook {
   finish: PotFinishId
   /** Seeds the pot's pattern stream, the one a finish draws from. */
   seed: number
+  /**
+   * Optional: draw the pot in these exact colors instead of the palette. Habits
+   * never set it (their pot comes from a seed), so it changes no existing pot.
+   * It is for one-off art, such as the login scene.
+   */
+  colors?: PotPalette
+  /**
+   * Optional: raise the pot's shadow by this many canvas units, so the pot can sit lower on
+   * a surface while its shadow stays where it was. Habits never set it.
+   */
+  shadowLift?: number
 }
 
 /**

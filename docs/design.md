@@ -26,6 +26,7 @@ This page is the map. The detail lives in the documents below.
 | [backend/design.md](backend/design.md) | Endpoints, request flow, and the rules behind every number |
 | [database/design.md](database/design.md) | Tables, access control, migrations |
 | [frontend/plant-generation.md](frontend/plant-generation.md) | How plants are drawn |
+| [frontend/login-wall.md](frontend/login-wall.md) | The login screen's shelf wall, and how to change its plants |
 | [dev/](dev) | How we work: branches, PRs, issues |
 
 ---

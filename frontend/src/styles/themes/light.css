@@ -2,6 +2,10 @@
 [data-theme="light"] {
   color-scheme: light;
 
+  /* The oval under a pot. Set here too so a light area inside a dark page resets it. */
+  --pot-shadow-color: #342f29;
+  --pot-shadow-opacity: 0.14;
+
   /* Figma Make's light surfaces */
   --color-app-canvas: #d9cdbb;
   --color-background: var(--milk);
@@ -31,6 +35,13 @@
   --color-danger: var(--danger-red-soft);
   --color-danger-hover: var(--danger-red);
   --color-danger-text: #6e211e;
+
+  /* The login wall and its shelves */
+  --color-wall: var(--sage-plaster);
+  --color-wall-shade: var(--sage-plaster-deep);
+  --color-shelf: var(--birch);
+  --color-shelf-top: var(--birch-top);
+  --color-shelf-edge: var(--birch-deep);
 
   --color-focus: var(--teal);
   --color-link: var(--teal-deep);

@@ -17,6 +17,13 @@
   --yellow: #f2c84b;
   --pink: #ee87a5;
 
+  /* The login wall: sage plaster and light birch shelves. Themes map these to --color-wall and --color-shelf. */
+  --sage-plaster: #dfe8d6;
+  --sage-plaster-deep: #c9d8bd;
+  --birch: #ecd3a6;
+  --birch-top: #f4e3c0;
+  --birch-deep: #c9a574;
+
   --action-green: #83c17d;
   --action-green-selected: #4a8c46;
   --action-green-dark: #5c9d57;

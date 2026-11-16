@@ -87,6 +87,50 @@ export function flowerState(stage: number, config: FlowerConfig): FlowerState {
   return "none"
 }
 
+/**
+ * How a plant's move between two stages is going, for the parts that are not leaves
+ * (the flowers). The from and to stages are the stages the move goes between (0 is nothing at
+ * all), and t says how far along it is, from 0 to 1.
+ */
+export interface FlowerMotion {
+  from: number
+  to: number
+  t: number
+}
+
+/** How big the flowers are, from 0 to 1, and how open: 0 is a closed bud, 1 is a full bloom. */
+export interface FlowerLook {
+  size: number
+  open: number
+}
+
+const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1)
+const smooth = (x: number) => x * x * (3 - 2 * x)
+
+/**
+ * What the flowers look like right now: null for none, otherwise their size and how far
+ * open they are. At rest this is a closed bud or a full bloom. During a move up a stage,
+ * flowers that were not there grow as buds, and buds then open: a plant that goes straight
+ * from no flowers to blooming grows its buds in the first half of the move and opens them
+ * in the second. A move down a stage plays the same thing backwards.
+ */
+export function flowerLook(stage: number, motion: FlowerMotion | null | undefined, config: FlowerConfig): FlowerLook | null {
+  if (!motion) {
+    const state = flowerState(stage, config)
+    return state === "none" ? null : { size: 1, open: state === "bloom" ? 1 : 0 }
+  }
+  const from = flowerState(motion.from, config)
+  const to = flowerState(motion.to, config)
+  const t = clamp01(motion.t)
+  let look: FlowerLook
+  if (to === "none") return null
+  if (from === "none" && to === "bud") look = { size: smooth(t), open: 0 }
+  else if (from === "none") look = { size: smooth(clamp01(t / 0.5)), open: smooth(clamp01((t - 0.5) / 0.5)) }
+  else if (from === "bud" && to === "bloom") look = { size: 1, open: smooth(t) }
+  else look = { size: 1, open: to === "bloom" ? 1 : 0 }
+  return look.size <= 0 ? null : look
+}
+
 /** The flower dome: the leaf dome stretched by `reach`, standing on the same soil point. */
 export function flowerDome(leaf: StagedPlantConfig, config: FlowerConfig): Dome {
   return {

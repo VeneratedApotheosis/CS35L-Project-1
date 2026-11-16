@@ -17,7 +17,7 @@ export function Pot({
   id: string
 }) {
   const S = POT_SHAPE
-  const colors = POT_PALETTES[look.palette % POT_PALETTES.length]
+  const colors = look.colors ?? POT_PALETTES[look.palette % POT_PALETTES.length]
   const clip = id + S.body.clipIdSuffix
   const finish = getFinish(look.finish).draw({
     rng: mulberry32(look.seed),
@@ -31,7 +31,7 @@ export function Pot({
     <g>
       <ellipse
         cx={S.shadow.cx}
-        cy={S.shadow.cy}
+        cy={S.shadow.cy - (look.shadowLift ?? 0)}
         rx={S.shadow.rx}
         ry={S.shadow.ry}
         style={{

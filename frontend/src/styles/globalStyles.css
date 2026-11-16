@@ -23,6 +23,7 @@
 @import "./components/plant-cards.css";
 @import "./components/garden.css";
 @import "./components/dashboard.css";
+@import "./components/login.css";
 
 * {
   box-sizing: border-box;

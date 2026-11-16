@@ -39,6 +39,13 @@
   --pot-shadow-color: #120f0b;
   --pot-shadow-opacity: 0.45;
 
+  /* The login wall and its shelves: deep green-grey plaster, the same warm wood, a little dimmer */
+  --color-wall: #2c3830;
+  --color-wall-shade: #222c26;
+  --color-shelf: #c3a073;
+  --color-shelf-top: #d2b58c;
+  --color-shelf-edge: #94744b;
+
   --color-focus: var(--teal);
   --color-link: #7bd7c4;
 }
