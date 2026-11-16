@@ -126,6 +126,31 @@ describe("layerScale", () => {
   })
 })
 
+describe("stems.leafLean", () => {
+  const withLean = (leafLean: number, name: string): StagedPlantSpecies<LeafSpec> => ({
+    config: { ...OTHER_CONFIG, name, layerAngle: { outward: 80, upright: 80, curve: 1 }, stems: { ...OTHER_CONFIG.stems, leafLean } },
+    leaf: heart,
+  })
+
+  /** How far the stem's arrival direction is from the leaf's direction, in degrees, on average. */
+  const corner = (species: StagedPlantSpecies<LeafSpec>) => {
+    const turns = SEEDS.flatMap((seed) =>
+      createStagedPlant(seed, species).stages.at(-1)!.leaves.map((leaf) => {
+        const arrive = Math.atan2(leaf.stem.x1 - leaf.stem.cx, -(leaf.stem.y1 - leaf.stem.cy)) * (180 / Math.PI)
+        return Math.abs(arrive - leaf.angle)
+      }),
+    )
+    return turns.reduce((sum, t) => sum + t, 0) / turns.length
+  }
+
+  it("makes the stem arrive closer to the leaf's direction, and is checked when the plant is built", () => {
+    expect(corner(withLean(1, "lean-full"))).toBeLessThan(corner(withLean(0, "lean-none")) - 20)
+    expect(OTHER_CONFIG.stems.leafLean).toBeUndefined()
+    const bad = withLean(2, "lean-bad")
+    expect(() => createStagedPlant(1, bad)).toThrow(/leafLean/)
+  })
+})
+
 describe("stage ladders", () => {
   it("rise from min to max leaves", () => {
     const counts = leafCountLadder(5, { ...POTHOS_CONFIG.stages, minLeaves: 1, maxLeaves: 9 })

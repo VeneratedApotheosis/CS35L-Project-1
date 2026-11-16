@@ -90,6 +90,13 @@ export interface StagedPlantConfig {
     headingJitter: Range
     /** Where along the stem the curve bends, as a share of its length. */
     bendPoint: number
+    /**
+     * Optional, from 0 to 1. How far the stem curves toward the leaf's direction
+     * by the time it reaches the leaf: 0 (the default) keeps the stem running
+     * along its heading to the end, so a leaf turned far from its heading meets
+     * it at a sharp corner; 1 makes the stem arrive pointing the way the leaf points.
+     */
+    leafLean?: number
     /** While fitting, a stem may shrink to this share of its layer length. */
     shrinkFloor: number
     /** Each fitting step multiplies the stem length by this. */

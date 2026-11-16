@@ -285,6 +285,11 @@ so a bad config fails here with a list of exactly what doesn't fit.
 - **Make low leaves smaller** (like a peace lily's outer leaves). Add an opt-in
   `layerScale: { low, high }`: a leaf's length is multiplied by `low` at layer 0
   and `high` at layer 1. Without it leaf size does not depend on height.
+- **Curve the stem into the leaf.** Add `stems.leafLean` (0 to 1) when a leaf points
+  far from its stem's heading (for example with `layerAngle`). At 0, the default, the
+  stem runs along its heading to the end, so the leaf meets it at a sharp corner. At 1
+  the stem arrives pointing the way the leaf points, so it bends smoothly into it.
+  A lower `bendPoint` makes the curve start sooner.
 - **Hanging below the soil** (a plant whose outer leaves droop over the pot rim, like the spider plant). Add an
   opt-in `hang: { depth }` to the config and set `limits.floor` to the soil line
   plus `depth`. Leaves may then fall past the soil, over the pot, as far as

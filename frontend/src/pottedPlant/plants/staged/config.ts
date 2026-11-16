@@ -61,6 +61,9 @@ export function validateConfig(config: StagedPlantConfig): void {
   check(ordered(leaves.curl) && ordered(leaves.jitter), "leaves.curl and leaves.jitter must run from low to high")
   check(leaves.shrinkStep > 0 && leaves.shrinkStep < 1, "leaves.shrinkStep must be in (0, 1)")
 
+  if (config.stems.leafLean !== undefined) {
+    check(config.stems.leafLean >= 0 && config.stems.leafLean <= 1, "stems.leafLean must be between 0 and 1")
+  }
   if (config.layerScale) {
     check(config.layerScale.low > 0 && config.layerScale.high > 0, "layerScale.low and layerScale.high must be above 0")
   }

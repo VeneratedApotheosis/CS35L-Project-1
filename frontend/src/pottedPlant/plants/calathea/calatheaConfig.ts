@@ -65,14 +65,15 @@ export const CALATHEA_CONFIG: StagedPlantConfig = {
 
   // Stems from short (low leaves by the rim) to tall (the leaves in the back and middle).
   stems: {
-    lengthRange: [0.12, 0.62],
+    lengthRange: [0.17, 0.62],
     minLength: 0.06,
     reachMultiplier: 1.5,
     headroomShare: 1,
     leafHeadroomShare: 0.92,
     headingSpread: 16,
     headingJitter: [-8, 8],
-    bendPoint: 0.6,
+    bendPoint: 0.4,
+    leafLean: 1,
     shrinkFloor: 0.55,
     shrinkStep: 0.94,
   },
