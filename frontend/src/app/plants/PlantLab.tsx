@@ -14,6 +14,7 @@ import { Lily } from "@/pottedPlant/plants/lily"
 import { Rose } from "@/pottedPlant/plants/rose"
 import { Monstera } from "@/pottedPlant/plants/monstera"
 import { Philodendron } from "@/pottedPlant/plants/philodendron"
+import { Calathea } from "@/pottedPlant/plants/calathea"
 import { Pothos } from "@/pottedPlant/plants/pothos/Pothos"
 import { randomLeafSpec } from "@/pottedPlant/plants/pothos/leaf"
 import { STAGES } from "@/pottedPlant/genome"
@@ -104,6 +105,13 @@ const PLANTS = [
       "Broad, rounded paddle leaves in an upright crown on the same stage engine as the pothos, on thick reddish-maroon petioles. The newest, most upright leaves are deep burgundy-red; the older outer leaves are glossy green and arch outward. No flowers.",
     stageNames: ["Sprout", "Young", "Fuller", "Full crown"],
   },
+  {
+    id: "calathea",
+    label: "Calathea",
+    description:
+      "Broad oval leaves on stems, on the same stage engine as the pothos. Each is dark green with lighter herringbone stripes running from a pale midrib out to the edge, clipped to the leaf, and a muted purple rim. A fairly full, low clump. No flowers.",
+    stageNames: ["Sprout", "Young", "Fuller", "Full clump"],
+  },
 ] as const
 type PlantId = (typeof PLANTS)[number]["id"]
 
@@ -180,6 +188,7 @@ export default function PlantLab() {
     rose: FIRST_SEED,
     monstera: FIRST_SEED,
     philodendron: FIRST_SEED,
+    calathea: FIRST_SEED,
   })
   const [chosen, setChosen] = useState<PlantId>("pothos")
   const [scale, setScale] = useState(1)
@@ -226,6 +235,7 @@ export default function PlantLab() {
     if (chosen === "monstera") return <Monstera seed={seeds.monstera} stage={stage} scale={scale} pot={potFor(seeds.monstera)} />
     if (chosen === "philodendron")
       return <Philodendron seed={seeds.philodendron} stage={stage} scale={scale} pot={potFor(seeds.philodendron)} />
+    if (chosen === "calathea") return <Calathea seed={seeds.calathea} stage={stage} scale={scale} pot={potFor(seeds.calathea)} />
     return <Pilea seed={seeds.pilea} stage={stage} scale={scale} pot={potFor(seeds.pilea)} />
   }
 
