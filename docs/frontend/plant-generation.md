@@ -58,6 +58,11 @@ pottedPlant/
       coverage.ts          how well leaves fill the canopy, and how deeply they stack
       generate.ts          createStagedPlant: builds every stage of a plant for a seed
       StemmedPlant.tsx     draws a staged plant without its pot; the species supplies the leaf drawing
+      wilt.ts              the wilted look: how stems and leaves change with the wilt amount
+      WiltContext.tsx      passes the wilt amount to the species' leaf drawing
+      growth.ts            the spring that moves each leaf from its old place to its new one
+      accents.ts           the lines, pops and stars that burst around a plant moving up a stage
+      GrowthAccents.tsx    draws those accents
     pothos/
       pothosConfig.ts          every number behind the pothos
       pothosStages.ts          the pothos species: config + heart leaf, and the names tests use
@@ -134,7 +139,7 @@ These are the decisions we made for every stage-engine plant. Each is enforced b
 
 ## 2. Pot
 
-Code: `frontend/src/pottedPlant/pots/`. A low drum pot (body 46 tall) built from a rounded **rim**, a tapered **body**, a dark **soil** oval, and a **shadow** oval. The pot is separate from the plants. A plant draws only its stems, leaves and flowers, and the pot is drawn under it by `PottedPlant`. The pot never changes size with the plant.
+Code: `frontend/src/pottedPlant/pots/`. A low drum pot (body 46 tall) built from a rounded **rim**, a tapered **body**, a dark **soil** oval, and a **shadow** oval. The shadow reads `--pot-shadow-color` and `--pot-shadow-opacity` from the theme (a light-theme default in `shape.ts`, overridden in `themes/dark.css`), because the light-theme color is the same as the dark background and would not show. The pot is separate from the plants. A plant draws only its stems, leaves and flowers, and the pot is drawn under it by `PottedPlant`. The pot never changes size with the plant.
 
 A pot's **look** is `PotLook`: a `palette` (an index into the five palettes: terracotta, cream, sage, sky, blush), a `band` (none, or a stripe; the stripe is twice as likely, see `POT_BAND_ODDS`), a `finish` and a `seed` for the finish's pattern. `potLookFromSeed(seed)` in `pots/style.ts` makes one. There used to be a dotted band too; pots that would have had it now get the stripe.
 
@@ -236,6 +241,31 @@ A plant can fan its outer leaves, so they look as if their face points toward th
 ### 3.8 Extra parts
 
 `StemmedPlant` draws the stems, then the leaves, as a group with no pot and no `svg`. `PottedPlant` draws the pot first and then this group on top, so the pot is behind everything. A species can add its own parts through two optional slots: `renderBehindLeaves` (after the stems, before the leaves) and `renderAboveLeaves` (on top of everything). Both receive the stage being drawn.
+
+### 3.9 Health: the wilted look
+
+A plant takes a `wilt` amount from 0 to 1, as a prop or from the nearest `WiltProvider` (`WiltContext.tsx`); the previews in `plantTypes.tsx` take a `wilt` prop. The backend's three health states map to it: healthy 0, slightly wilted 0.5, wilted 1 (`WILT.forHealth` in `wilt.ts`). A plant with no `wilt` draws exactly as before. Every plant on the stage engine wilts; the lotus does not, because it has its own drawing.
+
+- **Stems** tilt their tips outward, up to 32 degrees at full wilt, but never past 70 degrees from vertical, so a tip never dips below its root.
+- **Leaves** droop toward 80 degrees from vertical at full wilt (each leaf differs by up to 8 degrees, fixed per leaf), so the average leaf hangs almost flat. A long leaf also curves along its length, up to 80 degrees of turn; a short one stays straight. Curved leaves are drawn as 6 slices.
+- **Browning.** Half of the leaves brown and a quarter of all leaves are dark brown. Which leaves is fixed per leaf and spread evenly, so every stage browns the same ones. The browning grows with the wilt amount.
+- **Limits.** A wilted leaf is shortened (by 4% a step) and tried again until it fits the same side limits as a healthy one, and the wilt is eased back if it still does not fit.
+- **The pot never changes.** Only stems and leaves wilt.
+
+Code: `staged/wilt.ts` (`wiltPlant`, `WILT`, `BROWNING`), tests in `wilt.test.tsx`. The `/plants` page shows one plant in all three states.
+
+### 3.10 Moving up a stage
+
+When a plant moves up a stage after the user's own action, it animates instead of jumping. `animate` and `accents` default to true, but only a change of stage while the plant is on screen animates, never the first draw, and it is instant when the user prefers reduced motion.
+
+- **Leaves** spring from their old place to their new one in `GROWTH.duration` (1.1 s), overshooting a little and settling. New leaves grow out of the soil. The pot and soil do not move.
+- **Accents** burst around the plant: lines, pops, and stars on the last stage only. A bigger plant gets more, and larger ones, up to 5 lines, 3 pops and 2 stars. They sit on a half-oval around the plant, balanced left and right, close to a small plant. They linger 0.5 s after the leaves settle. A line's travel grows more slowly than the plant, so a big plant's lines do not fly far.
+
+Code: `staged/growth.ts`, `staged/accents.ts` and `GrowthAccents.tsx`, with tests in `growth.test.ts` and `accents.test.tsx`. The numbers are in `GROWTH` and `ACCENTS`. The `/plants` page has a Stage-up animation section.
+
+### 3.11 Dark surfaces
+
+Plants use their own palettes on any surface. Checked on the dark theme on `/plants`: every plant and pot palette stays readable, and the darkest leaf (the philodendron's dark red) still stands out. The one problem was the pot's shadow, which matched the dark background, so it is now a theme token (see Pot).
 
 ## 4. Pothos
 
@@ -367,9 +397,7 @@ Over 60 seeds unless noted.
 ## 8. Open items
 
 - **Stage count.** The backend's growth rules ([8.7](../backend/design.md#87-plant-growth)) have **five** stages (0 to 24%, 25 to 49%, 50 to 74%, 75 to 99%, 100%). The plants default to four. Either map five onto four, or set the default to five and decide when the peace lily blooms.
-- **Health.** The backend has three health states (healthy, slightly wilted, wilted). No plant has a wilted look yet.
 - **Flower config** is not covered by `validateConfig`. Only the leaf config is checked; the flower numbers are protected by the tests.
-- **Dark theme.** Pot and leaf colors are not yet checked on dark surfaces.
 
 ## 9. History
 

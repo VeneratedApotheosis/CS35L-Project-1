@@ -21,6 +21,13 @@ export const KIMBERLY_FROND_STYLE = {
 }
 
 /**
+ * Drawn numbers are rounded to three decimals. Math.sin and Math.cos can differ
+ * in their last digits between the server and the browser, and React then
+ * reports a hydration mismatch on every attribute that was not rounded.
+ */
+const px = (n: number) => Math.round(n * 1000) / 1000
+
+/**
  * One frond in local coordinates: base at (0,0), tip near (0,-length). Pinnae
  * are drawn first (lighter on the inner side of the rachis, base tone on the
  * other), then the rachis over them, then one soft highlight clipped to the
@@ -61,10 +68,10 @@ export function KimberlyFrondShape({
       {pinnae.map((p, i) => (
         <ellipse
           key={i}
-          cx={p.cx}
-          cy={p.cy}
-          rx={p.rx}
-          ry={p.ry}
+          cx={px(p.cx)}
+          cy={px(p.cy)}
+          rx={px(p.rx)}
+          ry={px(p.ry)}
           transform={"rotate(" + p.rotation.toFixed(2) + " " + p.cx.toFixed(2) + " " + p.cy.toFixed(2) + ")"}
           fill={p.side === lightSide ? c.light : c.base}
         />
@@ -86,11 +93,11 @@ export function KimberlyFrondShape({
       </clipPath>
       <g clipPath={"url(#" + clipId + ")"}>
         <ellipse
-          cx={highlightX}
-          cy={highlightY}
-          rx={S.highlight.rx * width}
-          ry={S.highlight.ry * length}
-          transform={"rotate(" + S.highlight.tilt + " " + highlightX + " " + highlightY + ")"}
+          cx={px(highlightX)}
+          cy={px(highlightY)}
+          rx={px(S.highlight.rx * width)}
+          ry={px(S.highlight.ry * length)}
+          transform={"rotate(" + S.highlight.tilt + " " + px(highlightX) + " " + px(highlightY) + ")"}
           fill={S.highlight.color}
           opacity={S.highlight.opacity}
         />
