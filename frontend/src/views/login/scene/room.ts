@@ -41,10 +41,15 @@ export const SHELVES: readonly Shelf[] = [
  * right wall, and between a pane's two frames (ROOM.rings).
  */
 export const SUN = {
-  /** How far from the right wall (in units at the back wall) each row of patches starts and ends. */
+  /**
+   * How far from the right wall (in units at the back wall) each row of patches
+   * starts and ends, and how far up the roof its shaft begins (0 at the eave, 1
+   * at the ridge). Spreading the rows spreads the light across the whole floor.
+   */
   rows: [
-    { from: 120, to: 430 },
-    { from: 560, to: 860 },
+    { from: 120, to: 400, top: 0.05 },
+    { from: 520, to: 800, top: 0.45 },
+    { from: 930, to: 1230, top: 0.9 },
   ],
   /** Which gaps between rings get patches. The first gap is the pane nearest the back wall. */
   panes: [0, 1, 2, 3],
@@ -56,8 +61,10 @@ export const SUN = {
   slant: 0.00042,
   /** Share of each pane's depth left dark, so the frames throw a shadow between patches. */
   gap: 0.12,
+  /** How strong each part of the light is, from 0 (none) to 1. Kept low so the sun is a gentle warmth. */
+  strength: { patch: 0.36, core: 0.26, shaft: 0.2, wash: 0.42 },
   /** Dust in the light: how many specks and the seed that places them. */
-  dust: { count: 26, seed: 7 },
+  dust: { count: 40, seed: 7 },
 } as const
 
 /** The spot the HTML text sits over, left of center. The tests keep every plant out of it. */

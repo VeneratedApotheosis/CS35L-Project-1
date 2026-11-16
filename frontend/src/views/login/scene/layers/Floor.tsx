@@ -88,8 +88,8 @@ export function Floor() {
         <polygon points={pointsText([FLOOR_LEFT, FLOOR_RIGHT, project(FLOOR_RIGHT, 1.1), project(FLOOR_LEFT, 1.1)])} fill="#8a5a22" fillOpacity="0.16" />
         {patches.map((patch) => (
           <g key={patch.key}>
-            <polygon points={pointsText(patch.outer)} fill={COLORS.light} fillOpacity="0.62" />
-            <polygon points={pointsText(patch.core)} fill="#fff3b8" fillOpacity="0.5" />
+            <polygon points={pointsText(patch.outer)} fill="#fff0b0" fillOpacity={SUN.strength.patch} />
+            <polygon points={pointsText(patch.core)} fill="#fffbe2" fillOpacity={SUN.strength.core} />
           </g>
         ))}
       </g>
