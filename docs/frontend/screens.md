@@ -150,8 +150,8 @@ the date picker mirrors that exception.
 
 ### 7 Settings
 
-The current `/settings` page implements the timezone field and saves through
-`PATCH /me`. The other settings below are planned. Signed-in pages initialize
+The current `/settings` page implements the timezone field (saved through
+`PATCH /me`) and an Account section with Delete account. The other settings below are planned. Signed-in pages initialize
 an empty profile timezone from the browser (UTC if detection is unavailable)
 before allowing habit actions. An existing saved timezone is never replaced
 automatically. Profile setup failures show a retry action.
@@ -159,7 +159,7 @@ automatically. Profile setup failures show a retry action.
 - Username, email, and profile picture (from Google). Display name is editable, and saved through the backend.
 - **Timezone:** defaults to the browser's on first sign-in, and can be changed here.
 - Light/dark mode toggle, saved in the browser.
-- Log out. Delete account, under Account, with a confirmation that lists what is deleted (habits, activity logs, badges).
+- Log out (planned). **Delete account**, under Account: the button opens a dialog that lists what is deleted (habits, activity logs, badges) and asks the user to type `DELETE`. It then calls `DELETE /me`, signs the user out and the signed-in layout sends them to the login page. If deleting fails, an error shows and the user stays signed in. The code is in `views/settings/AccountSection.tsx`.
 - **Nav:** Overall Dashboard, My Garden, Badges.
 
 ### 8 Shared habits (planned)
