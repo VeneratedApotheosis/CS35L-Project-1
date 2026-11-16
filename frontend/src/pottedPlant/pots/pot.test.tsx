@@ -120,6 +120,15 @@ describe("potLookFromSeed", () => {
     expect(Math.abs(stripes / seeds - expected)).toBeLessThan(0.04)
   })
 
+  it("draws a pot in custom colors when the look has them, and leaves other looks alone", () => {
+    const custom = { name: "Test", body: "#123456", rim: "#234567", shade: "#345678", band: "#456789" }
+    const plain = renderToStaticMarkup(<svg><Pot look={lookOf("stripe")} id="a" /></svg>)
+    const colored = renderToStaticMarkup(<svg><Pot look={{ ...lookOf("stripe"), colors: custom }} id="a" /></svg>)
+    expect(colored).toContain("#123456")
+    expect(plain).not.toContain("#123456")
+    expect(plain).toContain(POT_PALETTES[0].body)
+  })
+
   it("draws from its own stream, not the plant's", () => {
     // The plant's stream is mulberry32(seed). A pot made from the same seed must not follow it:
     // matching the plant's first draw by chance is about one palette in five, not most of them.

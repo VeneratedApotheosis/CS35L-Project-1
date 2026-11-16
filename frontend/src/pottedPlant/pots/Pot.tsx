@@ -17,7 +17,7 @@ export function Pot({
   id: string
 }) {
   const S = POT_SHAPE
-  const colors = POT_PALETTES[look.palette % POT_PALETTES.length]
+  const colors = look.colors ?? POT_PALETTES[look.palette % POT_PALETTES.length]
   const clip = id + S.body.clipIdSuffix
   const finish = getFinish(look.finish).draw({
     rng: mulberry32(look.seed),

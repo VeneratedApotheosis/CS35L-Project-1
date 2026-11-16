@@ -2,6 +2,10 @@
 [data-theme="light"] {
   color-scheme: light;
 
+  /* The oval under a pot. Set here too so a light area inside a dark page resets it. */
+  --pot-shadow-color: #342f29;
+  --pot-shadow-opacity: 0.14;
+
   /* Figma Make's light surfaces */
   --color-app-canvas: #d9cdbb;
   --color-background: var(--milk);
