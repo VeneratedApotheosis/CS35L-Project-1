@@ -21,10 +21,18 @@ export const FIDDLE_TRUNK = {
   leanCurve: 1.6,
   /** The trunk's tip sits this far below the highest leaf base, as a share of the stage's height. */
   tipBelowTopLeaf: 0.05,
-  /** Each branch leaves the trunk this far below its leaf base, as a share of the stage's height. */
+  /**
+   * An upright leaf's branch leaves the trunk this far below the leaf base, as a
+   * share of the stage's height. A leaf that points sideways has no drop, so its
+   * branch runs outward.
+   */
   branchDrop: 0.08,
-  /** Where along a branch it bends from the trunk's direction to the leaf's base (0 trunk end, 1 leaf end). */
-  branchBend: 0.45,
+  /**
+   * How far back from the leaf base the branch's curve is pulled along the
+   * leaf's own direction, as a share of the branch's straight length. The
+   * branch then arrives at the base heading the way the leaf points.
+   */
+  branchFollow: 0.5,
   /** Branch width. */
   branchWidth: 2.2,
   /** A trunk shorter than this (growing from nothing) is not drawn. */
@@ -78,10 +86,13 @@ export function fiddleTrunk<Spec>(stage: PlantStage<Spec>, soil: { x: number; y:
   }
 
   const branches = stage.leaves.map((leaf) => {
-    const dropY = Math.min(Math.max(leaf.baseY + T.branchDrop * stage.height, tipY), soil.y)
+    const a = (leaf.angle * Math.PI) / 180
+    const upright = Math.max(Math.cos(a), 0)
+    const dropY = Math.min(Math.max(leaf.baseY + T.branchDrop * stage.height * upright, tipY), soil.y)
     const [ax, ay] = middleAt(dropY)
-    const cx = ax + (leaf.baseX - ax) * T.branchBend
-    const cy = ay - (ay - leaf.baseY) * (1 - T.branchBend)
+    const back = Math.hypot(leaf.baseX - ax, leaf.baseY - ay) * T.branchFollow
+    const cx = leaf.baseX - Math.sin(a) * back
+    const cy = leaf.baseY + Math.cos(a) * back
     return {
       index: leaf.index,
       d: "M" + round(ax) + " " + round(ay) + " Q" + round(cx) + " " + round(cy) + " " + round(leaf.baseX) + " " + round(leaf.baseY),

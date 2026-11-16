@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { VIEWBOX } from "../../genome"
 import { WiltProvider } from "../staged/WiltContext"
 import { wiltPlant } from "../staged/wilt"
@@ -13,9 +13,13 @@ import { SNAKE_PLANT_CONFIG } from "../snakePlant/snakePlantConfig"
 import { FiddleLeafFig, FiddleLeafFigDrawing } from "./FiddleLeafFig"
 import { FIDDLE_LEAF_FIG_CONFIG } from "./fiddleLeafFigConfig"
 import { bladeWidth, FIDDLE_PROFILE, fiddleLeafPath, fiddleLeafPolygon, randomFiddleLeaf } from "./fiddleLeafFigLeaf"
+import { crownAngle, FIDDLE_CROWN } from "./fiddleLeafFigCrown"
 import { fiddleTrunk } from "./fiddleLeafFigTrunk"
 import { createFiddleLeafFig, leafOutline, stageLeafCounts, stageScales } from "./fiddleLeafFigStages"
 import { mulberry32 } from "../../rng"
+
+// Growing 60 plants of up to 14 leaves is slow when the whole suite runs at once.
+vi.setConfig({ testTimeout: 30000 })
 
 const SEEDS = Array.from({ length: 60 }, (_, i) => i + 1)
 const EPS = 1e-6
@@ -24,9 +28,8 @@ const LIMITS = CONFIG.limits
 const ANCHOR = CONFIG.dome.anchor
 
 describe("stage ladder", () => {
-  it("gives 2 to 7 leaves and never exceeds the leaf cap", () => {
-    expect(stageLeafCounts(4)[0]).toBe(2)
-    expect(stageLeafCounts(4).at(-1)).toBe(7)
+  it("gives 4 to 14 leaves (4, 6, 10, 14) and never exceeds the leaf cap", () => {
+    expect(stageLeafCounts(4)).toEqual([4, 6, 10, 14])
     for (let s = 1; s <= CONFIG.stages.max; s++) {
       for (const n of stageLeafCounts(s)) expect(n).toBeLessThanOrEqual(CONFIG.stages.maxLeaves)
     }
@@ -65,12 +68,11 @@ describe("generated fiddle-leaf fig", () => {
     expect(renderToStaticMarkup(<FiddleLeafFig seed={7} stage={4} />)).toContain("<svg")
   })
 
-  it("never draws more than the configured leaf cap, and has 4 to 8 leaves at the last stage", () => {
+  it("never draws more than the configured leaf cap, and has 14 leaves at the last stage", () => {
     for (const seed of SEEDS) {
       const { stages } = createFiddleLeafFig(seed)
       for (const st of stages) expect(st.leaves.length).toBeLessThanOrEqual(CONFIG.stages.maxLeaves)
-      expect(stages.at(-1)!.leaves.length).toBeGreaterThanOrEqual(4)
-      expect(stages.at(-1)!.leaves.length).toBeLessThanOrEqual(8)
+      expect(stages.at(-1)!.leaves).toHaveLength(14)
     }
   })
 
@@ -159,6 +161,37 @@ describe("generated fiddle-leaf fig", () => {
   })
 })
 
+describe("the layered crown", () => {
+  it("turns leaves from out and slightly down at the bottom to upright at the top", () => {
+    expect(crownAngle(0)).toBe(FIDDLE_CROWN.outwardAngle)
+    expect(crownAngle(0)).toBeGreaterThan(90)
+    expect(crownAngle(1)).toBe(FIDDLE_CROWN.uprightAngle)
+    for (let i = 1; i <= 10; i++) expect(crownAngle(i / 10)).toBeLessThan(crownAngle((i - 1) / 10))
+  })
+
+  it("points the lower leaves outward and the higher leaves upright", () => {
+    const mean = (values: number[]) => values.reduce((a, b) => a + b, 0) / values.length
+    for (const seed of SEEDS) {
+      const last = createFiddleLeafFig(seed).stages.at(-1)!
+      const byHeight = [...last.leaves].sort((a, b) => b.baseY - a.baseY)
+      const third = Math.floor(byHeight.length / 3)
+      const lowAngle = mean(byHeight.slice(0, third).map((l) => Math.abs(l.angle)))
+      const highAngle = mean(byHeight.slice(-third).map((l) => Math.abs(l.angle)))
+      expect(lowAngle).toBeGreaterThan(60)
+      expect(highAngle).toBeLessThan(45)
+      expect(lowAngle - highAngle).toBeGreaterThan(25)
+    }
+  })
+
+  it("keeps the leaves of the full plant on both sides of the trunk", () => {
+    for (const seed of SEEDS) {
+      const last = createFiddleLeafFig(seed).stages.at(-1)!
+      expect(last.leaves.filter((l) => l.angle < 0).length).toBeGreaterThanOrEqual(3)
+      expect(last.leaves.filter((l) => l.angle > 0).length).toBeGreaterThanOrEqual(3)
+    }
+  })
+})
+
 describe("the violin leaf", () => {
   const leaves = Array.from({ length: 40 }, (_, i) => randomFiddleLeaf(mulberry32(i + 1)))
 
@@ -197,13 +230,37 @@ describe("the trunk", () => {
     expect(fiddleTrunk(last, ANCHOR)!.branches).toHaveLength(last.leaves.length)
   })
 
-  it("rises from the soil to just under the highest leaf, leaving the bottom bare", () => {
+  it("rises from the soil to just under the highest leaf, with a short bare stretch at the bottom", () => {
     for (const seed of SEEDS) {
       const last = createFiddleLeafFig(seed).stages.at(-1)!
       const lowest = Math.max(...last.leaves.map((l) => l.baseY))
       const highest = Math.min(...last.leaves.map((l) => l.baseY))
-      expect(ANCHOR.y - lowest).toBeGreaterThanOrEqual(last.height * 0.2)
+      expect(ANCHOR.y - lowest).toBeGreaterThanOrEqual(last.height * 0.1)
       expect(ANCHOR.y - highest).toBeGreaterThanOrEqual(last.height * 0.4)
+    }
+  })
+
+  it("carries several leaves low on the trunk, so it is not bare", () => {
+    for (const seed of SEEDS) {
+      const last = createFiddleLeafFig(seed).stages.at(-1)!
+      const low = last.leaves.filter((l) => ANCHOR.y - l.baseY <= last.height * 0.4)
+      expect(low.length).toBeGreaterThanOrEqual(4)
+    }
+  })
+
+  it("ends every branch heading the way its leaf points, so the leaf stays attached", () => {
+    for (const seed of SEEDS.slice(0, 20)) {
+      const last = createFiddleLeafFig(seed).stages.at(-1)!
+      const trunk = fiddleTrunk(last, ANCHOR)!
+      for (const leaf of last.leaves) {
+        const d = trunk.branches.find((b) => b.index === leaf.index)!.d
+        const [, cx, cy, bx, by] = d.match(/Q(-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+)$/)!.map(Number)
+        expect(bx).toBeCloseTo(leaf.baseX, 1)
+        expect(by).toBeCloseTo(leaf.baseY, 1)
+        const a = (leaf.angle * Math.PI) / 180
+        const cross = (bx - cx) * -Math.cos(a) - (by - cy) * Math.sin(a)
+        expect(Math.abs(cross)).toBeLessThan(0.05)
+      }
     }
   })
 
