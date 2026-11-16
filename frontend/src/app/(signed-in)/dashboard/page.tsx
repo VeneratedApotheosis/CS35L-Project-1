@@ -1,6 +1,5 @@
-import Garden from "@/views/Garden"
+import Dashboard from "@/views/Dashboard"
 
-/** Basic saved-habit dashboard; activity statistics will be added later. */
 export default function DashboardPage() {
-  return <Garden title="Dashboard" />
+  return <Dashboard />
 }

@@ -214,3 +214,17 @@
     transform: none;
   }
 }
+
+/* Garden has room for three readable cards; other screens retain their measure. */
+.app-shell__content--garden {
+  max-width: 90rem;
+  padding-inline: clamp(var(--space-6), 4vw, var(--space-16));
+}
+
+@media (max-width: 43.999rem) {
+  .app-shell__content--garden {
+    padding-top: calc(clamp(var(--space-12), 8vw, var(--space-16)) + env(safe-area-inset-top, 0px));
+    padding-bottom: var(--space-16);
+    padding-inline: clamp(var(--space-8), 6vw, var(--space-12));
+  }
+}

@@ -19,6 +19,7 @@ import { Toast, type ToastProps } from "@/components/Toast"
 import { Card } from "@/components/Card"
 import { Icon } from "@/components/Icon"
 import { NavBar } from "@/components/NavBar"
+import { ProgressRing } from "@/components/ProgressRing"
 import { ProgressBar } from "@/components/ProgressBar"
 import { useTheme } from "@/styles/ThemeProvider"
 import { PlantCardExamples } from "./PlantCardExamples"
@@ -457,6 +458,12 @@ export default function StyleGuide() {
           description="Goals up to 10 show one step per activity. Larger goals use a smooth bar to avoid crowded ticks. Logging beyond the goal keeps the bar full and shows the actual count. Use the theme switch above to compare both themes."
         >
           <ProgressExamples />
+          <div className="flex flex-wrap gap-6">
+            <ProgressRing label="Not started" value={0} />
+            <ProgressRing label="Partway there" value={0.42} />
+            <ProgressRing label="Complete" value={1} />
+            <ProgressRing label="Unavailable" value={null} />
+          </div>
         </Section>
 
         <Section

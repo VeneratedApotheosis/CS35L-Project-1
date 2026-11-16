@@ -115,7 +115,7 @@ The plant is the main visual. Style reference: the icons in Animal Crossing: New
 - **Containment.** Leaves stay above the soil line and within the pot's width (8px overhang allowed), so plants never overlap neighbors in the grid.
 - **The pot is drawn separately** (`PottedPlant`): the seed also picks the pot's look — palette, band and finish — so any pot can go with any plant.
 
-Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant**, **Kimberly Queen**, **lily**, **rose**, **monstera**, **philodendron** and **lotus** — ids `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`. The create-habit picker, the previews and the backend's `plant_type` validation all read the same list (`frontend/src/plants/plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`). Every plant except the lotus is built on the shared stage engine; the lotus is a water plant with its own drawing.
+Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant**, **Kimberly Queen**, **lily**, **rose**, **monstera**, **philodendron** and **lotus** — ids `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`. The create-habit picker, the previews and the backend's `plant_type` validation all read the same list (`frontend/src/pottedPlant/plants/plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`). Every plant except the lotus is built on the shared stage engine; the lotus is a water plant with its own drawing.
 
 ## 7. Layout
 
@@ -180,7 +180,7 @@ Built in `frontend/src/components/`, styled by the CSS in `frontend/src/styles/c
 | `Icon` | lucide icons with a size and a tone, always `currentColor` |
 | `NavBar` / `AppShell` | responsive navigation, current route, disabled future destinations, shared signed-in layout and skip link |
 | `ProgressBar` | accessible label, activity count and target (1–50); segmented steps for targets up to 10, smooth fill above 10, capped fill and uncapped count |
-| `PlantCard` | habit name, plant type, seed, stage (1–4), health, period progress and callbacks for logging, details and editing |
+| `PlantCard` | habit name, plant type, seed, stage (1–4), health, period progress and callbacks for logging and details |
 | Inputs | CSS classes in `inputs.css`; a React wrapper is not built yet |
 
 Still to build: Modal, toast (for the undo after logging).
@@ -204,7 +204,7 @@ Still to build: Modal, toast (for the undo after logging).
 ## 10. Motion
 
 - Motion answers a person's action: logging an activity, a plant moving up a stage, a menu opening, a toast appearing.
-- **One orchestrated moment:** when a log moves a plant to the next stage, the plant grows from the old size to the new one. This is the one place where motion is the main event.
+- **One orchestrated moment:** when a log moves a plant to the next stage, each leaf springs from its old place to its new one, new leaves grow out of the soil, and lines, pops and (on the last stage) stars burst around the plant. The pot and soil do not move. This is the one place where motion is the main event. Details are in [plant-generation.md section 3.10](plant-generation.md#310-moving-up-a-stage).
 - No entrance animation on every section, no hover animation on every card.
 - Respect `prefers-reduced-motion`: replace movement with an instant change.
 
@@ -227,10 +227,11 @@ frontend/src/
   app/             routes (Next.js App Router): login, style-guide, plants, home
   views/           full screens used by routes: Garden, Login
   components/      shared UI: Button, Card, Icon
-  plants/          plant drawing and generation (see plant-generation.md)
-    pothos/        the pothos: config, leaf, component
-    pot/           the pot shared by all plants
-    staged/        the stage engine
+  pottedPlant/     plants in pots (see plant-generation.md)
+    plants/        every plant, one folder per species, built on the stage engine
+      staged/      the stage engine
+      pothos/      the pothos: config, leaf, component
+    pots/          the pot and its finishes, shared by all plants
   auth/            Supabase auth context and protected routes
   lib/             Supabase client
   styles/          tokens, themes, component CSS, ThemeProvider
@@ -248,10 +249,10 @@ frontend/src/
 - Supabase auth with protected routes.
 - Procedural plants and pots (ten plant types on the shared stage engine, plus the water lotus), and the `/plants` prototype page.
 - Create-habit form with the full plant picker and a live, seeded preview.
+- Wilted look for every plant on the stage engine, and the stage-up animation (see [plant-generation.md](plant-generation.md#39-health-the-wilted-look)). Both can be tried on `/plants`.
+- Plants checked on the dark theme; the pot's shadow is a theme token.
 
 **Open**
 - **Login and Garden pages** are placeholders and are not yet on the design system.
 - **Missing components:** Modal, toast, input wrappers.
-- **Plants on dark surfaces.** Check the pot and leaf colors against the dark theme.
-- **Stage-up animation** is described in section 10 but not built.
-- **Health look.** The rules (backend-design.md section 8.8) describe a wilting plant; how the drawing changes for health is not decided yet.
+- **Lotus** is not on the stage engine, so it does not wilt or animate yet.

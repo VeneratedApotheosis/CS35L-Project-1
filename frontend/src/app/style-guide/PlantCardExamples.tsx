@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/Button"
 import { PlantCard, type PlantHealth } from "@/components/PlantCard"
-import { PLANT_TYPES } from "@/plants/plantTypes"
+import { PLANT_TYPES } from "@/pottedPlant/plants/plantTypes"
 
 const stages = [1, 2, 3, 4] as const
 const healthOptions: { value: PlantHealth; label: string }[] = [
@@ -11,6 +11,8 @@ const healthOptions: { value: PlantHealth; label: string }[] = [
   { value: "slightly_wilted", label: "Slightly wilted" },
   { value: "wilted", label: "Wilted" },
 ]
+
+const demoNames = ["Read a little", "Take a walk", "Practice piano", "Drink water", "Stretch", "Journal", "Meditate", "Cook at home", "Call a friend", "Tidy up"]
 
 /** Local demo data: these actions never create or change a saved habit. */
 export function PlantCardExamples() {
@@ -37,25 +39,24 @@ export function PlantCardExamples() {
           </select>
         </label>
         <Button variant="secondary" className="self-end" onClick={() => {
-          setCounts({ pothos: 0, peace_lily: 0, pilea: 0 })
+          setCounts({})
           setMessage("Demo counts reset")
         }}>Reset counts</Button>
       </div>
       <div className="plant-card-grid">
         {PLANT_TYPES.map((plant, index) => (
-          <PlantCard key={plant.id} name={["Read a little", "Take a walk", "Practice piano"][index]}
+          <PlantCard key={plant.id} name={demoNames[index % demoNames.length]}
             plantType={plant.id} seed={42 + index} stage={stage} health={health}
-            count={counts[plant.id]} target={3} periodLabel="This week"
+            count={counts[plant.id] ?? 0} target={3} periodLabel="This week"
             onLogActivity={() => {
-              setCounts((current) => ({ ...current, [plant.id]: current[plant.id] + 1 }))
+              setCounts((current) => ({ ...current, [plant.id]: (current[plant.id] ?? 0) + 1 }))
               setMessage(`Activity logged for ${plant.label} (demo only)`)
             }}
             onViewDetails={() => setMessage(`View details selected for ${plant.label} (demo only)`)}
-            onEditHabit={() => setMessage(`Edit habit selected for ${plant.label} (demo only)`)}
           />
         ))}
       </div>
-      <p className="text-body-sm text-secondary" role="status">{message || "Open a card’s options to log an activity, view details, or edit the demo habit."}</p>
+      <p className="text-body-sm text-secondary" role="status">{message || "Open a card’s options to log an activity, or view details."}</p>
     </div>
   )
 }

@@ -28,7 +28,7 @@ import {
   PLANT_TYPES,
   plantTypeById,
   type PlantTypeId,
-} from "@/plants/plantTypes"
+} from "@/pottedPlant/plants/plantTypes"
 
 type Step = "edit" | "confirm"
 type Errors = Partial<Record<string, string>>

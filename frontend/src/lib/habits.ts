@@ -1,4 +1,4 @@
-import type { PlantTypeId } from "@/plants/plantTypes"
+import type { PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 import { api } from "./api"
 
 export type IntervalUnit = "day" | "week" | "month"
@@ -90,8 +90,21 @@ export function createHabit(input: CreateHabitInput): Promise<Habit> {
   return api.post<Habit>("/habits", input)
 }
 
+/** Read-model stats supplied by GET /habits and GET /habits/:id. */
+export interface HabitStats {
+  state: "not_started" | "active" | "expired"
+  current_period: { number: number; total: number | null; start: string; end: string; count: number; target: number }
+  overall_progress: number | null
+  stage: 1 | 2 | 3 | 4
+  health: "healthy" | "slightly_wilted" | "wilted"
+}
+
+export interface HabitWithStats extends Habit {
+  stats: HabitStats
+}
+
 export interface HabitPage {
-  habits: Habit[]
+  habits: HabitWithStats[]
   total: number
   limit: number
   offset: number
@@ -106,6 +119,42 @@ export function listHabits(offset = 0): Promise<HabitPage> {
   return api.get<HabitPage>(`/habits?limit=50&offset=${offset}`)
 }
 
-export function getHabit(id: string): Promise<Habit> {
-  return api.get<Habit>(`/habits/${encodeURIComponent(id)}`)
+/** Progress fields from the full stats returned by GET /habits/:id. */
+export interface HabitProgressStats {
+  state: "not_started" | "active" | "expired"
+  current_period: {
+    number: number
+    total: number | null
+    start: string
+    end: string
+    count: number
+    target: number
+  }
+  overall_progress: number | null
+  consistency: { successful: number; completed: number; rate: number | null }
+  streak: number
+}
+
+export interface HabitPeriod {
+  number: number
+  start: string
+  /** Exclusive end date, as returned by the backend. */
+  end: string
+  count: number
+  target: number
+  met: boolean
+  status: "completed" | "current" | "upcoming"
+}
+
+export interface HabitDetail extends HabitWithStats {
+  stats: HabitStats & HabitProgressStats & {
+    end_date: string | null
+    periods: HabitPeriod[]
+    log_days: { date: string; count: number }[]
+    current_period_logs: { id: string; occurred_on: string }[]
+  }
+}
+
+export function getHabit(id: string): Promise<HabitDetail> {
+  return api.get<HabitDetail>(`/habits/${encodeURIComponent(id)}`)
 }

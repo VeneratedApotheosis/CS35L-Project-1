@@ -6,11 +6,11 @@ import { Sprout } from "lucide-react"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
 import { Icon } from "@/components/Icon"
-import { PeaceLily } from "@/plants/peaceLily"
-import { Monstera } from "@/plants/monstera"
-import { Pilea } from "@/plants/pilea"
-import { Pothos } from "@/plants/pothos"
-import { Rose } from "@/plants/rose"
+import { PeaceLily } from "@/pottedPlant/plants/peaceLily"
+import { Monstera } from "@/pottedPlant/plants/monstera"
+import { Pilea } from "@/pottedPlant/plants/pilea"
+import { Pothos } from "@/pottedPlant/plants/pothos"
+import { Rose } from "@/pottedPlant/plants/rose"
 
 /** Google's brand colors are fixed, so they are not theme tokens. */
 function GoogleIcon() {
