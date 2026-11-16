@@ -38,50 +38,37 @@ export const SCENE_PLANTS: readonly ScenePlant[] = [
   { id: "back-lower-8", type: "philodendron", x: 1142, y: 544, size: 170, stage: 4, wilt: 0.0, seed: 152, pot: { color: "sky" }, mirror: true, shelf: "back-lower" },
   { id: "back-lower-9", type: "pothos", x: 1203, y: 536, size: 144, stage: 4, wilt: 0.0, seed: 159, pot: { color: "cream" }, shelf: "back-lower" },
 
-  // High shelf along the right wall. Nearer plants are bigger.
-  { id: "right-upper-1", type: "pothos", x: 1253, y: 320, size: 130, stage: 4, wilt: 0.0, seed: 166, pot: { color: "blush" } },
-  { id: "right-upper-2", type: "philodendron", x: 1320, y: 308, size: 150, stage: 4, wilt: 0.0, seed: 173, pot: { color: "sage" }, mirror: true },
-  { id: "right-upper-3", type: "kimberly_queen", x: 1387, y: 296, size: 175, stage: 4, wilt: 0.0, seed: 180, pot: { color: "terracotta" } },
-
-  // Lower shelf along the right wall.
-  { id: "right-lower-1", type: "pilea", x: 1253, y: 550, size: 150, stage: 4, wilt: 0.0, seed: 187, pot: { color: "blush" } },
-  { id: "right-lower-2", type: "lotus", x: 1320, y: 572, size: 170, stage: 4, wilt: 0.0, seed: 194, pot: { color: "clay" }, mirror: true },
-  { id: "right-lower-3", type: "pothos", x: 1387, y: 594, size: 190, stage: 4, wilt: 0.0, seed: 201, pot: { color: "terracotta" } },
-
-  // High shelf along the left wall, above the text: the top-left corner.
-  { id: "left-upper-1", type: "pothos", x: 347, y: 216, size: 130, stage: 4, wilt: 0.0, seed: 208, pot: { color: "terracotta" } },
-  { id: "left-upper-2", type: "monstera", x: 288, y: 192, size: 150, stage: 4, wilt: 0.0, seed: 215, pot: { color: "slate" }, mirror: true },
-  { id: "left-upper-3", type: "pothos", x: 229, y: 168, size: 170, stage: 4, wilt: 0.0, seed: 222, pot: { color: "mustard" } },
-  { id: "left-upper-4", type: "philodendron", x: 170, y: 144, size: 190, stage: 4, wilt: 0.0, seed: 229, pot: { color: "sky" }, mirror: true },
+  // Shelf along the right wall: nearer plants are bigger.
+  { id: "right-lower-1", type: "pilea", x: 1253, y: 550, size: 150, stage: 4, wilt: 0.0, seed: 166, pot: { color: "blush" } },
+  { id: "right-lower-2", type: "lotus", x: 1320, y: 572, size: 170, stage: 4, wilt: 0.0, seed: 173, pot: { color: "sage" }, mirror: true },
+  { id: "right-lower-3", type: "pothos", x: 1387, y: 594, size: 190, stage: 4, wilt: 0.0, seed: 180, pot: { color: "terracotta" } },
 
   // Floor row against the back wall, under the lower shelf.
-  { id: "wall-back-1", type: "snake_plant", x: 470, y: 704, size: 112, stage: 4, wilt: 0.0, seed: 236, pot: { color: "terracotta" } },
-  { id: "wall-back-2", type: "pilea", x: 540, y: 708, size: 108, stage: 4, wilt: 0.0, seed: 243, pot: { color: "slate" }, mirror: true },
-  { id: "wall-back-3", type: "pothos", x: 610, y: 706, size: 100, stage: 4, wilt: 0.0, seed: 250, pot: { color: "clay" } },
-  { id: "wall-back-4", type: "monstera", x: 715, y: 702, size: 142, stage: 4, wilt: 0.0, seed: 257, pot: { color: "navy" }, mirror: true },
-  { id: "wall-back-5", type: "pothos", x: 775, y: 706, size: 150, stage: 4, wilt: 0.0, seed: 264, pot: { color: "cream" } },
-  { id: "wall-back-6", type: "philodendron", x: 835, y: 700, size: 146, stage: 4, wilt: 0.5, seed: 271, pot: { color: "blush" }, mirror: true },
-  { id: "wall-back-7", type: "rose", x: 895, y: 705, size: 156, stage: 4, wilt: 0.0, seed: 278, pot: { color: "teal" } },
-  { id: "wall-back-8", type: "kimberly_queen", x: 955, y: 701, size: 150, stage: 4, wilt: 0.0, seed: 285, pot: { color: "terracotta" }, mirror: true },
-  { id: "wall-back-9", type: "pothos", x: 1015, y: 707, size: 160, stage: 4, wilt: 0.0, seed: 292, pot: { color: "mustard" } },
-  { id: "wall-back-10", type: "peace_lily", x: 1075, y: 702, size: 148, stage: 4, wilt: 0.0, seed: 299, pot: { color: "terracotta" }, mirror: true },
-  { id: "wall-back-11", type: "pothos", x: 1135, y: 706, size: 154, stage: 4, wilt: 0.0, seed: 306, pot: { color: "navy" } },
-  { id: "wall-back-12", type: "monstera", x: 1195, y: 703, size: 150, stage: 4, wilt: 0.0, seed: 313, pot: { color: "navy" }, mirror: true },
+  { id: "wall-back-1", type: "snake_plant", x: 470, y: 704, size: 112, stage: 4, wilt: 0.0, seed: 187, pot: { color: "blush" } },
+  { id: "wall-back-2", type: "pilea", x: 540, y: 708, size: 108, stage: 4, wilt: 0.0, seed: 194, pot: { color: "clay" }, mirror: true },
+  { id: "wall-back-3", type: "pothos", x: 610, y: 706, size: 100, stage: 4, wilt: 0.0, seed: 201, pot: { color: "terracotta" } },
+  { id: "wall-back-4", type: "monstera", x: 715, y: 702, size: 142, stage: 4, wilt: 0.0, seed: 208, pot: { color: "terracotta" }, mirror: true },
+  { id: "wall-back-5", type: "pothos", x: 775, y: 706, size: 150, stage: 4, wilt: 0.0, seed: 215, pot: { color: "slate" } },
+  { id: "wall-back-6", type: "philodendron", x: 835, y: 700, size: 146, stage: 4, wilt: 0.5, seed: 222, pot: { color: "mustard" }, mirror: true },
+  { id: "wall-back-7", type: "rose", x: 895, y: 705, size: 156, stage: 4, wilt: 0.0, seed: 229, pot: { color: "sky" } },
+  { id: "wall-back-8", type: "kimberly_queen", x: 955, y: 701, size: 150, stage: 4, wilt: 0.0, seed: 236, pot: { color: "terracotta" }, mirror: true },
+  { id: "wall-back-9", type: "pothos", x: 1015, y: 707, size: 160, stage: 4, wilt: 0.0, seed: 243, pot: { color: "slate" } },
+  { id: "wall-back-10", type: "peace_lily", x: 1075, y: 702, size: 148, stage: 4, wilt: 0.0, seed: 250, pot: { color: "clay" }, mirror: true },
+  { id: "wall-back-11", type: "pothos", x: 1135, y: 706, size: 154, stage: 4, wilt: 0.0, seed: 257, pot: { color: "navy" } },
+  { id: "wall-back-12", type: "monstera", x: 1195, y: 703, size: 150, stage: 4, wilt: 0.0, seed: 264, pot: { color: "cream" }, mirror: true },
 
-  // The back-right corner: tall plants up to the roof, then a row down the right wall.
-  { id: "corner-1", type: "monstera", x: 1250, y: 690, size: 360, stage: 4, wilt: 0.0, seed: 320, pot: { color: "slate" } },
-  { id: "corner-2", type: "pothos", x: 1172, y: 698, size: 300, stage: 4, wilt: 0.0, seed: 327, pot: { color: "clay" }, mirror: true },
-  { id: "corner-3", type: "kimberly_queen", x: 1225, y: 715, size: 300, stage: 4, wilt: 0.0, seed: 334, pot: { color: "charcoal" } },
-  { id: "corner-4", type: "philodendron", x: 1300, y: 770, size: 400, stage: 4, wilt: 0.0, seed: 341, pot: { color: "sky" }, mirror: true },
-  { id: "corner-5", type: "pothos", x: 1395, y: 845, size: 460, stage: 4, wilt: 0.0, seed: 348, pot: { color: "clay" } },
+  // Floor row down the right wall, growing toward the viewer.
+  { id: "wall-right-1", type: "pothos", x: 1220, y: 712, size: 165, stage: 4, wilt: 0.0, seed: 271, pot: { color: "blush" } },
+  { id: "wall-right-2", type: "kimberly_queen", x: 1290, y: 764, size: 220, stage: 4, wilt: 0.0, seed: 278, pot: { color: "teal" }, mirror: true },
+  { id: "wall-right-3", type: "philodendron", x: 1377, y: 829, size: 295, stage: 4, wilt: 0.0, seed: 285, pot: { color: "terracotta" } },
 
   // Row down the left wall. Kept low, so the plants stay below the text.
-  { id: "wall-left-1", type: "pilea", x: 380, y: 712, size: 120, stage: 4, wilt: 0.0, seed: 355, pot: { color: "sage" } },
-  { id: "wall-left-2", type: "pothos", x: 327, y: 751, size: 165, stage: 4, wilt: 0.0, seed: 362, pot: { color: "terracotta" }, mirror: true },
-  { id: "wall-left-3", type: "monstera", x: 275, y: 790, size: 205, stage: 4, wilt: 0.0, seed: 369, pot: { color: "charcoal" } },
-  { id: "wall-left-4", type: "philodendron", x: 205, y: 842, size: 262, stage: 4, wilt: 0.0, seed: 376, pot: { color: "clay" }, mirror: true },
-  { id: "wall-left-5", type: "kimberly_queen", x: 117, y: 907, size: 335, stage: 4, wilt: 0.0, seed: 383, pot: { color: "clay" } },
+  { id: "wall-left-1", type: "pilea", x: 380, y: 712, size: 120, stage: 4, wilt: 0.0, seed: 292, pot: { color: "mustard" } },
+  { id: "wall-left-2", type: "pothos", x: 327, y: 751, size: 165, stage: 4, wilt: 0.0, seed: 299, pot: { color: "terracotta" }, mirror: true },
+  { id: "wall-left-3", type: "monstera", x: 275, y: 790, size: 205, stage: 4, wilt: 0.0, seed: 306, pot: { color: "navy" } },
+  { id: "wall-left-4", type: "philodendron", x: 205, y: 842, size: 262, stage: 4, wilt: 0.0, seed: 313, pot: { color: "navy" }, mirror: true },
+  { id: "wall-left-5", type: "kimberly_queen", x: 117, y: 907, size: 335, stage: 4, wilt: 0.0, seed: 320, pot: { color: "slate" } },
 
   // The biggest plant, at the right edge.
-  { id: "big-1", type: "monstera", x: 1530, y: 940, size: 462, stage: 4, wilt: 0.0, seed: 390, pot: { color: "clay" } },
+  { id: "big-1", type: "monstera", x: 1530, y: 940, size: 462, stage: 4, wilt: 0.0, seed: 327, pot: { color: "clay" } },
 ]

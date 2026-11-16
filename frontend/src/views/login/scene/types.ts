@@ -50,18 +50,18 @@ export interface ScenePlant {
   shelf?: string
 }
 
-/** A shelf attached to the back wall, the left wall or the right wall. */
+/** A shelf attached to the back wall or to the right wall. */
 export interface Shelf {
   id: string
-  side: "back" | "left" | "right"
-  /** Back shelf: the left and right ends. Side shelf: how far it runs toward the viewer, as depth factors (1 is the back wall). */
+  side: "back" | "right"
+  /** Back shelf: the left and right ends. Right shelf: how far it runs toward the viewer, as depth factors (1 is the back wall). */
   from: number
   to: number
   /** The height of the board where it meets the wall. */
   y: number
   /** Back shelf: how far the board sticks out from the wall, as a depth factor (1.08 is a little). */
   reach?: number
-  /** Side shelf: how far the board sticks out from the wall, in units at the back wall. */
+  /** Right shelf: how far the board sticks out from the wall, in units at the back wall. */
   inset?: number
   /** The thickness of the board's front edge. */
   thickness: number

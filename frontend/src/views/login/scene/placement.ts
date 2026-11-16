@@ -33,14 +33,6 @@ export function plantBounds(plant: Pick<ScenePlant, "x" | "y" | "size">): Frame 
   return { ...frame, height: plant.y - frame.y }
 }
 
-/** The x of a side wall at the back wall's depth, and of a side shelf's free edge, which sticks out into the room. */
-export function sideWallX(shelf: Pick<Shelf, "side" | "inset">): { wall: number; free: number } {
-  const inset = shelf.inset ?? 70
-  return shelf.side === "left"
-    ? { wall: ROOM.left, free: ROOM.left + inset }
-    : { wall: ROOM.right, free: ROOM.right - inset }
-}
-
 /** The top and front faces of a shelf board, as polygons on the canvas. */
 export function shelfFaces(shelf: Shelf): { top: Point[]; front: Point[] } {
   if (shelf.side === "back") {
@@ -55,9 +47,9 @@ export function shelfFaces(shelf: Shelf): { top: Point[]; front: Point[] } {
       front: [freeLeft, freeRight, { x: freeRight.x, y: freeRight.y + drop }, { x: freeLeft.x, y: freeLeft.y + drop }],
     }
   }
-  const edges = sideWallX(shelf)
-  const wall = (factor: number) => project({ x: edges.wall, y: shelf.y }, factor)
-  const free = (factor: number) => project({ x: edges.free, y: shelf.y }, factor)
+  const inset = shelf.inset ?? 70
+  const wall = (factor: number) => project({ x: 1240, y: shelf.y }, factor)
+  const free = (factor: number) => project({ x: 1240 - inset, y: shelf.y }, factor)
   return {
     top: [wall(shelf.from), wall(shelf.to), free(shelf.to), free(shelf.from)],
     front: [
