@@ -275,20 +275,22 @@ so a bad config fails here with a list of exactly what doesn't fit.
 - **Flowers or other parts.** `StemmedPlant` has two slots, `renderBehindLeaves`
   (between stems and leaves) and `renderAboveLeaves` (on top). Reuse the peace
   lily's flower placement in `peaceLily/flowers.ts`. See the lily and rose.
-- **Point leaves by their height** (a layered plant, like the fiddle-leaf fig and
-  the calathea). Add an opt-in `layerAngle: { outward, upright, curve }` to the
+- **Point leaves by their height** (a layered plant, like the calathea). Add an opt-in `layerAngle: { outward, upright, curve }` to the
   config. A leaf at the lowest layer (0) points `outward` degrees from straight
   up (above 90 dips below level), a leaf at the highest layer (1) points
   `upright` degrees, and `curve` above 1 keeps the lower layers spread out.
   Without it a leaf's direction is its stem's heading plus a random curl, which
   has nothing to do with how high it sits. Use `layers.bands` and
   `stems.lengthRange` to make low layers sit low.
-- **Hanging below the soil** (a trailing plant, like the string of pearls). Add an
+- **Make low leaves smaller** (like a peace lily's outer leaves). Add an opt-in
+  `layerScale: { low, high }`: a leaf's length is multiplied by `low` at layer 0
+  and `high` at layer 1. Without it leaf size does not depend on height.
+- **Hanging below the soil** (a plant whose outer leaves droop over the pot rim, like the spider plant). Add an
   opt-in `hang: { depth }` to the config and set `limits.floor` to the soil line
   plus `depth`. Leaves may then fall past the soil, over the pot, as far as
   `depth` (scaled by stage). If the leaf's shape depends on the way it points,
   read the `angle` argument of `outline()`; set `droops: false` on the leaf model
-  if wilting should only brown it. Copy `stringOfPearls/`.
+  if wilting should only brown it. Copy `spiderPlant/`.
 - **Planted straight in the soil** (no visible stems, buried bases — like the
   snake plant). Pass `planting={{ bury, soilY: SOIL.y }}` to `StemmedPlant` and
   collapse `stems.lengthRange` to ~0 in the config. The stems are hidden and the

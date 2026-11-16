@@ -111,6 +111,21 @@ describe("layerAngle", () => {
   })
 })
 
+describe("layerScale", () => {
+  it("makes low leaves smaller than high ones, and is checked when the plant is built", () => {
+    const small: StagedPlantSpecies<LeafSpec> = { config: { ...OTHER_CONFIG, name: "layer-small", layerScale: { low: 0.4, high: 0.4 } }, leaf: heart }
+    const big: StagedPlantSpecies<LeafSpec> = { config: { ...OTHER_CONFIG, name: "layer-big", layerScale: { low: 1, high: 1 } }, leaf: heart }
+    const mean = (species: StagedPlantSpecies<LeafSpec>) => {
+      const lengths = SEEDS.flatMap((seed) => createStagedPlant(seed, species).stages.at(-1)!.leaves.map((leaf) => leaf.length))
+      return lengths.reduce((sum, n) => sum + n, 0) / lengths.length
+    }
+    expect(mean(small)).toBeLessThan(mean(big))
+    expect(OTHER_CONFIG.layerScale).toBeUndefined()
+    const bad: StagedPlantSpecies<LeafSpec> = { config: { ...OTHER_CONFIG, name: "layer-bad", layerScale: { low: 0, high: 1 } }, leaf: heart }
+    expect(() => createStagedPlant(1, bad)).toThrow(/layerScale/)
+  })
+})
+
 describe("stage ladders", () => {
   it("rise from min to max leaves", () => {
     const counts = leafCountLadder(5, { ...POTHOS_CONFIG.stages, minLeaves: 1, maxLeaves: 9 })

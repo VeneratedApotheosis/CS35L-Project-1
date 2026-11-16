@@ -158,6 +158,15 @@ export interface StagedPlantConfig {
   }
 
   /**
+   * Optional. Scales each leaf's length by the layer it hangs in, so the lowest
+   * leaves can be small (a skirt of small leaves by the rim) and the highest
+   * full size. A leaf at layer 0 is multiplied by `low`, one at layer 1 by
+   * `high`, in between by the blend. Leave this out for a plant whose leaf size
+   * does not depend on its height.
+   */
+  layerScale?: { low: number; high: number }
+
+  /**
    * Optional. Sets each leaf's direction from the layer it hangs in, so the
    * lower leaves can spread out and the higher ones stand more upright, as in a
    * layered plant. Without it a leaf's direction is its stem's heading plus a

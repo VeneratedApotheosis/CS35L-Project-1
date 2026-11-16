@@ -82,7 +82,7 @@ export const CALATHEA_CONFIG: StagedPlantConfig = {
     lengthRange: [0.3, 0.8],
     lengthFactor: [0.75, 1.15],
     curl: [4, 16],
-    jitter: [-8, 8],
+    jitter: [-6, 6],
     drawOrderNoise: 0.05,
     shrinkStep: 0.9,
   },
@@ -105,7 +105,10 @@ export const CALATHEA_CONFIG: StagedPlantConfig = {
   },
 
   // Layered like a peace lily: the lowest leaves point out and droop, the middle ring angles out, the top stays upright.
-  layerAngle: { outward: 92, upright: 8, curve: 1.3 },
+  layerAngle: { outward: 66, upright: 8, curve: 1.3 },
+
+  // The low skirt leaves are small, like a peace lily's outer leaves; the tall ones keep full size.
+  layerScale: { low: 0.55, high: 1.1 },
 
   // The outer leaves fan outward like a peace lily's: they bend away from the middle and droop.
   fan: {

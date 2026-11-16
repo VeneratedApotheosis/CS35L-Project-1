@@ -37,7 +37,7 @@ export const SPIDER_PLANT_CONFIG: StagedPlantConfig = {
   dome: {
     anchor: { x: SOIL.x, y: SOIL.y },
     halfWidth: 56,
-    height: 66,
+    height: 84,
   },
 
   // The outer blades hang below the soil line, down over the pot rim.
@@ -53,7 +53,7 @@ export const SPIDER_PLANT_CONFIG: StagedPlantConfig = {
 
   // The blades all start close to the middle of the pot, in a tight crown.
   roots: {
-    range: [0.35, 0.65],
+    range: [0.2, 0.8],
     middle: 0.5,
     spreadStep: 0.618,
   },
@@ -68,12 +68,12 @@ export const SPIDER_PLANT_CONFIG: StagedPlantConfig = {
 
   // Very short stems: blades come straight out of the crown.
   stems: {
-    lengthRange: [0.02, 0.1],
-    minLength: 0.015,
+    lengthRange: [0.08, 0.46],
+    minLength: 0.06,
     reachMultiplier: 1.2,
     headroomShare: 0.95,
     leafHeadroomShare: 0.95,
-    headingSpread: 70,
+    headingSpread: 68,
     headingJitter: [-10, 10],
     bendPoint: 0.5,
     shrinkFloor: 0.55,

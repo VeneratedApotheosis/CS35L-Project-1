@@ -54,13 +54,18 @@ export function makeGene<Spec>(
   // changes the others. Draw order below is part of the plant's identity.
   const lr = mulberry32(subSeed(seed, index, config.rngStreams.leaf))
   const spec = leaf.randomSpec(lr)
-  const lengthFactor = range(lr, config.leaves.lengthFactor[0], config.leaves.lengthFactor[1])
+  const drawnFactor = range(lr, config.leaves.lengthFactor[0], config.leaves.lengthFactor[1])
 
   // Roots and layers each follow their own golden-ratio sequence, so any run
   // of leaves is spread across the pot and across the layers at once.
   const rootShare = lerp(roots.range[0], roots.range[1], sequence(index, roots.spreadStep, phases.roots))
   const band = layers.bands[index % layers.bands.length]
   const layer = band.start + band.width * sequence(index, layers.spreadStep, phases.layers)
+
+  // A layered plant can make its low leaves smaller (the draw above is kept so no other trait moves).
+  const lengthFactor = config.layerScale
+    ? drawnFactor * lerp(config.layerScale.low, config.layerScale.high, Math.min(Math.max(layer, 0), 1))
+    : drawnFactor
 
   // Stems left of the middle lean left, stems right of it lean right.
   const rootHalfWidth = (roots.range[1] - roots.range[0]) / 2

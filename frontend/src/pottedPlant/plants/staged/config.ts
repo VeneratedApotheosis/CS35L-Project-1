@@ -61,6 +61,9 @@ export function validateConfig(config: StagedPlantConfig): void {
   check(ordered(leaves.curl) && ordered(leaves.jitter), "leaves.curl and leaves.jitter must run from low to high")
   check(leaves.shrinkStep > 0 && leaves.shrinkStep < 1, "leaves.shrinkStep must be in (0, 1)")
 
+  if (config.layerScale) {
+    check(config.layerScale.low > 0 && config.layerScale.high > 0, "layerScale.low and layerScale.high must be above 0")
+  }
   if (config.layerAngle) {
     const { outward, upright, curve } = config.layerAngle
     check(outward >= 0 && outward <= 180 && upright >= 0 && upright <= 180, "layerAngle.outward and layerAngle.upright must be between 0 and 180")
