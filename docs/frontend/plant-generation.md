@@ -19,6 +19,7 @@ Status:
 | Monstera deliciosa | Stage engine (leaf-only, fenestrated leaves) | Current |
 | Pilea peperomioides | Stage engine (leaf-only, round coins, with pups) | Current |
 | Philodendron 'Sun Red' / Rojo Congo | Stage engine (leaf-only, broad paddles, red stems, burgundy newest leaves) | Current |
+| Calathea (prayer plant) | Stage engine (leaf-only, broad oval leaves with herringbone stripes and a purple rim) | Current |
 
 ---
 
@@ -77,8 +78,13 @@ pottedPlant/
       shape.ts                 the pointed blade outline shared by leaf and flower hood
       flowers.ts               flower placement, the flower dome and the bud/bloom stages
       Flower.tsx               draws flower stalks, buds and open flowers
+<<<<<<< HEAD
     (and a folder for each other species: snakePlant, kimberlyQueen, spiderPlant, lily, rose,
      monstera, philodendron, pilea, lotus)
+=======
+    (and a folder for each other species: snakePlant, kimberlyQueen, lily, rose,
+     monstera, philodendron, pilea, calathea, lotus)
+>>>>>>> feat/new-plants-calathea
   pots/                    the pot, separate from every plant
     palettes.ts            the color palettes, the band names and the band odds
     shape.ts               every measurement of the drawing, plus the rim and soil points
