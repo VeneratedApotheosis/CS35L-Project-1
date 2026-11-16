@@ -35,6 +35,10 @@
   --color-danger-hover: var(--danger-red-dark-selected);
   --color-danger-text: #ffd5d0;
 
+  /* The oval under a pot. Near-black so it still shows on the dark surfaces. */
+  --pot-shadow-color: #120f0b;
+  --pot-shadow-opacity: 0.45;
+
   --color-focus: var(--teal);
   --color-link: #7bd7c4;
 }

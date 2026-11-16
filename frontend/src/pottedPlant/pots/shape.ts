@@ -84,7 +84,11 @@ export const POT_SHAPE = {
     clipIdSuffix: "-pot",
   },
 
-  /** The soft oval under the pot. */
+  /**
+   * The soft oval under the pot. These are the light-theme values; the dark
+   * theme overrides them with --pot-shadow-color and --pot-shadow-opacity
+   * (dark.css), because this color matches the dark background.
+   */
   shadow: { cx: 100, cy: 210, rx: 54, ry: 6, color: "#342f29", opacity: 0.14 },
 
   /** The darker right side of the body. */

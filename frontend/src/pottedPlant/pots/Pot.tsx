@@ -29,7 +29,16 @@ export function Pot({
 
   return (
     <g>
-      <ellipse cx={S.shadow.cx} cy={S.shadow.cy} rx={S.shadow.rx} ry={S.shadow.ry} fill={S.shadow.color} opacity={S.shadow.opacity} />
+      <ellipse
+        cx={S.shadow.cx}
+        cy={S.shadow.cy}
+        rx={S.shadow.rx}
+        ry={S.shadow.ry}
+        style={{
+          fill: "var(--pot-shadow-color, " + S.shadow.color + ")",
+          opacity: "var(--pot-shadow-opacity, " + S.shadow.opacity + ")",
+        }}
+      />
       <clipPath id={clip}>
         <path d={S.body.path} />
       </clipPath>
