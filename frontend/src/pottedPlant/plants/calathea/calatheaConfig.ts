@@ -45,7 +45,7 @@ export const CALATHEA_CONFIG: StagedPlantConfig = {
   pot: { rimLeft: POT_RIM.left, rimRight: POT_RIM.right },
 
   roots: {
-    range: [0.36, 0.64],
+    range: [0.25, 0.75],
     middle: 0.5,
     spreadStep: 0.618,
   },

@@ -114,7 +114,7 @@ describe("generated calathea", () => {
     }
   })
 
-  it("roots every stem between 36% and 64% of the way across the pot", () => {
+  it("roots every stem between 25% and 75% of the way across the pot", () => {
     const width = CONFIG.pot.rimRight - CONFIG.pot.rimLeft
     const [lo, hi] = CONFIG.roots.range
     for (const seed of SEEDS) {
