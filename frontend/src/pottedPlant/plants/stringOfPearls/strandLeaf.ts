@@ -47,10 +47,10 @@ export interface StrandRanges {
 }
 
 export const STRAND_RANGES: StrandRanges = {
-  beads: [10, 13],
-  beadSize: [0.4, 0.48],
-  rise: [0.1, 0.22],
-  arc: [0.34, 0.46],
+  beads: [30, 39],
+  beadSize: [0.54, 0.6],
+  rise: [0.03, 0.08],
+  arc: [0.14, 0.24],
   hang: [168, 186],
   sway: [2, 6],
   swayWaves: [0.8, 1.6],
@@ -58,7 +58,7 @@ export const STRAND_RANGES: StrandRanges = {
 }
 
 /** How the bead size shrinks toward the strand's tip: the last bead is this share of the first. */
-export const STRAND_TAPER = 0.72
+export const STRAND_TAPER = 0.8
 
 /** Curve samples per outline point, so a curve has this many times `perSegment` steps. */
 export const STRAND_STEPS_PER_SEGMENT = 3

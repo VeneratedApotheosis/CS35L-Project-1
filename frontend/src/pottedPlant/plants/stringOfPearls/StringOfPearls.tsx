@@ -10,7 +10,7 @@ import { STRING_OF_PEARLS_CONFIG } from "./stringOfPearlsConfig"
 import { createStringOfPearls, type PlacedStrand } from "./stringOfPearlsStages"
 
 /** The short stems the strands rise on: the same thread the beads hang on. */
-const STRING_OF_PEARLS_STEM: StemStyle = { color: STRAND_PALETTE.thread, width: 1.4 }
+const STRING_OF_PEARLS_STEM: StemStyle = { color: STRAND_PALETTE.thread, width: 0.8 }
 
 export interface StringOfPearlsDrawingProps {
   /** Any integer, such as a habit id. Same seed, same plant. */
