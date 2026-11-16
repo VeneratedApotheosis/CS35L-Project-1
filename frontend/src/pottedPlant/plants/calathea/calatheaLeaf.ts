@@ -58,9 +58,26 @@ export function randomCalatheaLeaf(rng: Rng, ranges: CalatheaLeafRanges = CALATH
   }
 }
 
-/** The leaf as a closed polygon: base at (0,0), tip at (0,-length). The calathea does not fan. */
-export function calatheaLeafOutline(spec: CalatheaLeafSpec, length: number, perSegment: number): Pt[] {
-  return bladeOutline(spec, length, perSegment * 2)
+/** How an outer leaf's bend is drawn. */
+export const CALATHEA_LEAF_FAN = {
+  /** Sideways swing of the tip, as a share of length, at full fan. */
+  sweep: 0.4,
+}
+
+/**
+ * The leaf's blade shape with its outward bend applied. `fan` is -1 to 1:
+ * positive bends right, negative left, 0 leaves the leaf as it is. The blade's
+ * own random bow is eased off as it bends, so the curve reads as one clean arc.
+ * Every drawn part (rim, body, stripes, midrib) is built from this shape.
+ */
+export function fannedCalatheaShape(spec: CalatheaLeafSpec, fan: number): CalatheaLeafSpec {
+  if (fan === 0) return spec
+  return { ...spec, bow: spec.bow * (1 - Math.abs(fan)), sweep: fan * CALATHEA_LEAF_FAN.sweep }
+}
+
+/** The leaf as a closed polygon: base at (0,0), tip near (0,-length). `fan` is how far it bends outward, -1 to 1. */
+export function calatheaLeafOutline(spec: CalatheaLeafSpec, length: number, perSegment: number, fan = 0): Pt[] {
+  return bladeOutline(fannedCalatheaShape(spec, fan), length, perSegment * 2)
 }
 
 /* ------------------------------------------------------------------ */

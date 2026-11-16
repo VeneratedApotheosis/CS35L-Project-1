@@ -15,13 +15,13 @@ import { calatheaLeafOutline, randomCalatheaLeaf, type CalatheaLeafSpec } from "
 /*
  * The calathea (a prayer plant): a staged plant (see ../staged) with broad,
  * striped oval leaves on stems. Leaves come from the shared engine; it has no
- * flowers and does not fan.
+ * flowers, and its outer leaves fan outward and droop like a peace lily's.
  */
 
-/** Broad ovals with the stalk end at the base and the tip pointing up. */
+/** Broad ovals with the stalk end at the base; outer leaves bend outward by `fan`. */
 const CALATHEA_LEAF: LeafShapeModel<CalatheaLeafSpec> = {
   randomSpec: randomCalatheaLeaf,
-  outline: (spec, length, perSegment) => calatheaLeafOutline(spec, length, perSegment),
+  outline: calatheaLeafOutline,
   middle: 0.5,
 }
 

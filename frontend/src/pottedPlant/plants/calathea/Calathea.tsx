@@ -48,7 +48,7 @@ export function Calathea({
         stage={stage}
         stemStyle={CALATHEA_STEM}
         renderLeaf={(leaf: PlacedCalatheaLeaf, clipId) => (
-          <CalatheaLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} />
+          <CalatheaLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} fan={leaf.fan} />
         )}
       />
     </PottedPlant>

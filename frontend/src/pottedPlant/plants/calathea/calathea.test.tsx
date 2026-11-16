@@ -4,7 +4,7 @@ import { pointInPolygon } from "../../geometry"
 import { mulberry32 } from "../../rng"
 import { Calathea } from "./Calathea"
 import { CalatheaLeafShape } from "./CalatheaLeafShape"
-import { calatheaLeafOutline, calatheaStripesPath, randomCalatheaLeaf } from "./calatheaLeaf"
+import { calatheaLeafOutline, calatheaStripesPath, fannedCalatheaShape, randomCalatheaLeaf } from "./calatheaLeaf"
 import { CALATHEA_CONFIG } from "./calatheaConfig"
 import { createCalathea, leafOutline, stageLeafCounts } from "./calatheaStages"
 
@@ -15,8 +15,8 @@ const LIMITS = CONFIG.limits
 const ANCHOR = CONFIG.dome.anchor
 
 describe("stage ladder", () => {
-  it("gives 2, 3, 5, 7 leaves for four stages", () => {
-    expect(stageLeafCounts(4)).toEqual([2, 3, 5, 7])
+  it("gives 2, 4, 7, 10 leaves for four stages", () => {
+    expect(stageLeafCounts(4)).toEqual([2, 4, 7, 10])
   })
 
   it("never exceeds the leaf cap for any stage count", () => {
@@ -104,8 +104,10 @@ describe("generated calathea", () => {
   it("fills the canopy it encloses", () => {
     for (const seed of SEEDS) {
       for (const st of createCalathea(seed).stages) {
-        expect(st.coverage).toBeGreaterThanOrEqual(0.15)
+        // A sprout with two leaves, both fanned out to the sides, covers little of the canopy.
+        expect(st.coverage).toBeGreaterThanOrEqual(0.1)
       }
+      expect(createCalathea(seed).stages.at(-1)!.coverage).toBeGreaterThanOrEqual(0.4)
     }
   })
 
@@ -135,6 +137,30 @@ describe("generated calathea", () => {
     }
   })
 
+  it("fans only the outer leaves, outward, and leaves the middle ones straight", () => {
+    const halfRange = (CONFIG.roots.range[1] - CONFIG.roots.range[0]) / 2
+    let fanned = 0
+    let straight = 0
+    for (const seed of SEEDS) {
+      const last = createCalathea(seed).stages.at(-1)!
+      for (const leaf of last.leaves) {
+        const out = (leaf.stem.x0 - ANCHOR.x) / ((CONFIG.pot.rimRight - CONFIG.pot.rimLeft) * last.scale)
+        const outward = Math.abs(out) / halfRange
+        if (leaf.fan === 0) {
+          straight++
+          expect(outward).toBeLessThan(CONFIG.fan!.outerThreshold + EPS)
+        } else {
+          fanned++
+          expect(Math.sign(leaf.fan)).toBe(Math.sign(out))
+          expect(Math.abs(leaf.fan)).toBeGreaterThanOrEqual(CONFIG.fan!.strength[0] - EPS)
+          expect(Math.abs(leaf.fan)).toBeLessThanOrEqual(CONFIG.fan!.strength[1] + EPS)
+        }
+      }
+    }
+    expect(fanned).toBeGreaterThan(0)
+    expect(straight).toBeGreaterThan(0)
+  })
+
   it("draws striped leaves clipped to the leaf, with no flowers", () => {
     const html = renderToStaticMarkup(<Calathea seed={7} stage={4} />)
     expect(html).toContain("<clipPath")
@@ -157,6 +183,28 @@ describe("calathea leaf pattern", () => {
         expect(pointInPolygon(outline, stripes[i], stripes[i + 1])).toBe(true)
       }
     }
+  })
+
+  it("keeps every stripe corner inside the outline of a fanned leaf", () => {
+    for (const seed of SEEDS) {
+      for (const fan of [-1, -0.75, 0.75, 1]) {
+        const spec = fannedCalatheaShape(randomCalatheaLeaf(mulberry32(seed)), fan)
+        const outline = calatheaLeafOutline(randomCalatheaLeaf(mulberry32(seed)), LENGTH, 40, fan)
+        const stripes = numbers(calatheaStripesPath(spec, LENGTH))
+        expect(stripes.length).toBeGreaterThan(0)
+        for (let i = 0; i < stripes.length; i += 2) {
+          expect(pointInPolygon(outline, stripes[i], stripes[i + 1])).toBe(true)
+        }
+      }
+    }
+  })
+
+  it("bends a fanned leaf's tip toward its side and leaves an unfanned leaf as it was", () => {
+    const spec = randomCalatheaLeaf(mulberry32(3))
+    const tipX = (fan: number) => calatheaLeafOutline(spec, LENGTH, 20, fan).reduce((a, p) => (p[1] < a[1] ? p : a))[0]
+    expect(tipX(1)).toBeGreaterThan(tipX(0) + 1)
+    expect(tipX(-1)).toBeLessThan(tipX(0) - 1)
+    expect(calatheaLeafOutline(spec, LENGTH, 20, 0)).toEqual(calatheaLeafOutline(spec, LENGTH, 20))
   })
 
   it("draws stripes on both sides of the midrib, sweeping toward the tip", () => {

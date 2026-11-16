@@ -4,6 +4,7 @@ import {
   calatheaLeafPath,
   calatheaMidribPath,
   calatheaStripesPath,
+  fannedCalatheaShape,
   type CalatheaLeafSpec,
 } from "./calatheaLeaf"
 
@@ -21,19 +22,25 @@ export const CALATHEA_LEAF_STYLE = {
   highlight: { x: -0.18, y: 0.66, rx: 0.1, ry: 0.15, tilt: 14, opacity: 0.12, color: "#fff" },
 }
 
-/** One leaf in local coordinates: base at (0,0), tip at (0,-length). */
+/**
+ * One leaf in local coordinates: base at (0,0), tip near (0,-length).
+ * `fan` is how far the leaf bends outward, -1 to 1 (positive bends right).
+ */
 export function CalatheaLeafShape({
   spec,
   length,
   clipId,
+  fan = 0,
 }: {
   spec: CalatheaLeafSpec
   length: number
   clipId: string
+  fan?: number
 }) {
   const S = CALATHEA_LEAF_STYLE
   const c = calatheaLeafColors(spec)
-  const d = calatheaLeafPath(spec, length)
+  const shape = fannedCalatheaShape(spec, fan)
+  const d = calatheaLeafPath(shape, length)
   const width = length * spec.aspect
 
   return (
@@ -43,8 +50,8 @@ export function CalatheaLeafShape({
       </clipPath>
       <path d={d} fill={c.purple} />
       <g clipPath={"url(#" + clipId + ")"}>
-        <path d={calatheaBodyPath(spec, length)} fill={c.body} />
-        <path d={calatheaStripesPath(spec, length)} fill={c.stripe} opacity={S.stripes.opacity} />
+        <path d={calatheaBodyPath(shape, length)} fill={c.body} />
+        <path d={calatheaStripesPath(shape, length)} fill={c.stripe} opacity={S.stripes.opacity} />
         <ellipse
           cx={S.highlight.x * width}
           cy={-S.highlight.y * length}
@@ -58,7 +65,7 @@ export function CalatheaLeafShape({
         />
       </g>
       <path
-        d={calatheaMidribPath(spec, length, S.midrib.start, S.midrib.end)}
+        d={calatheaMidribPath(shape, length, S.midrib.start, S.midrib.end)}
         stroke={c.midrib}
         strokeWidth={Math.max(S.midrib.minWidth, length * S.midrib.widthShare)}
         strokeLinecap="round"
