@@ -110,3 +110,113 @@
     margin-inline: auto;
   }
 }
+
+/*
+ * The dev tools panel (only shown with /login?dev in development). It is a plain
+ * tool window, docked at the right under the logo, so it never covers the words.
+ */
+.login-dev {
+  position: fixed;
+  top: 4.5rem;
+  right: 0.75rem;
+  z-index: 100;
+  width: 19.5rem;
+  max-height: calc(100dvh - 5.25rem);
+  overflow-y: auto;
+  padding: var(--space-3);
+  border: 1px solid #b9b2a4;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 253, 246, 0.96);
+  color: #342f29;
+  font: 500 0.78rem/1.35 var(--font-family);
+  box-shadow: 0 0.4rem 1.2rem rgba(52, 47, 41, 0.25);
+}
+
+.login-dev *,
+.login-dev *::before,
+.login-dev *::after {
+  box-sizing: border-box;
+}
+
+.login-dev__title {
+  margin: 0 0 var(--space-1);
+  font-size: 0.95rem;
+}
+
+.login-dev__hint,
+.login-dev__status {
+  margin: var(--space-1) 0;
+  color: #6f665c;
+}
+
+.login-dev__group {
+  min-width: 0;
+  margin: var(--space-2) 0;
+  padding: var(--space-2);
+  border: 1px solid #d8d1c3;
+  border-radius: var(--radius-sm);
+}
+
+.login-dev__group legend {
+  padding: 0 var(--space-1);
+  font-weight: 700;
+}
+
+.login-dev__check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.1rem 0;
+}
+
+.login-dev__field {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0.2rem 0;
+}
+
+.login-dev__field input,
+.login-dev__field select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #b9b2a4;
+  border-radius: 0.3rem;
+  background: #fff;
+  font: inherit;
+}
+
+.login-dev__row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  margin: 0.2rem 0;
+}
+
+.login-dev button {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #b9b2a4;
+  border-radius: 0.3rem;
+  background: #f0ebde;
+  font: 700 0.75rem/1.2 var(--font-family);
+}
+
+.login-dev button:hover {
+  background: #e6dfcf;
+}
+
+.login-dev__problems {
+  margin: var(--space-2) 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: #fdecea;
+  color: #6e211e;
+}
+
+.login-dev__problems ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Sprout } from "lucide-react"
 import { useAuth } from "@/auth/useAuth"
@@ -8,6 +8,10 @@ import { Button } from "@/components/Button"
 import { Icon } from "@/components/Icon"
 import { GoogleIcon } from "./login/GoogleIcon"
 import { LoginScene } from "./login/scene/LoginScene"
+import { useDevMode } from "./login/scene/dev/useDevMode"
+
+// The dev tools load only when they are asked for, so a normal visit never downloads them.
+const DevScene = lazy(() => import("./login/scene/dev/DevScene"))
 
 /**
  * The login screen: a greenhouse fills the screen, and the words sit straight
@@ -19,6 +23,8 @@ export default function Login() {
   const router = useRouter()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
+  const dev = useDevMode()
+  const [hideText, setHideText] = useState(false)
 
   useEffect(() => {
     if (!authLoading && user) router.replace("/")
@@ -43,9 +49,15 @@ export default function Login() {
   return (
     <main className="login" data-theme="light">
       {/* Decorative: the words on the page say everything the picture does. */}
-      <LoginScene />
+      {dev ? (
+        <Suspense fallback={<LoginScene />}>
+          <DevScene hideText={hideText} onHideText={setHideText} />
+        </Suspense>
+      ) : (
+        <LoginScene />
+      )}
       <div className="login__haze" aria-hidden="true" />
-      {ready && <LoginWords pending={pending} error={error} onSignIn={() => void handleSignIn()} />}
+      {ready && !(dev && hideText) && <LoginWords pending={pending} error={error} onSignIn={() => void handleSignIn()} />}
     </main>
   )
 }
