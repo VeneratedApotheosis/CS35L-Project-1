@@ -41,6 +41,23 @@ export function lerp(a: Point, b: Point, share: number): Point {
   return { x: a.x + (b.x - a.x) * share, y: a.y + (b.y - a.y) * share }
 }
 
+/** The smallest convex polygon around a set of points (monotone chain), in order around the edge. */
+export function convexHull(points: readonly Point[]): Point[] {
+  const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y)
+  if (sorted.length < 3) return sorted
+  const cross = (o: Point, a: Point, b: Point) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+  const build = (list: readonly Point[]) => {
+    const half: Point[] = []
+    for (const point of list) {
+      while (half.length >= 2 && cross(half[half.length - 2], half[half.length - 1], point) <= 0) half.pop()
+      half.push(point)
+    }
+    half.pop()
+    return half
+  }
+  return [...build(sorted), ...build([...sorted].reverse())]
+}
+
 /** One decimal place. Drawn numbers are rounded so the server and the browser print the same text. */
 export const round1 = (n: number) => Math.round(n * 10) / 10
 

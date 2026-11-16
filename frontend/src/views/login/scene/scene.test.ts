@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { VIEWBOX } from "@/pottedPlant/genome"
 import { PLANT_TYPES } from "@/pottedPlant/plants/plantTypes"
-import { CANVAS, VANISH, exitPoint, project } from "./geometry"
-import { PLANT_VIEW, insidePolygon, plantBounds, plantFrame, shelfFaces } from "./placement"
+import { CANVAS, VANISH, convexHull, exitPoint, project } from "./geometry"
+import { PLANT_VIEW, insidePolygon, plantBounds, plantFrame, shelfFaces, sunPatches } from "./placement"
 import { ROOM, SAFE_ZONE, SHELVES } from "./room"
 import { SCENE_PLANTS } from "./plants"
 import { SCENE_POT_COLORS, resolvePot } from "./scenePots"
@@ -52,6 +52,33 @@ describe("scene geometry", () => {
     expect([...ROOM.rings]).toEqual([...ROOM.rings].sort((a, b) => a - b))
     expect(ROOM.rings[0]).toBe(1)
     expect(ROOM.backBars.every((x) => x > ROOM.left && x < ROOM.right)).toBe(true)
+  })
+})
+
+describe("sunlight", () => {
+  it("wraps a set of points in the smallest convex outline", () => {
+    const hull = convexHull([
+      { x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }, { x: 5, y: 5 }, { x: 5, y: 1 },
+    ])
+    expect(hull).toHaveLength(4)
+    expect(insidePolygon({ x: 5, y: 5 }, hull)).toBe(true)
+  })
+
+  it("makes every beam start from a pane of glass, not a point", () => {
+    const patches = sunPatches()
+    expect(patches.length).toBeGreaterThanOrEqual(6)
+    for (const patch of patches) {
+      const xs = patch.glass.map((p) => p.x)
+      const ys = patch.glass.map((p) => p.y)
+      // The glass has real width and height. Sunlight from a point would have none.
+      expect(Math.max(...xs) - Math.min(...xs) + (Math.max(...ys) - Math.min(...ys))).toBeGreaterThan(40)
+      expect(new Set(patch.glass.map((p) => p.x + "," + p.y)).size).toBe(4)
+    }
+  })
+
+  it("spreads the patches across the width of the floor", () => {
+    const centers = sunPatches().map((patch) => patch.outer.reduce((sum, p) => sum + p.x, 0) / patch.outer.length)
+    expect(Math.max(...centers) - Math.min(...centers)).toBeGreaterThan(600)
   })
 })
 

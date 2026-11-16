@@ -36,21 +36,23 @@ export const SHELVES: readonly Shelf[] = [
 ]
 
 /**
- * The sun comes through the right wall's glass and lands on the floor to its left.
- * Each patch is a pane's footprint: it runs between two inset distances from the
- * right wall, and between a pane's two frames (ROOM.rings).
+ * The sun comes through the glass on the right and lands on the floor to its left.
+ * Sunlight is a set of parallel beams, so each beam starts from a whole pane of glass
+ * (a region, not a point) and lands on that pane's footprint on the floor: a patch
+ * between two distances from the right wall, and between two frames (ROOM.rings).
  */
 export const SUN = {
   /**
    * How far from the right wall (in units at the back wall) each row of patches
-   * starts and ends, and how far up the roof its shaft begins (0 at the eave, 1
-   * at the ridge). Spreading the rows spreads the light across the whole floor.
+   * starts and ends, and which glass its beams come through: the right wall, or a
+   * strip of the right roof slope (from 0 at the eave to 1 at the ridge). Spreading
+   * the rows spreads the light across the whole floor.
    */
   rows: [
-    { from: 120, to: 400, top: 0.05 },
-    { from: 520, to: 800, top: 0.45 },
-    { from: 930, to: 1230, top: 0.9 },
-  ],
+    { from: 120, to: 400, glass: "wall" },
+    { from: 520, to: 800, glass: [0.25, 0.75] },
+    { from: 930, to: 1230, glass: [0.6, 1] },
+  ] as readonly { from: number; to: number; glass: "wall" | readonly [number, number] }[],
   /** Which gaps between rings get patches. The first gap is the pane nearest the back wall. */
   panes: [0, 1, 2, 3],
   /**

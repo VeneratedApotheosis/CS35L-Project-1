@@ -1,9 +1,9 @@
 import { mulberry32 } from "@/pottedPlant/rng"
 import { pointsText, project, round1, type Point } from "../geometry"
-import { sunLanding } from "../placement"
+import { sunPatches } from "../placement"
 import { COLORS, ROOM, SUN } from "../room"
 
-const { left, right, floorY, rings } = ROOM
+const { left, right, floorY } = ROOM
 const FLOOR_LEFT: Point = { x: left, y: floorY }
 const FLOOR_RIGHT: Point = { x: right, y: floorY }
 
@@ -47,24 +47,7 @@ export function Floor() {
     index++
   }
 
-  const patches: { key: string; outer: Point[]; core: Point[] }[] = []
-  SUN.rows.forEach((row, rowIndex) => {
-    SUN.panes.forEach((pane) => {
-      const near = rings[pane]
-      const far = rings[pane + 1]
-      if (near === undefined || far === undefined) return
-      const margin = (far - near) * (SUN.gap / 2)
-      const [a, b] = [near + margin, far - margin]
-      const at = sunLanding
-      const make = (from: number, to: number, f1: number, f2: number) => [at(from, f1), at(to, f1), at(to, f2), at(from, f2)]
-      const grow = (row.to - row.from) * 0.18
-      patches.push({
-        key: rowIndex + "-" + pane,
-        outer: make(row.from, row.to, a, b),
-        core: make(row.from + grow, row.to - grow, a + (b - a) * 0.15, b - (b - a) * 0.15),
-      })
-    })
-  })
+  const patches = sunPatches()
 
   return (
     <g>

@@ -1,5 +1,5 @@
 import { POT_SHAPE } from "@/pottedPlant/pots"
-import { project, type Point } from "./geometry"
+import { lerp, project, type Point } from "./geometry"
 import { ROOM, SUN } from "./room"
 import type { ScenePlant, Shelf } from "./types"
 
@@ -68,6 +68,54 @@ export function shelfFaces(shelf: Shelf): { top: Point[]; front: Point[] } {
 export function sunLanding(inset: number, factor: number): Point {
   const leaned = Math.max(1, factor - SUN.slant * inset)
   return project({ x: ROOM.right - inset, y: ROOM.floorY }, leaned)
+}
+
+export interface SunPatch {
+  key: string
+  /** The patch of light on the floor, and a brighter middle of it. */
+  outer: Point[]
+  core: Point[]
+  /** The pane of glass the beam comes through. */
+  glass: Point[]
+}
+
+/**
+ * Every patch of sun: one for each row of SUN.rows and each pane in SUN.panes.
+ * A beam is the glass it comes through joined to the patch it lands on, so the
+ * light starts from a whole pane, never a point.
+ */
+export function sunPatches(): SunPatch[] {
+  const patches: SunPatch[] = []
+  const eave: Point = { x: ROOM.right, y: ROOM.eaveY }
+  const floor: Point = { x: ROOM.right, y: ROOM.floorY }
+  SUN.rows.forEach((row, rowIndex) => {
+    SUN.panes.forEach((pane) => {
+      const near = ROOM.rings[pane]
+      const far = ROOM.rings[pane + 1]
+      if (near === undefined || far === undefined) return
+      const margin = (far - near) * (SUN.gap / 2)
+      const [a, b] = [near + margin, far - margin]
+      const land = (from: number, to: number, f1: number, f2: number) => [
+        sunLanding(from, f1), sunLanding(to, f1), sunLanding(to, f2), sunLanding(from, f2),
+      ]
+      const grow = (row.to - row.from) * 0.18
+      const edge = (point: Point, factor: number) => project(point, factor)
+      const glass =
+        row.glass === "wall"
+          ? [edge(eave, a), edge(eave, b), edge(floor, b), edge(floor, a)]
+          : [
+              edge(lerp(eave, ROOM.peak, row.glass[0]), a), edge(lerp(eave, ROOM.peak, row.glass[1]), a),
+              edge(lerp(eave, ROOM.peak, row.glass[1]), b), edge(lerp(eave, ROOM.peak, row.glass[0]), b),
+            ]
+      patches.push({
+        key: rowIndex + "-" + pane,
+        outer: land(row.from, row.to, a, b),
+        core: land(row.from + grow, row.to - grow, a + (b - a) * 0.15, b - (b - a) * 0.15),
+        glass,
+      })
+    })
+  })
+  return patches
 }
 
 /** Whether a point is inside a polygon. */
