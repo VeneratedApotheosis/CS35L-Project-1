@@ -14,6 +14,8 @@ export type FakeResult = {
   error: FakeError | null;
   count?: number | null;
 };
+// A call to a database function, such as delete_my_account.
+export type RpcCall = { name: string; args?: unknown };
 export type Operation = "select" | "insert" | "update" | "delete";
 
 export type RecordedCall = {
@@ -36,6 +38,8 @@ export type RecordedCall = {
 // the result programmed for the table and operation. It never uses the network.
 export class FakeSupabase {
   readonly calls: RecordedCall[] = [];
+  readonly rpcCalls: RpcCall[] = [];
+  private readonly rpcResults = new Map<string, FakeResult>();
   private readonly results = new Map<string, FakeResult>();
   // Results returned once each, in order, before the one from setResult().
   private readonly queues = new Map<string, FakeResult[]>();
@@ -48,10 +52,24 @@ export class FakeSupabase {
           : { data: { user: null }, error: { message: "invalid" } },
     },
     from: (table: string) => this.query(table),
+    rpc: async (name: string, args?: unknown): Promise<FakeResult> => {
+      this.rpcCalls.push({ name, args });
+      return (
+        this.rpcResults.get(name) ?? {
+          data: null,
+          error: { message: `No fake result for rpc ${name}` },
+        }
+      );
+    },
   } as unknown as SupabaseClient;
 
   setResult(table: string, operation: Operation, result: FakeResult) {
     this.results.set(`${table}.${operation}`, result);
+  }
+
+  // The result of a database function call (supabase.rpc).
+  setRpcResult(name: string, result: FakeResult) {
+    this.rpcResults.set(name, result);
   }
 
   // For a query that runs twice and needs a different answer each time.
@@ -68,6 +86,8 @@ export class FakeSupabase {
 
   reset() {
     this.calls.length = 0;
+    this.rpcCalls.length = 0;
+    this.rpcResults.clear();
     this.results.clear();
     this.queues.clear();
   }

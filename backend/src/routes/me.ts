@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import {
+  deleteAccount,
   getProfile,
   updateProfile,
   type Profile,
@@ -56,3 +57,9 @@ meRouter.patch(
     res.status(200).json(meResponse(user, profile));
   },
 );
+
+meRouter.delete("/me", requireAuth, async (_req, res) => {
+  const { user, supabase } = res.locals;
+  await deleteAccount(supabase, user.id);
+  res.status(204).send();
+});
