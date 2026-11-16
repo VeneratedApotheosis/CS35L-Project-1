@@ -261,6 +261,9 @@ When a plant moves up a stage after the user's own action, it animates instead o
 - **Leaves** spring from their old place to their new one in `GROWTH.duration` (1.1 s), overshooting a little and settling. New leaves grow out of the soil. The pot and soil do not move.
 - **Accents** burst around the plant: lines, pops, and stars on the last stage only. A bigger plant gets more, and larger ones, up to 5 lines, 3 pops and 2 stars. They sit on a half-oval around the plant, balanced left and right, close to a small plant. They linger 0.5 s after the leaves settle. A line's travel grows more slowly than the plant, so a big plant's lines do not fly far.
 
+- **Flowers** bloom instead of popping in. The species that have flowers (peace lily, lily, rose) are told how the move is going (`StageMotion`, passed to `renderBehindLeaves` and `renderAboveLeaves`) and ask `flowerLook` (`peaceLily/flowers.ts`) for the flowers' size and how open they are. A flower that is new grows from nothing as a bud on a growing stalk. A bud opens in the move to the bloom stage: it swells and fades while the bloom unfurls from the middle of the head, turning a little (`OpeningHead.tsx`). A move straight from no flowers to blooming does both, buds in the first half and opening in the second. At rest nothing changes.
+- **Opt-in motions.** Two providers in `staged/` add motions that plants do not have by default. `ShrinkProvider` plays a move down a stage backwards over the time it is given. `EmergeProvider` makes a plant that is first drawn grow out of the soil from no leaves. The login wall uses both.
+
 Code: `staged/growth.ts`, `staged/accents.ts` and `GrowthAccents.tsx`, with tests in `growth.test.ts` and `accents.test.tsx`. The numbers are in `GROWTH` and `ACCENTS`. The `/plants` page has a Stage-up animation section.
 
 ### 3.11 Dark surfaces

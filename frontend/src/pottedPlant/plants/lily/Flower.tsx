@@ -1,4 +1,5 @@
-import type { FlowerState, PlacedFlower } from "../peaceLily/flowers"
+import type { FlowerLook, PlacedFlower } from "../peaceLily/flowers"
+import { OpeningHead } from "../peaceLily/OpeningHead"
 import { bladePath, leftHalfPath, type BladeShape } from "../peaceLily/shape"
 import { BUD_SHAPE } from "./lilyConfig"
 
@@ -53,13 +54,17 @@ const fixed = (n: number) => n.toFixed(1)
 /** The stalks of every visible flower. Their width does not change with the stage, like the leaf stems. */
 export function FlowerStalks({
   flowers,
-  scale,
+  scale: plantScale,
+  size = 1,
   anchor,
 }: {
   flowers: PlacedFlower[]
   scale: number
+  /** How much of its length a stalk has grown, from 0 to 1. Flowers that are still appearing grow along it. */
+  size?: number
   anchor: { x: number; y: number }
 }) {
+  const scale = plantScale * size
   return (
     <>
       {flowers.map((f) => {
@@ -84,35 +89,41 @@ export function FlowerStalks({
 /** The heads of every visible flower, as buds or open stars. */
 export function FlowerHeads({
   flowers,
-  state,
-  scale,
+  look,
+  scale: plantScale,
   anchor,
   id,
 }: {
   flowers: PlacedFlower[]
-  state: Exclude<FlowerState, "none">
+  /** How big the heads are and how open (see FlowerLook). */
+  look: FlowerLook
   scale: number
   anchor: { x: number; y: number }
   id: string
 }) {
+  const scale = plantScale * look.size
   return (
     <>
-      {flowers.map((f) => (
-        <g
-          key={"fh" + f.index}
-          data-flower={state}
-          transform={
-            "translate(" + fixed(grow(f.baseX, anchor.x, scale)) + " " + fixed(grow(f.baseY, anchor.y, scale)) +
-            ") rotate(" + fixed(f.angle) + ") scale(" + scale.toFixed(4) + ")"
-          }
-        >
-          {state === "bloom" ? (
-            <Bloom flower={f} clipId={id + "-f" + f.index} />
-          ) : (
-            <Bud flower={f} clipId={id + "-f" + f.index} />
-          )}
-        </g>
-      ))}
+      {flowers.map((f) => {
+        const clipId = id + "-f" + f.index
+        return (
+          <g
+            key={"fh" + f.index}
+            data-flower={look.open >= 1 ? "bloom" : "bud"}
+            transform={
+              "translate(" + fixed(grow(f.baseX, anchor.x, scale)) + " " + fixed(grow(f.baseY, anchor.y, scale)) +
+              ") rotate(" + fixed(f.angle) + ") scale(" + scale.toFixed(4) + ")"
+            }
+          >
+            <OpeningHead
+              open={look.open}
+              pivotY={-f.length * 0.5}
+              bud={<Bud flower={f} clipId={clipId + "-bud"} />}
+              bloom={<Bloom flower={f} clipId={clipId + "-bloom"} />}
+            />
+          </g>
+        )
+      })}
     </>
   )
 }

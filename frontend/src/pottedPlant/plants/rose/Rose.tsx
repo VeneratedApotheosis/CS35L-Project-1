@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { flowerState } from "../peaceLily/flowers"
+import { flowerLook } from "../peaceLily/flowers"
 import { potLookFromSeed, type PotLook } from "../../pots"
 import { PottedPlant } from "../../PottedPlant"
 import { StemmedPlant, type StemStyle } from "../staged/StemmedPlant"
@@ -49,18 +49,17 @@ export function Rose({
         plant={plant}
         stage={stage}
         stemStyle={ROSE_STEM}
-        renderBehindLeaves={(current) =>
-          flowerState(current.stage, FLOWER_CONFIG) === "none" ? null : (
-            <FlowerStalks flowers={plant.flowers} scale={current.scale} anchor={anchor} />
-          )
-        }
+        renderBehindLeaves={(current, _id, motion) => {
+          const look = flowerLook(current.stage, motion, FLOWER_CONFIG)
+          return look === null ? null : <FlowerStalks flowers={plant.flowers} scale={current.scale} size={look.size} anchor={anchor} />
+        }}
         renderLeaf={(leaf: PlacedRoseLeaf, clipId) => (
           <RoseLeafShape spec={leaf.spec} length={leaf.length} clipId={clipId} />
         )}
-        renderAboveLeaves={(current, id) => {
-          const state = flowerState(current.stage, FLOWER_CONFIG)
-          return state === "none" ? null : (
-            <FlowerHeads flowers={plant.flowers} state={state} scale={current.scale} anchor={anchor} id={id} />
+        renderAboveLeaves={(current, id, motion) => {
+          const look = flowerLook(current.stage, motion, FLOWER_CONFIG)
+          return look === null ? null : (
+            <FlowerHeads flowers={plant.flowers} look={look} scale={current.scale} anchor={anchor} id={id} />
           )
         }}
       />
