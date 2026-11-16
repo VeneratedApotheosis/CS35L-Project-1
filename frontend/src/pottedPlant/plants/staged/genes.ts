@@ -71,6 +71,13 @@ export function makeGene<Spec>(
   let curl = side * range(lr, config.leaves.curl[0], config.leaves.curl[1])
   const jitter = range(lr, config.leaves.jitter[0], config.leaves.jitter[1])
 
+  // A layered plant points each leaf by the layer it hangs in, not by a random curl (the draws above are kept so its other leaf traits do not move).
+  if (config.layerAngle) {
+    const { outward, upright, curve } = config.layerAngle
+    const spread = (1 - Math.min(Math.max(layer, 0), 1)) ** curve
+    curl = side * lerp(upright, outward, spread) - heading
+  }
+
   // Lower layers are drawn on top; a little noise stops equal layers tying.
   const drawOrder = 1 - layer + lr() * config.leaves.drawOrderNoise
 

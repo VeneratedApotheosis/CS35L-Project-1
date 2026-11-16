@@ -1,5 +1,5 @@
 import type { Pt } from "../../geometry"
-import { leafOutline as stagedLeafOutline } from "../staged/generate"
+import { createStagedPlant, leafOutline as stagedLeafOutline } from "../staged/generate"
 import { leafCountLadder, scaleLadder } from "../staged/ladder"
 import type {
   LeafShapeModel,
@@ -10,13 +10,12 @@ import type {
   StagedPlantSpecies,
 } from "../staged/types"
 import { FIDDLE_LEAF_FIG_CONFIG } from "./fiddleLeafFigConfig"
-import { createLayeredPlant } from "./fiddleLeafFigCrown"
 import { fiddleLeafPolygon, randomFiddleLeaf, type FiddleLeafSpec } from "./fiddleLeafFigLeaf"
 
 /*
  * The fiddle-leaf fig: a staged plant (see ../staged) with a layered crown of
  * large violin leaves on a slim trunk. The leaves and their heights come from
- * the shared engine (through fiddleLeafFigCrown.ts, which sets each leaf's direction from its height); the trunk is drawn by FiddleLeafFig. It has no flowers.
+ * the shared engine (its `layerAngle` option sets each leaf's direction from its height); the trunk is drawn by FiddleLeafFig. It has no flowers.
  */
 
 /** Violin-shaped leaves, stalk end at the base and tip pointing up. The leaf does not fan. */
@@ -38,7 +37,7 @@ export type FiddleLeafFigPlant = StagedPlant<FiddleLeafSpec>
 
 /** Build (or fetch the cached) fiddle-leaf fig for a seed. Treat the result as read-only. */
 export function createFiddleLeafFig(seed: number, options: FiddleLeafFigOptions = {}): FiddleLeafFigPlant {
-  return createLayeredPlant(seed, FIDDLE_LEAF_FIG_SPECIES, options)
+  return createStagedPlant(seed, FIDDLE_LEAF_FIG_SPECIES, options)
 }
 
 /** A placed leaf's outline in canvas coordinates. Used by tests and debug views. */

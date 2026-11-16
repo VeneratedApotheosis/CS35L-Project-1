@@ -13,7 +13,6 @@ import { SNAKE_PLANT_CONFIG } from "../snakePlant/snakePlantConfig"
 import { FiddleLeafFig, FiddleLeafFigDrawing } from "./FiddleLeafFig"
 import { FIDDLE_LEAF_FIG_CONFIG } from "./fiddleLeafFigConfig"
 import { bladeWidth, FIDDLE_PROFILE, fiddleLeafPath, fiddleLeafPolygon, randomFiddleLeaf } from "./fiddleLeafFigLeaf"
-import { crownAngle, FIDDLE_CROWN } from "./fiddleLeafFigCrown"
 import { fiddleTrunk } from "./fiddleLeafFigTrunk"
 import { createFiddleLeafFig, leafOutline, stageLeafCounts, stageScales } from "./fiddleLeafFigStages"
 import { mulberry32 } from "../../rng"
@@ -162,11 +161,10 @@ describe("generated fiddle-leaf fig", () => {
 })
 
 describe("the layered crown", () => {
-  it("turns leaves from out and slightly down at the bottom to upright at the top", () => {
-    expect(crownAngle(0)).toBe(FIDDLE_CROWN.outwardAngle)
-    expect(crownAngle(0)).toBeGreaterThan(90)
-    expect(crownAngle(1)).toBe(FIDDLE_CROWN.uprightAngle)
-    for (let i = 1; i <= 10; i++) expect(crownAngle(i / 10)).toBeLessThan(crownAngle((i - 1) / 10))
+  it("sets the crown angles in the config: out and slightly down at the bottom, upright at the top", () => {
+    const { outward, upright } = FIDDLE_LEAF_FIG_CONFIG.layerAngle!
+    expect(outward).toBeGreaterThan(90)
+    expect(upright).toBeLessThan(30)
   })
 
   it("points the lower leaves outward and the higher leaves upright", () => {

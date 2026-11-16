@@ -83,6 +83,34 @@ describe("engine with another plant's config", () => {
   })
 })
 
+describe("layerAngle", () => {
+  const LAYERED: StagedPlantSpecies<LeafSpec> = {
+    config: { ...OTHER_CONFIG, name: "layered", layerAngle: { outward: 100, upright: 10, curve: 1 } },
+    leaf: heart,
+  }
+
+  it("points leaves by their layer, and does nothing to a plant that does not ask for it", () => {
+    const withAngles = (outward: number, upright: number, name: string): StagedPlantSpecies<LeafSpec> => ({
+      config: { ...OTHER_CONFIG, name, layerAngle: { outward, upright, curve: 1 } },
+      leaf: heart,
+    })
+    const flat = withAngles(100, 100, "layered-flat")
+    const straight = withAngles(10, 10, "layered-straight")
+    const mean = (species: StagedPlantSpecies<LeafSpec>) => {
+      const angles = SEEDS.flatMap((seed) => createStagedPlant(seed, species).stages.at(-1)!.leaves.map((leaf) => Math.abs(leaf.angle)))
+      return angles.reduce((sum, a) => sum + a, 0) / angles.length
+    }
+    expect(mean(flat)).toBeGreaterThan(mean(straight) + 50)
+    // The option is opt-in: without it the plant is as before.
+    expect(OTHER_CONFIG.layerAngle).toBeUndefined()
+  })
+
+  it("is checked when the plant is built", () => {
+    const bad = { ...LAYERED, config: { ...LAYERED.config, name: "bad-layered", layerAngle: { outward: 100, upright: 10, curve: 0 } } }
+    expect(() => createStagedPlant(1, bad)).toThrow(/layerAngle/)
+  })
+})
+
 describe("stage ladders", () => {
   it("rise from min to max leaves", () => {
     const counts = leafCountLadder(5, { ...POTHOS_CONFIG.stages, minLeaves: 1, maxLeaves: 9 })

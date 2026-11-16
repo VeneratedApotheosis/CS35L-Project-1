@@ -158,6 +158,22 @@ export interface StagedPlantConfig {
   }
 
   /**
+   * Optional. Sets each leaf's direction from the layer it hangs in, so the
+   * lower leaves can spread out and the higher ones stand more upright, as in a
+   * layered plant. Without it a leaf's direction is its stem's heading plus a
+   * random curl, which has nothing to do with its height. Leave this out for a
+   * plant whose leaves do not depend on their height.
+   */
+  layerAngle?: {
+    /** How far a leaf at the lowest layer (0) points from straight up, in degrees. Above 90 dips below level. */
+    outward: number
+    /** How far a leaf at the highest layer (1) points from straight up, in degrees. */
+    upright: number
+    /** How fast leaves straighten as they rise: above 1 keeps the lower layers spread out. */
+    curve: number
+  }
+
+  /**
    * Optional. Fans the outer leaves outward, so they look as if their face
    * points toward the middle while the blade bends away from it. Leaves in the
    * middle are untouched. Leave this out for a plant that should not fan.

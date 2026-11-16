@@ -7,7 +7,7 @@ import type { StagedPlantConfig } from "../staged/types"
  * engine, so this is a StagedPlantConfig (fields are documented on that type).
  * It is the tallest plant: a slim trunk rises from the soil and carries a
  * layered crown of up to 14 large leaves (the lower ones spread out, the higher
- * ones more upright; see fiddleLeafFigCrown.ts). The engine's stems are not
+ * ones more upright; see `layerAngle` below). The engine's stems are not
  * drawn. Instead
  * FiddleLeafFig draws one trunk with short branches, between the leaf bases the
  * engine places, so the stems here only decide how high each leaf sits.
@@ -78,8 +78,11 @@ export const FIDDLE_LEAF_FIG_CONFIG: StagedPlantConfig = {
     shrinkStep: 0.94,
   },
 
-  // Large leaves. Their direction is set from their layer by fiddleLeafFigCrown.ts
-  // (jitter still varies each one a little); curl and heading are replaced there.
+  // Layered crown: the lowest leaves point out and a little down, the highest stand nearly upright.
+  layerAngle: { outward: 100, upright: 12, curve: 1.2 },
+
+  // Large leaves. Their direction is set from their layer by `layerAngle`
+  // (jitter still varies each one a little), so the curl below is replaced.
   leaves: {
     lengthRange: [0.24, 0.4],
     lengthFactor: [0.9, 1.1],
