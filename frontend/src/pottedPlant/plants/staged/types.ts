@@ -144,6 +144,20 @@ export interface StagedPlantConfig {
   }
 
   /**
+   * Optional. Lets leaves hang below the soil line, over the pot rim, like a
+   * trailing plant. Leave this out for a plant that stays above the soil.
+   */
+  hang?: {
+    /**
+     * How far below the soil line a leaf may reach at the last stage, in canvas
+     * units. Earlier stages scale it with the dome. Below the soil the room is a
+     * box this deep, as wide as the dome, so a leaf can hang straight down at the
+     * edge. `limits.floor` must be at least this far below the anchor.
+     */
+    depth: number
+  }
+
+  /**
    * Optional. Fans the outer leaves outward, so they look as if their face
    * points toward the middle while the blade bends away from it. Leaves in the
    * middle are untouched. Leave this out for a plant that should not fan.
@@ -180,10 +194,21 @@ export interface LeafShapeModel<Spec> {
    * `fan` is how far the leaf bends outward, from -1 (fully, to the left) to 1
    * (fully, to the right). 0 or left out means no bend. A species that does not
    * fan can ignore it.
+   *
+   * `angle` is the leaf's direction in degrees from straight up, positive
+   * leaning right. Most leaves ignore it. A leaf whose shape depends on the way
+   * it points (a strand that curves over and hangs straight down) reads it, and
+   * then does not have to end at (0,-length).
    */
-  outline(spec: Spec, length: number, perSegment: number, fan?: number): Pt[]
+  outline(spec: Spec, length: number, perSegment: number, fan?: number, angle?: number): Pt[]
   /** Where the leaf's middle sits along its length, as a share measured from the stalk end. */
   middle: number
+  /**
+   * Whether a wilting plant turns and curves this leaf toward the ground. Defaults
+   * to true. A leaf that already hangs (a strand) sets false: wilting then only
+   * browns it and tilts its stem.
+   */
+  droops?: boolean
 }
 
 /** A plant species: its numbers and its leaf shape. */

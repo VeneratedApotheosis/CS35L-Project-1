@@ -9,7 +9,7 @@ import type { PlacedLeaf, StagedPlantSpecies } from "./types"
  *
  * The stem starts at the leaf's spot across the pot and runs up along its
  * heading for a length set by the leaf's layer. If the leaf would leave the
- * dome or dip below the soil line, the stem is shortened a little and tried
+ * dome or dip below the soil line (past the hang depth, for a plant that hangs), the stem is shortened a little and tried
  * again. If it still does not fit once the stem is as short as it may go, the
  * leaf itself is shortened and the whole fit starts over.
  *
@@ -65,7 +65,7 @@ export function placeLeaf<Spec>(
         const out = domeValue(dome, x, y)
         if (out > farthestOut) farthestOut = out
       }
-      if (lowestPoint <= anchor.y && farthestOut <= 1) {
+      if (lowestPoint <= anchor.y + (dome.depth ?? 0) && farthestOut <= 1) {
         return describePlacement(gene, species, rootX, rootY, stem, heading, length, angle)
       }
       stem *= stems.shrinkStep

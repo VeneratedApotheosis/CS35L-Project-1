@@ -16,6 +16,7 @@ import { Rose } from "@/pottedPlant/plants/rose"
 import { Monstera } from "@/pottedPlant/plants/monstera"
 import { Philodendron } from "@/pottedPlant/plants/philodendron"
 import { Calathea } from "@/pottedPlant/plants/calathea"
+import { StringOfPearls } from "@/pottedPlant/plants/stringOfPearls"
 import { Pothos } from "@/pottedPlant/plants/pothos/Pothos"
 import { randomLeafSpec } from "@/pottedPlant/plants/pothos/leaf"
 import { STAGES } from "@/pottedPlant/genome"
@@ -120,6 +121,13 @@ const PLANTS = [
       "Broad oval leaves on stems, on the same stage engine as the pothos. Each is dark green with lighter herringbone stripes running from a pale midrib out to the edge, clipped to the leaf, and a muted purple rim. A fairly full, low clump. No flowers.",
     stageNames: ["Sprout", "Young", "Fuller", "Full clump"],
   },
+  {
+    id: "stringOfPearls",
+    label: "String of pearls",
+    description:
+      "A trailing plant on the same stage engine as the pothos, but its leaves are hanging strands: each rises a little from the soil, curves over the pot rim and falls, as a row of round beads on a thread. Strands may hang below the soil line, over the pot. No flowers.",
+    stageNames: ["Sprout", "Trailing", "Spilling", "Cascading"],
+  },
 ] as const
 type PlantId = (typeof PLANTS)[number]["id"]
 
@@ -198,6 +206,7 @@ export default function PlantLab() {
     monstera: FIRST_SEED,
     philodendron: FIRST_SEED,
     calathea: FIRST_SEED,
+    stringOfPearls: FIRST_SEED,
   })
   const [chosen, setChosen] = useState<PlantId>("pothos")
   const [scale, setScale] = useState(1)
@@ -247,6 +256,8 @@ export default function PlantLab() {
     if (chosen === "philodendron")
       return <Philodendron seed={seeds.philodendron} stage={stage} scale={scale} pot={potFor(seeds.philodendron)} />
     if (chosen === "calathea") return <Calathea seed={seeds.calathea} stage={stage} scale={scale} pot={potFor(seeds.calathea)} />
+    if (chosen === "stringOfPearls")
+      return <StringOfPearls seed={seeds.stringOfPearls} stage={stage} scale={scale} pot={potFor(seeds.stringOfPearls)} />
     return <Pilea seed={seeds.pilea} stage={stage} scale={scale} pot={potFor(seeds.pilea)} />
   }
 

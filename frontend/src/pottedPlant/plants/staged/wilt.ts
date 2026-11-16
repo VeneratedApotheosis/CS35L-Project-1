@@ -164,14 +164,16 @@ export function wiltPlant<Spec, P extends StagedPlant<Spec>>(plant: P, amount: n
       // The stem and leaf as they stand when `ease` of the wilt shows (1 is all of it).
       const arrange = (length: number, ease: number) => {
         const stem = bentStem(leaf.stem, side, WILT.stemBend * wilt * ease, stems.bendPoint, dome.anchor.y)
-        const angle = lerp(leaf.angle, droopAngle, ease)
+        // A leaf that already hangs keeps its direction and its shape: it only browns, and its stem tilts.
+        const droops = species.leaf.droops !== false
+        const angle = droops ? lerp(leaf.angle, droopAngle, ease) : leaf.angle
         const share = clamp01((length - WILT.curveFrom) / WILT.curveSpan)
-        const bend = side * WILT.leafCurve * wilt * ease * share
+        const bend = droops ? side * WILT.leafCurve * wilt * ease * share : 0
         return { stem, angle, bend }
       }
       const fits = (length: number, ease: number) => {
         const { stem, angle, bend } = arrange(length, ease)
-        const straight = species.leaf.outline(leaf.spec, length, search.fitSegments, leaf.fan)
+        const straight = species.leaf.outline(leaf.spec, length, search.fitSegments, leaf.fan, angle)
         return placeOutline(bendOutline(straight, length, bend), { x: stem.x1, y: stem.y1 }, angle).every(
           ([x, y]) => x >= limits.left && x <= limits.right && y <= limits.floor,
         )

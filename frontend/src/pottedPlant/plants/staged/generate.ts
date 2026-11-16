@@ -155,7 +155,7 @@ export function leafOutline<Spec>(
   species: StagedPlantSpecies<Spec>,
   perSegment: number = species.config.search.fitSegments,
 ): Pt[] {
-  const straight = species.leaf.outline(leaf.spec, leaf.length, perSegment, leaf.fan)
+  const straight = species.leaf.outline(leaf.spec, leaf.length, perSegment, leaf.fan, leaf.angle)
   const shaped = leaf.bend ? bendOutline(straight, leaf.length, leaf.bend) : straight
   return placeOutline(shaped, { x: leaf.baseX, y: leaf.baseY }, leaf.angle)
 }

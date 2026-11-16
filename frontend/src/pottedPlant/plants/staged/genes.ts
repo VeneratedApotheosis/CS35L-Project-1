@@ -87,6 +87,8 @@ export function makeGene<Spec>(
     }
   }
 
+  const angle = heading + curl + jitter
+
   return {
     index,
     spec,
@@ -98,7 +100,7 @@ export function makeGene<Spec>(
     jitter,
     drawOrder,
     fan,
-    measureOutline: leaf.outline(spec, 1, search.measureSegments, fan),
-    fitOutline: leaf.outline(spec, 1, search.fitSegments, fan),
+    measureOutline: leaf.outline(spec, 1, search.measureSegments, fan, angle),
+    fitOutline: leaf.outline(spec, 1, search.fitSegments, fan, angle),
   }
 }
