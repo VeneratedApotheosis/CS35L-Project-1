@@ -187,12 +187,37 @@ describe("validateScene", () => {
     }
   })
 
-  it("has a varied real scene: every plant type, all stages, some wilt, many sizes and pot colors", () => {
+  it("has a varied real scene: every plant type, some wilt, many sizes and pot colors", () => {
     expect(SCENE_PLANTS.length).toBeGreaterThanOrEqual(30)
     expect(new Set(SCENE_PLANTS.map((p) => p.type)).size).toBe(PLANT_TYPES.length)
-    expect([...new Set(SCENE_PLANTS.map((p) => p.stage))].sort()).toEqual([1, 2, 3, 4])
     expect(SCENE_PLANTS.filter((p) => p.wilt > 0).length).toBeGreaterThanOrEqual(2)
     expect(new Set(SCENE_PLANTS.map((p) => p.pot?.color)).size).toBeGreaterThanOrEqual(7)
+  })
+
+  it("has every plant fully grown", () => {
+    expect(SCENE_PLANTS.every((p) => p.stage === 4)).toBe(true)
+  })
+
+  it("is crowded: many plants, and many pairs that overlap a little", () => {
+    expect(SCENE_PLANTS.length).toBeGreaterThanOrEqual(50)
+    let overlapping = 0
+    for (let i = 0; i < SCENE_PLANTS.length; i++) {
+      for (let j = i + 1; j < SCENE_PLANTS.length; j++) {
+        const a = plantBounds(SCENE_PLANTS[i])
+        const b = plantBounds(SCENE_PLANTS[j])
+        const across = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)
+        const down = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y)
+        if (across > 10 && down > 10) overlapping++
+      }
+    }
+    expect(overlapping).toBeGreaterThanOrEqual(40)
+  })
+
+  it("fills the back-right corner with big plants", () => {
+    const corner = SCENE_PLANTS.filter((p) => p.x > 1100 && p.y < 900 && p.size >= 290)
+    expect(corner.length).toBeGreaterThanOrEqual(4)
+    // And a high shelf on the right wall holds plants up near the roof.
+    expect(SCENE_PLANTS.filter((p) => p.id.startsWith("right-upper")).length).toBeGreaterThanOrEqual(3)
   })
 
   it("keeps the shelf plants big: at least 50% bigger than the first version's 72", () => {
@@ -218,8 +243,10 @@ describe("validateScene", () => {
 
   it("lines the floor plants up along the walls, not scattered across the room", () => {
     // A floor plant stands near the back wall's foot, or near a side wall's foot.
-    const floor = SCENE_PLANTS.filter((p) => !p.shelf && !p.id.startsWith("big") && !p.id.startsWith("right-shelf"))
-    expect(floor.length).toBeGreaterThanOrEqual(14)
+    const floor = SCENE_PLANTS.filter(
+      (p) => !p.shelf && !p.id.startsWith("big") && !p.id.startsWith("right-") && !p.id.startsWith("floor-front"),
+    )
+    expect(floor.length).toBeGreaterThanOrEqual(15)
     for (const p of floor) {
       const factor = Math.max(1, (p.y - VANISH.y) / (ROOM.floorY - VANISH.y))
       const nearBack = factor < 1.2

@@ -33,6 +33,7 @@ export const SHELVES: readonly Shelf[] = [
   { id: "back-upper", side: "back", from: 690, to: 1240, y: 330, reach: 1.08, thickness: 15 },
   { id: "back-lower", side: "back", from: 640, to: 1240, y: 530, reach: 1.12, thickness: 18, legs: [656, 950] },
   { id: "right-return", side: "right", from: 1, to: 1.5, y: 530, inset: 92, thickness: 18 },
+  { id: "right-upper", side: "right", from: 1, to: 1.5, y: 330, inset: 92, thickness: 15 },
 ]
 
 /**
