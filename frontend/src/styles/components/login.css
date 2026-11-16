@@ -1,13 +1,15 @@
 /*
- * The login screen. On wide screens the words take the left third and the
- * shelf wall the right two thirds (grid areas below). Below 64rem the wall
- * moves to the top and the words follow it. The wall's pieces are drawn by
- * views/login/wall/ShelfWall.tsx and colored here with the theme tokens.
+ * The login screen. The words take the left third (never less than 22rem) and the
+ * shelf wall the rest (grid areas below). The pots never shrink: the wall shows fewer
+ * of them as it narrows (see views/login/wall/ShelfWall.tsx). Below 39rem not even one
+ * pot fits beside the words, so the wall becomes a single shelf above them, on the
+ * page's own background. The wall's pieces are drawn by ShelfWall.tsx and colored
+ * here with the theme tokens.
  */
 
 .login {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  grid-template-columns: minmax(22rem, 1fr) minmax(0, 2fr);
   grid-template-rows: auto 1fr;
   grid-template-areas:
     "brand wall"
@@ -70,27 +72,24 @@
   font-weight: 700;
 }
 
-/* The wall: sage plaster with the shelves drawn on it. */
+/* The wall: sage plaster with the shelves drawn on it. The picture is placed from the middle and keeps its pixel size. */
 .wall {
   grid-area: wall;
+  position: relative;
   min-width: 0;
   min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-8);
+  overflow: hidden;
   background: var(--color-wall);
 }
 
 .wall__svg {
   display: block;
-  width: 100%;
-  height: 100%;
-  max-height: calc(100dvh - 2 * var(--space-8));
-}
-
-.wall__svg--tall {
-  display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: none;
+  overflow: visible;
 }
 
 .wall__board {
@@ -118,7 +117,7 @@
   opacity: 0.5;
 }
 
-@media (max-width: 63.99rem) {
+@media (max-width: 38.99rem) {
   .login {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto;
@@ -129,23 +128,16 @@
       "content";
   }
   .login__brand {
-    padding-bottom: var(--space-4);
+    padding-bottom: var(--space-2);
   }
   .wall {
-    padding: var(--space-4);
-  }
-  .wall__svg--wide {
-    display: none;
-  }
-  .wall__svg--tall {
-    display: block;
-    height: clamp(18rem, 50dvh, 36rem);
-    max-height: none;
+    height: var(--wall-row);
+    background: transparent;
   }
   .login__content {
     align-self: start;
     max-width: none;
-    padding-top: var(--space-8);
+    padding-top: var(--space-4);
   }
   .login__title {
     font-size: var(--font-size-3xl);

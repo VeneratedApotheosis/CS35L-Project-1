@@ -42,7 +42,7 @@ Every main screen links to the others through the navigation bar.
 
 - The words take the left third: app name and logo, a title, a short description, and **Sign in with Google**.
 - The right two thirds show eight terracotta pots on light wood shelves, on a sage wall. See [login-wall.md](login-wall.md).
-- The screen follows the app's light or dark theme. Below 64rem the shelves move above the words.
+- The screen follows the app's light or dark theme. The pots keep their size and fewer of them show as the screen narrows. Below 39rem the wall is one shelf above the words.
 - A profile is created automatically on first sign-in.
 - After login, users land on the Garden (empty for new users).
 - Every other page requires a session. Sessions persist across refreshes until logout or expiry.

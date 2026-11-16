@@ -44,12 +44,10 @@ describe("Login", () => {
     expect(screen.queryByRole("heading")).toBeNull()
   })
 
-  it("draws all eight plants in each of the two layouts", () => {
+  it("draws eight plants on two shelves when the wall has not been measured", () => {
     const { container } = render(<Login />)
-    expect(container.querySelectorAll(".wall__svg--wide [data-plant]").length).toBe(8)
-    expect(container.querySelectorAll(".wall__svg--tall [data-plant]").length).toBe(8)
-    expect(container.querySelectorAll(".wall__svg--wide [data-shelf]").length).toBe(2)
-    expect(container.querySelectorAll(".wall__svg--tall [data-shelf]").length).toBe(3)
+    expect(container.querySelectorAll(".wall__svg [data-plant]").length).toBe(8)
+    expect(container.querySelectorAll(".wall__svg [data-shelf]").length).toBe(2)
   })
 
   it("starts Google sign-in and disables the button while it connects", async () => {

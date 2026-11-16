@@ -10,9 +10,10 @@ import { GoogleIcon } from "./login/GoogleIcon"
 import { ShelfWall } from "./login/wall/ShelfWall"
 
 /**
- * The login screen: the words take the left third, and eight potted plants on
- * wooden shelves fill the right two thirds. The screen follows the app's theme.
- * Below 64rem the wall moves above the words.
+ * The login screen: the words take the left third, and potted plants on wooden
+ * shelves fill the rest. The pots keep their size and the wall shows fewer of them
+ * as the screen narrows; below 39rem it is a single shelf above the words. The
+ * screen follows the app's theme.
  */
 export default function Login() {
   const { user, loading: authLoading, signInWithGoogle } = useAuth()

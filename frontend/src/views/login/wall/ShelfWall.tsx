@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useCallback, useEffect, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Lily } from "@/pottedPlant/plants/lily"
 import { Monstera } from "@/pottedPlant/plants/monstera"
 import { PeaceLily } from "@/pottedPlant/plants/peaceLily"
@@ -13,7 +13,19 @@ import { EmergeProvider } from "@/pottedPlant/plants/staged/EmergeContext"
 import { ShrinkProvider } from "@/pottedPlant/plants/staged/ShrinkContext"
 import { PottedPlant } from "@/pottedPlant/PottedPlant"
 import { POT_SHAPE, potLookFromSeed, type PotLook } from "@/pottedPlant/pots"
-import { BOARD, TALL_LAYOUT, WALL_PLANTS, WIDE_LAYOUT, type Shelf, type Slot, type WallLayout, type WallPlant } from "./layouts"
+import {
+  BOARD,
+  ROW_PITCH,
+  STACKED_QUERY,
+  WALL_PLANTS,
+  wallFit,
+  wallLayout,
+  type Shelf,
+  type Slot,
+  type WallFit,
+  type WallLayout,
+  type WallPlant,
+} from "./layouts"
 
 /** The plant canvas every species draws in (see pottedPlant/genome.ts VIEWBOX): "0 30 200 205". */
 const PLANT_VIEW = { y: 30, width: 200, height: 205 } as const
@@ -347,20 +359,21 @@ function ShelfBoard({ shelf }: { shelf: Shelf }) {
   )
 }
 
-function WallSvg({ layout, variant }: { layout: WallLayout; variant: "wide" | "tall" }) {
+function WallSvg({ layout }: { layout: WallLayout }) {
   return (
     <svg
-      className={"wall__svg wall__svg--" + variant}
+      className="wall__svg"
+      width={layout.width}
+      height={layout.height}
       viewBox={"0 0 " + layout.width + " " + layout.height}
-      preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
       focusable="false"
     >
       {layout.shelves.map((shelf) => (
         <ShelfBoard key={shelf.y} shelf={shelf} />
       ))}
-      {WALL_PLANTS.map((plant, index) => {
-        const slot = layout.slots[index]
+      {layout.slots.map((slot, index) => {
+        const plant = WALL_PLANTS[index]
         return <WallPlantView key={plant.id} plant={plant} slot={slot} y={layout.shelves[slot.shelf].y - BOARD.rest} order={index} />
       })}
     </svg>
@@ -368,16 +381,36 @@ function WallSvg({ layout, variant }: { layout: WallLayout; variant: "wide" | "t
 }
 
 /**
- * The picture beside the login words: eight terracotta pots on light wood
- * shelves, on a sage wall. Two layouts of the same plants are drawn and the
- * screen's width decides which one shows (see login.css). The picture is
- * decorative; the words on the page say everything it does.
+ * The picture beside the login words: terracotta pots on light wood shelves, on a sage
+ * wall. The pots are always the same size. The wall measures itself and shows as many pots
+ * and shelves as fit, up to eight plants; where not even one pot fits beside the words it is
+ * a single shelf above them (see login.css). The picture is decorative; the words on the
+ * page say everything it does.
  */
 export function ShelfWall() {
+  const wall = useRef<HTMLDivElement>(null)
+  // Nothing is drawn until the wall has been measured, so a phone never flashes the desktop wall.
+  const [fit, setFit] = useState<WallFit | null>(null)
+
+  useLayoutEffect(() => {
+    const element = wall.current
+    if (!element) return
+    const measure = () => {
+      const stacked = typeof window.matchMedia === "function" && window.matchMedia(STACKED_QUERY).matches
+      const next = wallFit(element.clientWidth, element.clientHeight, stacked)
+      setFit((prev) => (prev && prev.cols === next.cols && prev.rows === next.rows ? prev : next))
+    }
+    measure()
+    if (typeof ResizeObserver === "undefined") return
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+
+  const layout = useMemo(() => (fit ? wallLayout(fit) : null), [fit])
   return (
-    <div className="wall" aria-hidden="true">
-      <WallSvg layout={WIDE_LAYOUT} variant="wide" />
-      <WallSvg layout={TALL_LAYOUT} variant="tall" />
+    <div ref={wall} className="wall" style={{ "--wall-row": ROW_PITCH + "px" } as React.CSSProperties} aria-hidden="true">
+      {layout && <WallSvg layout={layout} />}
     </div>
   )
 }

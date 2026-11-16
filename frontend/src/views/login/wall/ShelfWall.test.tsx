@@ -3,9 +3,9 @@ import { act, cleanup, fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { SHRINK_MS, ShelfWall } from "./ShelfWall"
 
-/** The plants of the wide layout, which is drawn in the page's first svg. */
+/** The plants on the wall (an unmeasured wall, as in jsdom, is the biggest: two shelves of four). */
 function plants(container: HTMLElement) {
-  return Array.from(container.querySelectorAll<SVGGElement>(".wall__svg--wide [data-plant]"))
+  return Array.from(container.querySelectorAll<SVGGElement>("[data-plant]"))
 }
 const advance = (ms: number) => act(() => void vi.advanceTimersByTime(ms))
 

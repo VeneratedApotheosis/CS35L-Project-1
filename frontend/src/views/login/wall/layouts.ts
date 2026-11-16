@@ -1,13 +1,10 @@
 import type { PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 
 /**
- * The plants on the login wall, in reading order (left to right, top shelf
- * first). Every plant is fully grown. The order matters: both layouts place the
- * same list, so going from two shelves to three only moves the line breaks.
- *
- * Shapes alternate (tall, flat-leaved, trailing, broad, low), and the three
- * flowering plants (rose, peace lily, lily) are spread apart so blooms are
- * seen across the whole wall.
+ * The plants on the login wall, in the order they are shown. Every plant is fully
+ * grown. When the screen only has room for a few pots, the first ones are kept, so
+ * the order puts a flowering plant (rose, peace lily, lily) among every few.
+ * Shapes alternate (tall, flat-leaved, trailing, broad, low).
  */
 export interface WallPlant {
   /** A unique name that says where the plant is. */
@@ -17,17 +14,19 @@ export interface WallPlant {
   seed: number
   /** Flip the plant left to right, for variety. */
   mirror?: boolean
+  /** Its picture's size as a share of POT_SIZE: a little variety, never more than MAX_SCALE. */
+  scale: number
 }
 
 export const WALL_PLANTS: readonly WallPlant[] = [
-  { id: "snake-plant", type: "snake_plant", seed: 12 },
-  { id: "rose", type: "rose", seed: 31 },
-  { id: "pothos", type: "pothos", seed: 47 },
-  { id: "monstera", type: "monstera", seed: 58, mirror: true },
-  { id: "peace-lily", type: "peace_lily", seed: 73 },
-  { id: "pilea", type: "pilea", seed: 86 },
-  { id: "philodendron", type: "philodendron", seed: 21, mirror: true },
-  { id: "lily", type: "lily", seed: 108 },
+  { id: "rose", type: "rose", seed: 31, scale: 1.05 },
+  { id: "snake-plant", type: "snake_plant", seed: 12, scale: 1 },
+  { id: "pothos", type: "pothos", seed: 47, scale: 1.03 },
+  { id: "peace-lily", type: "peace_lily", seed: 73, scale: 1.02 },
+  { id: "monstera", type: "monstera", seed: 58, mirror: true, scale: 1.06 },
+  { id: "pilea", type: "pilea", seed: 86, scale: 0.96 },
+  { id: "lily", type: "lily", seed: 108, scale: 1 },
+  { id: "philodendron", type: "philodendron", seed: 21, mirror: true, scale: 1.02 },
 ]
 
 /** One shelf board. y is the front top edge, in layout units; from and to are its ends. */
@@ -49,57 +48,76 @@ export interface WallLayout {
   width: number
   height: number
   shelves: readonly Shelf[]
-  /** One slot per plant of WALL_PLANTS, in the same order. */
+  /** One slot per plant shown: the first plants of WALL_PLANTS, in the same order. */
   slots: readonly Slot[]
 }
 
 /** The depth of the board's top face. A pot rests on the middle of it. */
 export const BOARD = { top: 10, front: 20, rest: 4 } as const
 
-/**
- * Wide screens (64rem and up): two shelves of four, the top one shifted left and
- * the bottom one right, like the reference photo. The tall plants are on top,
- * where there is the most room above them.
+/*
+ * The pots never scale with the screen. Every size here is in pixels (one layout unit is
+ * one pixel), and what changes as the screen narrows is how many pots fit.
  */
-export const WIDE_LAYOUT: WallLayout = {
-  width: 1000,
-  height: 720,
-  shelves: [
-    { y: 300, from: 40, to: 850 },
-    { y: 610, from: 150, to: 960 },
-  ],
-  slots: [
-    { shelf: 0, x: 142, size: 290 },
-    { shelf: 0, x: 345, size: 310 },
-    { shelf: 0, x: 548, size: 315 },
-    { shelf: 0, x: 751, size: 335 },
-    { shelf: 1, x: 252, size: 310 },
-    { shelf: 1, x: 455, size: 295 },
-    { shelf: 1, x: 658, size: 300 },
-    { shelf: 1, x: 861, size: 310 },
-  ],
+/** The width of a pot's picture, in pixels. */
+export const POT_SIZE = 280
+/** The biggest WallPlant.scale. */
+export const MAX_SCALE = 1.06
+/** How far the pots are from each other, side by side, in pixels. The leaves of neighbours overlap a little. */
+export const PITCH = 190
+/** How far the shelf runs past the outermost pots, in pixels. */
+export const SHELF_MARGIN = 40
+/** How far each shelf is shifted off the one above (left, then right), when there is more than one pot across. */
+export const STAGGER = 24
+/** The height of one shelf with the plants standing on it and the brackets below, in pixels. */
+export const ROW_PITCH = 300
+/** Where the board sits in its band: the plants and room for the tallest leaf above, then the brackets below. */
+const BOARD_IN_ROW = 226
+/** The most pots across and the most shelves. */
+export const MAX_COLS = 4
+export const MAX_ROWS = 4
+
+/**
+ * The width, in rem, below which the wall is not a column beside the words: not even one pot fits
+ * there. It is one shelf above the words on the page's own background. Keep it in step with
+ * login.css, whose words column is at least 22rem wide.
+ */
+export const STACKED_QUERY = "(max-width: 38.99rem)"
+
+/** How many pots across and how many shelves fit in a wall of this size, in pixels. Never less than one. */
+export interface WallFit {
+  cols: number
+  rows: number
 }
 
 /**
- * Narrower screens: the same eight plants on three shelves (3, 3 and 2), so each
- * pot stays a good size when the wall is squeezed into a smaller, squarer space.
+ * What fits. Beside the words, as many shelves as the height allows and pots as the width allows, up
+ * to what is needed for all the plants. Stacked, a single shelf. A size of 0 (not measured) gives the
+ * biggest wall.
  */
-export const TALL_LAYOUT: WallLayout = {
-  width: 620,
-  height: 650,
-  shelves: [
-    { y: 182, from: 30, to: 520 },
-    { y: 376, from: 100, to: 590 },
-    { y: 570, from: 30, to: 360 },
-  ],
-  slots: [
-    { shelf: 0, x: 111, size: 170 },
-    { shelf: 0, x: 274, size: 180 },
-    { shelf: 0, x: 437, size: 185 },
-    { shelf: 1, x: 181, size: 205 },
-    { shelf: 1, x: 344, size: 185 },
-    { shelf: 1, x: 507, size: 160 },
-    { shelf: 2, x: 112, size: 180 },
-    { shelf: 2, x: 277, size: 190 },
-  ],
+export function wallFit(width: number, height: number, stacked: boolean): WallFit {
+  const cols = width > 0 ? Math.min(MAX_COLS, Math.max(1, Math.floor((width - 2 * SHELF_MARGIN) / PITCH))) : MAX_COLS
+  if (stacked) return { cols: Math.min(cols, WALL_PLANTS.length), rows: 1 }
+  const roomRows = height > 0 ? Math.min(MAX_ROWS, Math.max(1, Math.floor(height / ROW_PITCH))) : 2
+  const count = Math.min(WALL_PLANTS.length, cols * roomRows)
+  return { cols: Math.min(cols, count), rows: Math.ceil(count / Math.min(cols, count)) }
+}
+
+/** The wall for this many pots across and shelves: as many plants as fit, in reading order, shelves staggered. */
+export function wallLayout({ cols, rows }: WallFit): WallLayout {
+  const stagger = cols > 1 ? STAGGER : 0
+  const width = cols * PITCH + 2 * SHELF_MARGIN + 2 * stagger
+  const count = Math.min(WALL_PLANTS.length, cols * rows)
+  const shelves: Shelf[] = []
+  const slots: Slot[] = []
+  for (let shelf = 0; shelf < rows; shelf++) {
+    const inRow = Math.min(cols, count - shelf * cols)
+    const shift = shelf % 2 === 0 ? -stagger : stagger
+    const left = SHELF_MARGIN + stagger + shift
+    shelves.push({ y: shelf * ROW_PITCH + BOARD_IN_ROW, from: left - SHELF_MARGIN, to: left + inRow * PITCH + SHELF_MARGIN })
+    for (let i = 0; i < inRow; i++) {
+      slots.push({ shelf, x: left + PITCH * (i + 0.5), size: Math.round(POT_SIZE * WALL_PLANTS[slots.length].scale) })
+    }
+  }
+  return { width, height: rows * ROW_PITCH, shelves, slots }
 }
