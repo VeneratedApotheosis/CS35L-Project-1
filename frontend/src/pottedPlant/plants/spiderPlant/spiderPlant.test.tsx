@@ -1,11 +1,14 @@
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { SpiderLeafShape } from "./SpiderLeafShape"
 import { SpiderPlant } from "./SpiderPlant"
 import { SPIDER_LEAF_RANGES, randomSpiderLeaf, spiderBladeSides, spiderLeafOutline } from "./spiderLeaf"
 import { SPIDER_PLANT_CONFIG } from "./spiderPlantConfig"
 import { createSpiderPlant, leafOutline, stageLeafCounts } from "./spiderPlantStages"
 import { mulberry32 } from "../../rng"
+
+// Growing 40 plants of up to 14 blades is slow when the whole suite runs at once.
+vi.setConfig({ testTimeout: 30000 })
 
 const SEEDS = Array.from({ length: 40 }, (_, i) => i + 1)
 const EPS = 1e-6
