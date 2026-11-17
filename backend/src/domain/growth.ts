@@ -24,18 +24,29 @@ export function growthStage(overall: number | null): GrowthStage {
 // early on). 80% and up is healthy, 50 to 79% slightly wilted, and below 50%
 // wilted. Before the first period ends the plant is healthy, and it recovers as
 // later goals are met because old periods drop out of the window.
+export function healthRate(
+  habit: ProgressHabit,
+  logDates: readonly string[],
+  today: string,
+): number {
+  const recent = periodSummaries(habit, logDates, today)
+    .filter((period) => period.status === "completed")
+    .slice(-HEALTH_WINDOW);
+  if (recent.length === 0) return 1;
+
+  return recent.filter((period) => period.met).length / recent.length;
+}
+
+export function healthFromRate(rate: number): PlantHealth {
+  if (rate >= 0.8) return "healthy";
+  if (rate >= 0.5) return "slightly_wilted";
+  return "wilted";
+}
+
 export function plantHealth(
   habit: ProgressHabit,
   logDates: readonly string[],
   today: string,
 ): PlantHealth {
-  const recent = periodSummaries(habit, logDates, today)
-    .filter((period) => period.status === "completed")
-    .slice(-HEALTH_WINDOW);
-  if (recent.length === 0) return "healthy";
-
-  const rate = recent.filter((period) => period.met).length / recent.length;
-  if (rate >= 0.8) return "healthy";
-  if (rate >= 0.5) return "slightly_wilted";
-  return "wilted";
+  return healthFromRate(healthRate(habit, logDates, today));
 }
