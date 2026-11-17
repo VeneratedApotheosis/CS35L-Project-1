@@ -453,3 +453,82 @@ describe("GET /habits/:id", () => {
     expect(res.body.error.code).toBe("unauthorized");
   });
 });
+
+describe("DELETE /habits/:id", () => {
+  const remove = (id = habitId) =>
+    request(app).delete(`/habits/${id}`).set("Authorization", auth);
+
+  it("deletes the owner's habit with one query and returns an empty 204", async () => {
+    fakeSupabase.setResult("habits", "delete", {
+      data: { id: habitId },
+      error: null,
+    });
+    const res = await remove();
+    expect(res.status).toBe(204);
+    expect(res.text).toBe("");
+    expect(fakeSupabase.calls).toEqual([
+      {
+        table: "habits",
+        operation: "delete",
+        columns: "id",
+        filter: { column: "id", value: habitId },
+        moreFilters: [{ column: "owner_id", value: TEST_USER.id }],
+      },
+    ]);
+    // No separate log deletion: the real database owns the FK cascade.
+  });
+
+  it("returns 404 for a missing habit, including a repeated deletion", async () => {
+    fakeSupabase.queueResult("habits", "delete", {
+      data: { id: habitId },
+      error: null,
+    });
+    fakeSupabase.setResult("habits", "delete", { data: null, error: null });
+    expect((await remove()).status).toBe(204);
+    const res = await remove();
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({
+      error: { code: "not_found", message: "Habit not found" },
+    });
+  });
+
+  it("returns the same 404 when another user's habit is filtered out", async () => {
+    // Supabase returns no deleted row when ownership/RLS excludes the habit.
+    fakeSupabase.setResult("habits", "delete", { data: null, error: null });
+    const res = await remove();
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({
+      error: { code: "not_found", message: "Habit not found" },
+    });
+    expect(
+      fakeSupabase.callsFor("habits", "delete")[0]?.moreFilters,
+    ).toContainEqual({ column: "owner_id", value: TEST_USER.id });
+  });
+
+  it("rejects malformed ids before touching the database", async () => {
+    expect((await remove("not-a-uuid")).status).toBe(400);
+    expect(fakeSupabase.calls).toHaveLength(0);
+  });
+
+  it.each([undefined, "Bearer invalid"])(
+    "rejects invalid authentication (%s)",
+    async (token) => {
+      const req = request(app).delete(`/habits/${habitId}`);
+      if (token) req.set("Authorization", token);
+      expect((await req).status).toBe(401);
+      expect(fakeSupabase.calls).toHaveLength(0);
+    },
+  );
+
+  it("returns a generic 500 on database failure, without leaking details", async () => {
+    fakeSupabase.setResult("habits", "delete", {
+      data: null,
+      error: { message: "private database details" },
+    });
+    const res = await remove();
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({
+      error: { code: "internal_error", message: "Could not delete habit" },
+    });
+  });
+});
