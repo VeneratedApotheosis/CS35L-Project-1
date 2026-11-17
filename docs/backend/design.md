@@ -368,7 +368,7 @@ The rules for the group numbers. Each member's own numbers use sections 8.2 to 8
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_PUBLISHABLE_KEY` | Publishable key. Safe to expose |
 | `PORT` | Defaults to 3000 |
-| `FRONTEND_ORIGIN` | Allowed CORS origin. The frontend runs on port 5173. A trailing slash is removed, because a browser's origin never has one |
+| `FRONTEND_ORIGIN` | Allowed CORS origins, separated by commas, for example `http://localhost:5173,https://name.github.io`. The local frontend runs on port 5173. A trailing slash is removed from each, because a browser's origin never has one, and an origin has no path |
 
 - The file is `backend/.env`, loaded by `dotenv/config`.
 - `config/env.ts` validates these at startup, so a missing one fails with a clear message.
@@ -388,7 +388,7 @@ The rules for the group numbers. Each member's own numbers use sections 8.2 to 8
 
 ## 11. Deployment
 
-The backend is a normal Node service: `npm run build`, then `npm start`. Set the variables from section 9 on the host. The host and how the frontend is served are open, see [design.md](../design.md#4-deployment).
+The backend is a normal Node service: `npm run build`, then `npm start`. Set the variables from section 9 on the host. The test deploy runs on Render, described by `render.yaml` at the repo root. The steps are in [DEPLOY.md](../dev/DEPLOY.md), and the hosting decision is in [design.md](../design.md#4-deployment).
 
 ---
 
@@ -396,7 +396,7 @@ The backend is a normal Node service: `npm run build`, then `npm start`. Set the
 
 | Item | Notes |
 | --- | --- |
-| Hosting for the backend | Section 11 |
+| Hosting for the backend | Test deploy on Render (section 11). The final choice is still open |
 | Changing timezone mid-habit | Past `occurred_on` dates stay as stored. Not decided otherwise. For shared habits the member timezone copy is fixed when they join |
 | Shared habits: member cap maximum | The owner chooses the cap. A system maximum is proposed (50), and whether the owner can change it after the start |
 | Shared habits: join code | Whether the owner can regenerate or close it (proposed: yes to both), and rate limiting of wrong guesses |

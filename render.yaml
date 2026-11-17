@@ -1,0 +1,26 @@
+# Render Blueprint: the backend as one web service. The frontend is on GitHub
+# Pages, so this file has no frontend. Secrets are not stored here: Render asks
+# for each `sync: false` value in its dashboard.
+# Guide: docs/dev/DEPLOY.md
+services:
+  - type: web
+    name: habit-garden-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    # --include=dev: tsc and the type packages are devDependencies.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit # redeploys on every push to the branch below
+    branch: main
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      # Comma-separated. Local dev plus the GitHub Pages origin (no path).
+      - key: FRONTEND_ORIGIN
+        sync: false

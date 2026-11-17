@@ -61,7 +61,7 @@ flowchart LR
 
 ## 4. Deployment
 
-Not decided yet. The current proposal is one Render service where the Express server serves both the API and the built frontend. That needs the frontend built as a static export. Render's free tier sleeps after 15 minutes without traffic, so the first request after a pause is slow.
+Not final. The test deploy splits the app in two: the Express backend on Render (`render.yaml`) and the frontend as a static export on GitHub Pages. This replaces the earlier proposal of one Render service serving both. Render's free tier sleeps after 15 minutes without traffic, so the first request after a pause is slow. Steps: [DEPLOY.md](dev/DEPLOY.md).
 
 Whatever the host, update the Google and Supabase redirect URLs to the deployed address.
 
