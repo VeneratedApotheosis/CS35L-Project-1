@@ -199,6 +199,17 @@ Stats are calculated by the rules in section 8 whenever they are asked for, and 
 
 The list reads the logs of the whole page in one query, not one per habit.
 
+The short and full stats also include `badge` (`gold`, `silver`,
+`bronze`, or `none`), `final_progress`, and `final_consistency` for expired
+habits (#251). All three fields are null until expiry. Final rates are 0–1,
+calculated using `habitResult`.
+
+`GET /habits?status=active|finished|both` filters by the caller's local date;
+the default is `both`. Active includes not-yet-started and indefinite habits.
+Filtering happens before offset/limit pagination, and `total` counts matches.
+Because end dates are calculated rather than stored, the backend scans habit
+metadata in batches, then loads logs only for the requested page.
+
 ### 6.5 Dashboard
 
 `GET /dashboard` returns the overall view across all of the user's habits:

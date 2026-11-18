@@ -2,7 +2,7 @@ import { Router } from "express";
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { PLANT_TYPES } from "../domain/plants.js";
-import { paginationQuery, type Pagination } from "../lib/pagination.js";
+import { paginationQuery } from "../lib/pagination.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import {
@@ -39,6 +39,10 @@ export const createHabitBody = z.strictObject({
     .optional(),
 });
 
+export const habitListQuery = paginationQuery.extend({
+  status: z.enum(["active", "finished", "both"]).default("both"),
+});
+
 export const habitParams = z.strictObject({ id: z.string().uuid() });
 
 habitsRouter.post(
@@ -56,10 +60,14 @@ habitsRouter.post(
 habitsRouter.get(
   "/habits",
   requireAuth,
-  validate({ query: paginationQuery }),
+  validate({ query: habitListQuery }),
   async (_req, res) => {
     const { user, supabase, valid } = res.locals;
-    const page = await listHabits(supabase, user.id, valid.query as Pagination);
+    const page = await listHabits(
+      supabase,
+      user.id,
+      valid.query as z.infer<typeof habitListQuery>,
+    );
     res.json({
       habits: page.items,
       total: page.total,

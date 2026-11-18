@@ -33,15 +33,6 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- 2. Delete my account.
--- No id argument: it can only delete the caller. profiles.id cascades from auth.users.
-create or replace function public.delete_my_account()
-returns void
-language sql
-security definer
-set search_path = public
-as $$
-  delete from auth.users where id = auth.uid();
-$$;
-
-revoke execute on function public.delete_my_account() from public, anon;
-grant execute on function public.delete_my_account() to authenticated;
+-- Moved: delete_my_account() now handles shared habits and lives in
+-- 20261117_04_delete_account_shared_habits.sql. It is not repeated here, so
+-- re-running this file cannot bring back the old version.

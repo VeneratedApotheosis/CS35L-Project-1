@@ -1,3 +1,4 @@
+import { habitState } from "../domain/periods.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isBeforeDate, todayInZone } from "../domain/dates.js";
 import type { PlantType } from "../domain/plants.js";
@@ -90,8 +91,11 @@ export async function createHabit(
 export async function listHabits(
   supabase: SupabaseClient,
   userId: string,
-  page: Pagination,
+  page: Pagination & { status?: "active" | "finished" | "both" },
 ): Promise<Page<HabitWithStats>> {
+  if (page.status && page.status !== "both") {
+    return listHabitsByStatus(supabase, userId, page, page.status);
+  }
   const { data, error, count } = await supabase
     .from("habits")
     .select(HABIT_COLUMNS, { count: "exact" })
@@ -197,4 +201,57 @@ export async function deleteHabit(
     throw new AppError(500, "internal_error", "Could not delete habit");
   }
   if (!data) throw notFound("Habit not found");
+}
+// End dates are calculated from calendar intervals, not stored columns.
+// Scan metadata in bounded pages, filter before slicing, then load logs only
+// for the requested page. This also avoids Supabase's default row limit.
+async function listHabitsByStatus(
+  supabase: SupabaseClient,
+  userId: string,
+  page: Pagination,
+  status: "active" | "finished",
+): Promise<Page<HabitWithStats>> {
+  const profile = await getProfile(supabase, userId);
+  const today = todayInZone(profile.timezone);
+  const selected: Habit[] = [];
+  const batchSize = 500;
+  for (let offset = 0; ; offset += batchSize) {
+    const { data, error } = await supabase
+      .from("habits")
+      .select(HABIT_COLUMNS)
+      .eq("owner_id", userId)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + batchSize - 1);
+    if (error) {
+      logger.error({ err: error, userId }, "could not list habits");
+      throw new AppError(500, "internal_error", "Could not list habits");
+    }
+    const batch = (data ?? []) as Habit[];
+    selected.push(
+      ...batch.filter(
+        (habit) =>
+          (habitState(habit, today) === "expired") === (status === "finished"),
+      ),
+    );
+    if (batch.length < batchSize) break;
+  }
+  const habits = selected.slice(page.offset, page.offset + page.limit);
+  const logs = await fetchLogs(
+    supabase,
+    habits.map((habit) => habit.id),
+  );
+  return {
+    items: habits.map((habit) => ({
+      ...habit,
+      stats: shortStats(
+        habit,
+        (logs.get(habit.id) ?? []).map((log) => log.occurred_on),
+        today,
+      ),
+    })),
+    total: selected.length,
+    limit: page.limit,
+    offset: page.offset,
+  };
 }

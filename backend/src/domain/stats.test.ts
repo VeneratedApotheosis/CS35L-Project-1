@@ -15,6 +15,9 @@ describe("shortStats", () => {
   it("describes a new habit with no logs", () => {
     expect(shortStats(gym, [], "2026-11-04")).toEqual({
       state: "active",
+      badge: null,
+      final_progress: null,
+      final_consistency: null,
       current_period: {
         number: 1,
         total: 4,
@@ -125,5 +128,53 @@ describe("fullStats", () => {
     expect(
       fullStats({ ...gym, num_periods: null }, [], "2026-11-04").end_date,
     ).toBeNull();
+  });
+});
+
+describe("final results", () => {
+  it.each([
+    ["gold", [3, 3, 3, 3], 1, 1],
+    ["silver", [12, 0, 0, 0], 1, 0.25],
+    ["bronze", [3, 3, 2, 0], 8 / 12, 0.5],
+    ["none", [0, 0, 0, 0], 0, 0],
+  ] as const)(
+    "exposes %s and final rates in both stats shapes",
+    (badge, counts, progress, rate) => {
+      const dates = counts.flatMap((count, index) =>
+        Array<string>(count).fill(
+          ["2026-11-02", "2026-11-09", "2026-11-16", "2026-11-23"][index]!,
+        ),
+      );
+      const expected = {
+        badge,
+        final_progress: progress,
+        final_consistency: rate,
+      };
+      expect(shortStats(gym, dates, "2026-11-30")).toMatchObject(expected);
+      expect(
+        fullStats(
+          gym,
+          dates.map((date, index) => entry(String(index), date)),
+          "2026-11-30",
+        ),
+      ).toMatchObject(expected);
+    },
+  );
+
+  it("does not award a final result early even after reaching the target", () => {
+    expect(
+      shortStats(gym, Array<string>(12).fill("2026-11-02"), "2026-11-03"),
+    ).toMatchObject({
+      badge: null,
+      final_progress: null,
+      final_consistency: null,
+    });
+    expect(
+      shortStats({ ...gym, num_periods: null }, [], "2027-01-01"),
+    ).toMatchObject({
+      badge: null,
+      final_progress: null,
+      final_consistency: null,
+    });
   });
 });

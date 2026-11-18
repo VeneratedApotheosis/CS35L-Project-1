@@ -251,7 +251,7 @@ RLS is on for all three tables, and `anon` gets nothing. "Member" below means `i
 
 | Table | Read | Insert | Update | Delete |
 | --- | --- | --- | --- | --- |
-| `shared_habits` | Members | As yourself (`owner_id` is you) | The owner, on allowed columns only | The owner |
+| `shared_habits` | Members, and the owner | As yourself (`owner_id` is you) | The owner, on allowed columns only | The owner |
 | `shared_habit_members` | Members of the same habit | No one. Only the join function and the owner trigger | No one | Yourself if you are not the owner (leaving), or the owner removing someone else |
 | `shared_habit_logs` | Your own logs | As yourself, and only if you are a member | No one | Your own logs |
 
@@ -276,9 +276,23 @@ Whether a column may change right now (while the owner is alone, once someone ha
 | `shared_habit_member_logs(shared_habit_id)` | Members | Returns `(user_id, occurred_on, count)` per day, only for current members. It counts per day, not one row per log, to keep the result small. It can still exceed the API's row limit (1000 by default), so the backend pages through it |
 | `transfer_shared_habit_ownership(shared_habit_id, new_owner)` | The owner | The new owner must be a member. Sets `owner_id` |
 | Trigger `add_shared_habit_owner` | Runs after an insert on `shared_habits` | Inserts the owner's member row with their timezone copy. `security definer`, because the members table has no insert policy |
-| Trigger `check_member_cap` | Runs before an insert on the members table | A backstop. Locks the habit row and refuses an insert past `max_members`. On `shared_habits` it refuses a `max_members` below the current member count |
+| Trigger `check_member_cap` | Runs before an insert on the members table | A backstop. Locks the habit row and refuses an insert past `max_members` |
+| Trigger `check_max_members` | Runs before `max_members` is updated on `shared_habits` | Refuses a `max_members` below the current member count |
+| Trigger `lock_started_shared_habit` | Runs before an update on `shared_habits` | Once the start date has passed, refuses a change to `target_count`, `interval_count`, `interval_unit`, `num_periods`, `start_date` or `join_by`. "Passed" uses the group's today, the earliest local date among the members' stored timezones. `name`, `description`, `plant_type`, `max_members` and `join_code` stay editable |
 
-The join errors have stable messages so the backend can map them: not found or closed (404), full (409), joining ended (400).
+The functions raise errors with stable messages so the backend can map them:
+
+| Message | Status | When |
+| --- | --- | --- |
+| `shared_habit_not_found` | 404 | The code is wrong or closed, or the habit is not yours (transfer) |
+| `shared_habit_full` | 409 | The member cap is reached |
+| `shared_habit_join_ended` | 400 | The caller's local date is past `join_by` |
+| `shared_habit_not_owner` | 403 | Transfer, by someone who is not the owner |
+| `shared_habit_not_member` | 400 | Transfer, to someone who is not a member |
+| `shared_habit_started` | 400 | An update of the goal or the dates after the start |
+| `shared_habit_cap_below_members` | 400 | `max_members` set below the member count |
+
+The owner cannot leave: the delete policy on members blocks it. They transfer the habit or delete it.
 
 ### 8.5 Delete account
 
@@ -303,7 +317,6 @@ Test each with two or more throwaway users, as in section 5.
 ### 8.7 Open items
 
 - Whether leaving deletes the member row (proposed) or keeps it with a `left_at` column, which a later "badges for everyone who finished" would need.
-- Whether edit timing is also enforced by a trigger. Proposed: the backend only at first.
 - The system maximum for `max_members` (proposed 50).
 - Rate limiting wrong codes. Postgres cannot do it, so it belongs to the backend.
 - The row limit on the member logs function, if a group's logs get large.
