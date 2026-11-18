@@ -251,7 +251,7 @@ RLS is on for all three tables, and `anon` gets nothing. "Member" below means `i
 
 | Table | Read | Insert | Update | Delete |
 | --- | --- | --- | --- | --- |
-| `shared_habits` | Members | As yourself (`owner_id` is you) | The owner, on allowed columns only | The owner |
+| `shared_habits` | Members, and the owner | As yourself (`owner_id` is you) | The owner, on allowed columns only | The owner |
 | `shared_habit_members` | Members of the same habit | No one. Only the join function and the owner trigger | No one | Yourself if you are not the owner (leaving), or the owner removing someone else |
 | `shared_habit_logs` | Your own logs | As yourself, and only if you are a member | No one | Your own logs |
 
