@@ -116,7 +116,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `POST /habits` | Create a habit | Built (#129) |
 | `GET /habits` | List own habits, each with short `stats` | Built (#130, #199) |
 | `GET /habits/:id` | Get one habit with full `stats` | Built (#130, #200) |
-| `DELETE /habits/:id` | Delete a habit | #125 (backlog) |
+| `DELETE /habits/:id` | Delete a habit | Built (#255) |
 | `POST /habits/:id/logs` | Add a log, current period only | Built (#196) |
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
@@ -143,6 +143,12 @@ Routes have no version prefix. There is no route to edit a habit, because habits
 - A start date in the past gets 400.
 - `owner_id` is the signed-in user. It is never read from the body.
 - The limits match the database constraints, except `plant_type`, which has no database constraint.
+
+Deleting a habit: `DELETE /habits/:id` permanently removes the caller's habit
+and its logs through the existing database cascade. Returns 204 with no body.
+A missing habit or another user's habit returns 404. Unlike deleting an
+individual log, deleting the whole habit is allowed regardless of its period
+or expiry state. The request uses the user's token and the existing delete policy.
 
 ### 6.2 Profile
 

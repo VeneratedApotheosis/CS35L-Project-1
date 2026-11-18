@@ -180,6 +180,28 @@ export async function getHabitDetail(
   };
 }
 
+// Delete as the signed-in user; RLS and the explicit owner filter both apply.
+// The database cascades this deletion to activity_logs in the same transaction.
+// Returning the deleted id avoids a separate existence check and its race.
+export async function deleteHabit(
+  supabase: SupabaseClient,
+  userId: string,
+  id: string,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("habits")
+    .delete()
+    .eq("id", id)
+    .eq("owner_id", userId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    logger.error({ err: error, userId, habitId: id }, "could not delete habit");
+    throw new AppError(500, "internal_error", "Could not delete habit");
+  }
+  if (!data) throw notFound("Habit not found");
+}
 // End dates are calculated from calendar intervals, not stored columns.
 // Scan metadata in bounded pages, filter before slicing, then load logs only
 // for the requested page. This also avoids Supabase's default row limit.
