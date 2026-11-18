@@ -1,3 +1,4 @@
+import { habitResult, type BadgeLevel } from "./badges.js";
 import {
   growthStage,
   plantHealth,
@@ -27,6 +28,9 @@ export type LogEntry = { id: string; occurred_on: string };
 // What the Garden needs for each plant.
 export type ShortStats = {
   state: HabitState;
+  badge: BadgeLevel | null;
+  final_progress: number | null;
+  final_consistency: number | null;
   // The period shown as "this period": the first one before the start, the
   // last one after the end.
   current_period: {
@@ -63,10 +67,14 @@ export function shortStats(
   logDates: readonly string[],
   today: string,
 ): ShortStats {
+  const result = habitResult(habit, logDates, today);
   const period = currentPeriodProgress(habit, logDates, today);
   const overall = overallProgress(habit, logDates, today);
   return {
     state: habitState(habit, today),
+    badge: result.badge,
+    final_progress: result.expired ? result.progress : null,
+    final_consistency: result.expired ? result.consistency : null,
     current_period: {
       number: period.number,
       total: habit.num_periods,
