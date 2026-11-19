@@ -33,7 +33,8 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | `POST` and `DELETE` for logs | Built (#196, #197) |
 | `GET /dashboard` | Built (#201) |
 | Shared habits: create, list and detail | Built (#268), using group calculations (#267) |
-| Shared habits: join, logging, leave and management | Planned, see sections 6.6 and 8.11 |
+| Shared habits: preview and join | Built (#269), see section 6.6 |
+| Shared habits: logging, leave and management | Planned, see sections 6.6 and 8.11 |
 | Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
@@ -235,8 +236,8 @@ Create, list and detail are built (#268); the other routes remain planned. All r
 | `GET /shared-habits/:id` | One shared habit with the group stats, every member's summary and the caller's own full stats |
 | `PATCH /shared-habits/:id` | The owner edits it, within the rules below |
 | `DELETE /shared-habits/:id` | The owner deletes the habit and everything in it |
-| `GET /shared-habits/preview/:code` | What the join screen shows for a code: name, goal, dates, owner, places left |
-| `POST /shared-habits/join` | Join with a code |
+| `GET /shared-habits/join/:code` | What the join screen shows for a code: name, goal, dates, owner, places left |
+| `POST /shared-habits/join/:code` | Join with a code |
 | `POST /shared-habits/:id/logs` | Add a log for the caller |
 | `DELETE /shared-habits/:id/logs/:logId` | Delete one of the caller's logs |
 | `DELETE /shared-habits/:id/members/me` | Leave. The owner cannot leave until they transfer ownership |
@@ -291,6 +292,20 @@ explicitly; rounding the API value would discard information.
 | Owner is the only member, before the start | Everything: goal, dates, `join_by`, `max_members`, name, description, plant |
 | Someone else has joined, before the start | Name, description, plant, `join_by` and `max_members` (not below the member count). The goal and start date are locked |
 | After the start | Nothing |
+
+**Invite endpoints (#269).** Preview returns the database preview fields plus
+`places_left`. Unknown, malformed, closed, and expired previews return the same
+404. Dates use the caller's profile timezone. POST returns `{ id }` with 200,
+including repeat joins. The database row lock enforces the member cap atomically;
+Express maps not-found/closed to 404, full to 409, and joining ended to 400.
+Unexpected failures return a generic 500.
+
+Both routes share a fixed-window budget of 20 requests per minute per verified
+user, including successful and malformed attempts. Excess requests return 429
+and `Retry-After`. [PLACEHOLDER] This limiter is process-local and resets on
+restart; shared storage is required for multiple replicas. Direct Supabase RPC
+calls bypass this Express limiter, so it is not database-wide guessing protection.
+Tests simulate cap-race RPC outcomes; actual locking requires a live database check.
 
 **Joining.** The join screen first calls the preview route, which returns nothing for a wrong, closed or expired code and never says which. Joining succeeds only while the joiner's own local date is on or before `join_by` and the habit is not full. Joining twice does nothing. Nobody joins after the start date.
 
