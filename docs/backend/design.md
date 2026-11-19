@@ -33,7 +33,8 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | `POST` and `DELETE` for logs | Built (#196, #197) |
 | `GET /dashboard` | Built (#201) |
 | Shared habits: create, list and detail | Built (#268), using group calculations (#267) |
-| Shared habits: join, logging, leave and management | Planned, see sections 6.6 and 8.11 |
+| Shared habits: preview and join | Built (#269), see section 6.6 |
+| Shared habits: logging, leave and management | Planned, see sections 6.6 and 8.11 |
 | Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
@@ -122,7 +123,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | Calls `delete_my_account` | No issue yet |
-| Shared habit routes | See section 6.6 | Planned (#216) |
+| Shared habit routes | Create/list/detail and preview/join built; see section 6.6 | Built (#268, #269); remaining routes planned |
 
 Routes have no version prefix. There is no route to edit a habit, because habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
 
@@ -226,7 +227,7 @@ metadata in batches, then loads logs only for the requested page.
 
 ### 6.6 Shared habits (planned)
 
-Create, list and detail are built (#268); the other routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
+Create, list and detail (#268), and invite preview and joining (#269), are built; logging and management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
 
 | Route | Purpose |
 | --- | --- |
@@ -235,8 +236,8 @@ Create, list and detail are built (#268); the other routes remain planned. All r
 | `GET /shared-habits/:id` | One shared habit with the group stats, every member's summary and the caller's own full stats |
 | `PATCH /shared-habits/:id` | The owner edits it, within the rules below |
 | `DELETE /shared-habits/:id` | The owner deletes the habit and everything in it |
-| `GET /shared-habits/preview/:code` | What the join screen shows for a code: name, goal, dates, owner, places left |
-| `POST /shared-habits/join` | Join with a code |
+| `GET /shared-habits/join/:code` | What the join screen shows for a code: name, goal, dates, owner, places left |
+| `POST /shared-habits/join/:code` | Join with a code |
 | `POST /shared-habits/:id/logs` | Add a log for the caller |
 | `DELETE /shared-habits/:id/logs/:logId` | Delete one of the caller's logs |
 | `DELETE /shared-habits/:id/members/me` | Leave. The owner cannot leave until they transfer ownership |
@@ -292,6 +293,20 @@ explicitly; rounding the API value would discard information.
 | Someone else has joined, before the start | Name, description, plant, `join_by` and `max_members` (not below the member count). The goal and start date are locked |
 | After the start | Nothing |
 
+**Invite endpoints (#269).** Preview returns the database preview fields plus
+`places_left`. Unknown, malformed, closed, and expired previews return the same
+404. Dates use the caller's profile timezone. POST returns `{ id }` with 200,
+including repeat joins. The database row lock enforces the member cap atomically;
+Express maps not-found/closed to 404, full to 409, and joining ended to 400.
+Unexpected failures return a generic 500.
+
+Both routes share a fixed-window budget of 20 requests per minute per verified
+user, including successful and malformed attempts. Excess requests return 429
+and `Retry-After`. [PLACEHOLDER] This limiter is process-local and resets on
+restart; shared storage is required for multiple replicas. Direct Supabase RPC
+calls bypass this Express limiter, so it is not database-wide guessing protection.
+Tests simulate cap-race RPC outcomes; actual locking requires a live database check.
+
 **Joining.** The join screen first calls the preview route, which returns nothing for a wrong, closed or expired code and never says which. Joining succeeds only while the joiner's own local date is on or before `join_by` and the habit is not full. Joining twice does nothing. Nobody joins after the start date.
 
 **Leaving and removal.** A member leaves with their past logs kept. Group numbers cover current members only. The owner can remove a member, which counts as that member leaving. The owner transfers ownership first if they want to leave. Deleting the habit removes every member and log.
@@ -307,7 +322,7 @@ explicitly; rounding the API value would discard information.
 - **Validation.** zod schemas, one per request, applied by the `validate` middleware.
 - **Error shape.** Every error is `{ "error": { "code": "...", "message": "..." } }`. Codes are short strings such as `unauthorized`, `validation_failed`, `not_found`.
 - **Status codes.** 400 bad input, 401 no valid token, 404 not found or not yours, 500 unexpected. Another user's habit returns 404, the same as a missing one.
-- **Logging.** Each request is logged. The `authorization` header and tokens are never logged. The logger is pino.
+- **Logging.** Invite codes in request paths are redacted, URL query strings are omitted, and Referer headers are redacted. Unexpected invite RPC failures log only the operation and a valid SQLSTATE; raw error text and payloads are omitted because they can echo codes. Unhandled invite errors also omit raw exceptions. Each request is logged. The `authorization` header and tokens are never logged. The logger is pino.
 
 ---
 

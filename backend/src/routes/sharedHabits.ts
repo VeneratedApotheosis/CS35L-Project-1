@@ -1,3 +1,9 @@
+import { createInviteRateLimit } from "../middleware/inviteRateLimit.js";
+import {
+  previewSharedHabit,
+  joinSharedHabit,
+} from "../services/sharedHabitJoin.js";
+import { notFound } from "../lib/errors.js";
 import { Router } from "express";
 import { z } from "zod";
 import { paginationQuery, type Pagination } from "../lib/pagination.js";
@@ -59,3 +65,25 @@ sharedHabitsRouter.get(
     );
   },
 );
+
+// Both routes share a budget keyed by verified identity, not the invite code.
+const inviteLimit = createInviteRateLimit();
+for (const method of ["get", "post"] as const) {
+  sharedHabitsRouter[method](
+    "/shared-habits/join/:code",
+    requireAuth,
+    inviteLimit,
+    async (req, res) => {
+      // Invite codes are stored lowercase; accept any casing a user pastes.
+      const code = (req.params.code as string).toLowerCase();
+      // Same public error for malformed, unknown and closed codes.
+      if (!/^[a-f0-9]{32}$/.test(code)) throw notFound("Invite not available");
+      const { user, supabase } = res.locals;
+      res.json(
+        method === "get"
+          ? await previewSharedHabit(supabase, user.id, code)
+          : await joinSharedHabit(supabase, code),
+      );
+    },
+  );
+}
