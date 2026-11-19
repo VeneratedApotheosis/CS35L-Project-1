@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { todayInZone } from "../domain/dates.js";
+import { isLogDeletable, logDateProblem } from "../domain/logging.js";
 import { endDate } from "../domain/periods.js";
 import { plantHealth } from "../domain/growth.js";
 import {
@@ -8,7 +9,7 @@ import {
   currentStreak,
 } from "../domain/progress.js";
 import { sharedHabitStats, isSharedLogDate } from "../domain/sharedHabits.js";
-import { fullStats, type LogEntry } from "../domain/stats.js";
+import { fullStats, shortStats, type LogEntry } from "../domain/stats.js";
 import { AppError, notFound, validationFailed } from "../lib/errors.js";
 import { logger } from "../lib/logger.js";
 import type { Pagination } from "../lib/pagination.js";
@@ -248,4 +249,99 @@ export async function getSharedHabit(
     }),
     own_stats: fullStats(habit, ownLogs, todayInZone(caller.timezone, now)),
   };
+}
+
+async function loggingContext(
+  client: SupabaseClient,
+  userId: string,
+  id: string,
+) {
+  const { data, error } = await client
+    .from("shared_habits")
+    .select(COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) databaseFailure(error);
+  if (!data) throw notFound("Shared habit not found");
+  const habit = data as SharedHabit;
+  const members = await memberData(client, habit, userId);
+  const caller = members.members.find((member) => member.user_id === userId)!;
+  return { habit, today: todayInZone(caller.timezone) };
+}
+
+async function loggingStats(
+  client: SupabaseClient,
+  userId: string,
+  habit: SharedHabit,
+) {
+  const now = new Date();
+  const data = await memberData(client, habit, userId);
+  const caller = data.members.find((member) => member.user_id === userId)!;
+  return {
+    stats: groupStats(habit, data, now),
+    own_stats: shortStats(
+      habit,
+      data.dates.get(userId)!,
+      todayInZone(caller.timezone, now),
+    ),
+  };
+}
+
+export async function addSharedLog(
+  client: SupabaseClient,
+  userId: string,
+  id: string,
+  occurredOn?: string,
+) {
+  const { habit, today } = await loggingContext(client, userId, id);
+  const date = occurredOn ?? today;
+  if (date < habit.start_date || today < habit.start_date)
+    throw validationFailed(
+      "occurred_on: shared habits cannot be logged before the start date",
+    );
+  const problem = logDateProblem(habit, date, today);
+  if (problem) throw validationFailed(problem);
+  const { data, error } = await client
+    .from("shared_habit_logs")
+    .insert({ shared_habit_id: id, user_id: userId, occurred_on: date })
+    .select("id, shared_habit_id, user_id, occurred_on")
+    .single();
+  if (error || !data) databaseFailure(error);
+  return { log: data, ...(await loggingStats(client, userId, habit)) };
+}
+
+export async function deleteSharedLog(
+  client: SupabaseClient,
+  userId: string,
+  id: string,
+  logId: string,
+) {
+  const { habit, today } = await loggingContext(client, userId, id);
+  const { data, error } = await client
+    .from("shared_habit_logs")
+    .select("id, occurred_on")
+    .eq("id", logId)
+    .eq("shared_habit_id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) databaseFailure(error);
+  if (!data) throw notFound("Log not found");
+  if (
+    data.occurred_on < habit.start_date ||
+    !isLogDeletable(habit, data.occurred_on, today)
+  )
+    throw validationFailed(
+      "Only logs in the current period can be deleted, earlier periods are locked",
+    );
+  const { data: deleted, error: deleteError } = await client
+    .from("shared_habit_logs")
+    .delete()
+    .eq("id", logId)
+    .eq("shared_habit_id", id)
+    .eq("user_id", userId)
+    .select("id")
+    .maybeSingle();
+  if (deleteError) databaseFailure(deleteError);
+  if (!deleted) throw notFound("Log not found");
+  return loggingStats(client, userId, habit);
 }
