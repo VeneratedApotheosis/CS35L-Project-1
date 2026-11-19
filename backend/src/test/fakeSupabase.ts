@@ -48,6 +48,7 @@ export class FakeSupabase {
           : { data: { user: null }, error: { message: "invalid" } },
     },
     from: (table: string) => this.query(table),
+    rpc: (name: string, args: unknown) => this.query(name, args),
   } as unknown as SupabaseClient;
 
   setResult(table: string, operation: Operation, result: FakeResult) {
@@ -72,8 +73,11 @@ export class FakeSupabase {
     this.queues.clear();
   }
 
-  private query(table: string) {
-    const call: Partial<RecordedCall> = { table };
+  private query(table: string, args?: unknown) {
+    const call: Partial<RecordedCall> =
+      args === undefined
+        ? { table }
+        : { table, operation: "select", payload: args };
 
     const query = {
       select: (columns: string, options?: { count?: "exact" }) => {

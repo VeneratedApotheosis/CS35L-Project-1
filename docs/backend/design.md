@@ -32,7 +32,8 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | Calculations in `domain/` (periods, progress, streak, growth, health, badges) | Built (#191 to #194) |
 | `POST` and `DELETE` for logs | Built (#196, #197) |
 | `GET /dashboard` | Built (#201) |
-| Shared habits: endpoints, group stats, join and leave | Planned (design in #216), see sections 6.6 and 8.11 |
+| Shared habits: create, list and detail | Built (#268), using group calculations (#267) |
+| Shared habits: join, logging, leave and management | Planned, see sections 6.6 and 8.11 |
 | Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
@@ -225,7 +226,7 @@ metadata in batches, then loads logs only for the requested page.
 
 ### 6.6 Shared habits (planned)
 
-Not built yet. Route names are provisional. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
+Create, list and detail are built (#268); the other routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
 
 | Route | Purpose |
 | --- | --- |
@@ -242,6 +243,19 @@ Not built yet. Route names are provisional. All routes need a token and return t
 | `DELETE /shared-habits/:id/members/:userId` | The owner removes a member |
 | `POST /shared-habits/:id/transfer` | The owner hands ownership to a member |
 | `POST /shared-habits/:id/code` and `DELETE /shared-habits/:id/code` | The owner regenerates the join code, or closes joining |
+
+**Implemented response contract (#268).** Create returns the saved habit with
+HTTP 201. List accepts `limit` and `offset` and returns
+`{ habits, total, limit, offset }`; each habit includes group `stats`.
+Detail returns the habit, group `stats`, `members`, and `own_stats`.
+Group stats include `today`, `state`, `overall_progress`, `stage`,
+`health_rate`, `health`, `end_date`, and `current_period`. The current-period
+count is the average member count against the per-member target; it may be fractional.
+There is no group streak or badge. Member summaries include `user_id`,
+`display_name`, `avatar_url`, `is_owner`, `overall_progress`,
+`current_period_count`, `streak`, and `health`.
+Only `own_stats` contains detailed logs. Aggregate per-day RPC results remain
+inside the backend. The caller's full stats use the membership timezone snapshot.
 
 **Creating.** The body has the same goal fields as a personal habit (section 6.1) plus `join_by` and `max_members`. `start_date` must be today or later. `join_by` must be between today and `start_date`. `max_members` is at least 2 and at most the system maximum. The calling user's timezone is copied to their member row.
 
