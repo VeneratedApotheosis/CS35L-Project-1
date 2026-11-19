@@ -10,6 +10,8 @@ import { healthRouter } from "./routes/health.js";
 import { logsRouter } from "./routes/logs.js";
 import { meRouter } from "./routes/me.js";
 
+import { sharedHabitsRouter } from "./routes/sharedHabits.js";
+
 export const app = express();
 
 app.use(pinoHttp({ logger }));
@@ -19,6 +21,7 @@ app.use(express.json());
 app.use(healthRouter);
 app.use(meRouter);
 app.use(habitsRouter);
+app.use(sharedHabitsRouter);
 app.use(logsRouter);
 app.use(dashboardRouter);
 

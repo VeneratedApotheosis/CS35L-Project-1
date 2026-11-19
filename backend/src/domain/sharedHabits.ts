@@ -13,6 +13,14 @@ export type SharedMember = {
 /** Shared habits require a finite goal, as specified by the create rules. */
 export type SharedGoal = ProgressHabit & { num_periods: number };
 
+/** Shared logs cannot belong to a day before the shared goal starts. */
+export function isSharedLogDate(
+  habit: Pick<SharedGoal, "start_date">,
+  date: string,
+): boolean {
+  return date >= habit.start_date;
+}
+
 /**
  * Rule 8.11. Passing the instant explicitly keeps this calculation deterministic.
  * No membership dates change the shared goal: every member has the same target.
@@ -42,7 +50,9 @@ export function sharedHabitStats(
   let healthTotal = 0;
   for (const member of members) {
     // Unlike personal habits, shared habits cannot be logged before the start
-    const dates = member.logDates.filter((date) => date >= habit.start_date);
+    const dates = member.logDates.filter((date) =>
+      isSharedLogDate(habit, date),
+    );
     // Each member is capped BEFORE averaging, so extra activity cannot compensate for another member who never logs
     progressTotal += overallProgress(habit, dates, today)!;
     healthTotal += healthRate(habit, dates, today);
