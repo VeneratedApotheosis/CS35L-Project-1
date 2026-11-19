@@ -8,6 +8,9 @@ import { ArrowLeft, Dices } from "lucide-react"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
+import { useProfile } from "@/lib/useProfile"
+import { sharedInviteUrl } from "@/lib/paths"
+import { createSharedHabit, defaultJoinBy, SHARED_MEMBER_LIMITS, type SharedHabit } from "@/lib/sharedHabits"
 import {
   buildCreateHabitPayload,
   createHabit,
@@ -30,7 +33,7 @@ import {
   type PlantTypeId,
 } from "@/pottedPlant/plants/plantTypes"
 
-type Step = "edit" | "confirm"
+type Step = "edit" | "confirm" | "invite"
 type Errors = Partial<Record<string, string>>
 
 const INTERVAL_UNITS: { value: IntervalUnit; label: string }[] = [
@@ -48,6 +51,14 @@ export default function CreateHabit() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { user } = useAuth()
+  const profile = useProfile()
+
+  const [withFriends, setWithFriends] = useState(false)
+  const [joinBy, setJoinBy] = useState<string | null>(null)
+  const [maxMembers, setMaxMembers] = useState("2")
+  const [createdShared, setCreatedShared] = useState<SharedHabit | null>(null)
+  const [inviteUrl, setInviteUrl] = useState("")
+  const [copyStatus, setCopyStatus] = useState("")
 
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
@@ -69,7 +80,9 @@ export default function CreateHabit() {
 
   // The browser's date, or "" on the server and while hydrating, so the server
   // and client markup match.
-  const today = useSyncExternalStore(subscribeNever, todayISO, () => "")
+  const browserToday = useSyncExternalStore(subscribeNever, todayISO, () => "")
+  const today = withFriends ? profile.data?.today ?? "" : browserToday
+  const effectiveJoinBy = joinBy ?? defaultJoinBy(startDate ?? today, today)
 
   // Only a date other than today is sent. Otherwise the backend picks today in
   // the profile timezone, which can differ from the browser's date.
@@ -155,6 +168,18 @@ export default function CreateHabit() {
       next.startDate = "Start date can't be in the past."
     }
 
+    if (withFriends) {
+      if (!today) next.startDate = "Wait for your profile to load, then try again."
+      if (!effectiveJoinBy) {
+        next.joinBy = "Join by date is required."
+      } else if (effectiveJoinBy < today || effectiveJoinBy > (startDate ?? today)) {
+        next.joinBy = "Join by must be between today and the start date."
+      }
+      if (!inRange(parseWholeNumber(maxMembers), SHARED_MEMBER_LIMITS)) {
+        next.maxMembers = "Enter a whole number from 2 to 50."
+      }
+    }
+
     return next
   }
 
@@ -170,22 +195,39 @@ export default function CreateHabit() {
 
   async function handleCreate() {
     if (submittingRef.current) return
+    const found = validate()
+    setErrors(found)
+    if (Object.keys(found).length) {
+      setStep("edit")
+      return
+    }
     submittingRef.current = true
     setSubmitting(true)
     setSubmitError("")
     try {
-      await createHabit(
-        buildCreateHabitPayload({
-          name,
-          description,
-          plantType,
-          targetCount: nums.targetCount,
-          intervalCount: nums.intervalCount,
-          intervalUnit,
-          numPeriods: nums.numPeriods,
-          startDate: chosenStartDate,
-        }),
-      )
+      const payload = buildCreateHabitPayload({
+        name,
+        description,
+        plantType,
+        targetCount: nums.targetCount,
+        intervalCount: nums.intervalCount,
+        intervalUnit,
+        numPeriods: nums.numPeriods,
+        startDate: withFriends ? startDate ?? today : chosenStartDate,
+      })
+      if (withFriends) {
+        const saved = await createSharedHabit({
+          ...payload,
+          join_by: effectiveJoinBy,
+          max_members: parseWholeNumber(maxMembers),
+        })
+        setCreatedShared(saved)
+        setInviteUrl(saved.join_code ? sharedInviteUrl(window.location.origin, saved.join_code) : "")
+        setStep("invite")
+        setSubmitting(false)
+        return
+      }
+      await createHabit(payload)
       // Refresh every cached page so the new habit appears on return.
       if (user) {
         await queryClient.invalidateQueries({ queryKey: habitKeys.all(user.id) })
@@ -206,6 +248,15 @@ export default function CreateHabit() {
       setStep("edit")
       submittingRef.current = false
       setSubmitting(false)
+    }
+  }
+
+  async function copyInvite() {
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      setCopyStatus("Invite link copied.")
+    } catch {
+      setCopyStatus("Couldn't copy automatically. Select and copy the invite link above.")
     }
   }
 
@@ -237,6 +288,17 @@ export default function CreateHabit() {
         <form className="form" onSubmit={handleReview} noValidate>
           <div className="create-grid">
           <div className="create-grid__fields">
+          <fieldset className="field sharing-choice">
+            <legend className="field__label">Who is this habit for?</legend>
+            <label>
+              <input type="radio" name="habit-sharing" checked={!withFriends}
+                onChange={() => setWithFriends(false)} /> Just me
+            </label>
+            <label>
+              <input type="radio" name="habit-sharing" checked={withFriends}
+                onChange={() => setWithFriends(true)} /> With friends
+            </label>
+          </fieldset>
           <div className="field">
             <label className="field__label" htmlFor="habit-name">
               Name
@@ -414,6 +476,30 @@ export default function CreateHabit() {
             </div>
           </div>
 
+          {withFriends && (
+            <div className="field-row">
+              <div className="field">
+                <label className="field__label" htmlFor="habit-join-by">Join by</label>
+                <input id="habit-join-by" className="input" type="date"
+                  min={today || undefined} max={startDate ?? (today || undefined)}
+                  value={effectiveJoinBy} onChange={(e) => setJoinBy(e.target.value)}
+                  aria-invalid={Boolean(errors.joinBy)}
+                  aria-describedby={errors.joinBy ? "habit-join-by-error" : undefined} />
+                {errors.joinBy && <p className="field__error" id="habit-join-by-error">{errors.joinBy}</p>}
+              </div>
+              <div className="field">
+                <label className="field__label" htmlFor="habit-max-members">Max members</label>
+                <input id="habit-max-members" className="input" type="number" inputMode="numeric"
+                  min={SHARED_MEMBER_LIMITS.min} max={SHARED_MEMBER_LIMITS.max} step={1}
+                  value={maxMembers} onChange={(e) => setMaxMembers(e.target.value)}
+                  aria-invalid={Boolean(errors.maxMembers)}
+                  aria-describedby={errors.maxMembers ? "habit-max-members-error" : "habit-max-members-hint"} />
+                <p className="field__hint" id="habit-max-members-hint">2–50 people, including you.</p>
+                {errors.maxMembers && <p className="field__error" id="habit-max-members-error">{errors.maxMembers}</p>}
+              </div>
+            </div>
+          )}
+
           {sentence && (
             <Card variant="muted">
               <p className="goal-preview">{sentence}</p>
@@ -490,6 +576,26 @@ export default function CreateHabit() {
           </aside>
           </div>
         </form>
+      ) : step === "invite" && createdShared ? (
+        <div className="form" style={{ maxWidth: "42rem" }}>
+          <Card>
+            <h2 className="text-heading">Your shared habit is ready</h2>
+            <p>{createdShared.name} has been saved. You are its first member.</p>
+            <p>Invite up to {createdShared.max_members - 1} {createdShared.max_members === 2 ? "friend" : "friends"} to join by {formatDate(createdShared.join_by)}.</p>
+            {inviteUrl ? (
+              <div className="field" style={{ marginTop: "var(--space-4)" }}>
+                <label className="field__label" htmlFor="habit-invite">Invite link</label>
+                <input id="habit-invite" className="input" type="text" readOnly
+                  value={inviteUrl} onFocus={(event) => event.currentTarget.select()} />
+                <Button onClick={() => void copyInvite()}>Copy invite link</Button>
+                {copyStatus && <p role="status">{copyStatus}</p>}
+              </div>
+            ) : (
+              <p role="status">Your habit was saved, but no invite link was returned.</p>
+            )}
+          </Card>
+          <Button onClick={() => router.replace("/dashboard")}>Go to dashboard</Button>
+        </div>
       ) : (
         <div className="form" style={{ maxWidth: "42rem" }}>
           <Card>
@@ -509,12 +615,17 @@ export default function CreateHabit() {
                 <dt>Ends</dt>
                 <dd>{endDate ? formatDate(endDate) : "—"}</dd>
               </div>
+              {withFriends && <>
+                <div><dt>Join by</dt><dd>{formatDate(effectiveJoinBy)}</dd></div>
+                <div><dt>Max members</dt><dd>{maxMembers} (including you)</dd></div>
+              </>}
             </dl>
           </Card>
 
           <p className="confirm-note">
-            Goal, period, and duration can&apos;t be changed after you create
-            the habit. To fix a mistake, delete the habit and create it again.
+            {withFriends
+              ? "The goal and start date lock once a friend joins. After the habit starts, nothing can be edited."
+              : "Goal, period, and duration can't be changed after you create the habit. To fix a mistake, delete the habit and create it again."}
           </p>
 
           {submitError && (
