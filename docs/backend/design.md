@@ -257,6 +257,31 @@ There is no group streak or badge. Member summaries include `user_id`,
 Only `own_stats` contains detailed logs. Aggregate per-day RPC results remain
 inside the backend. The caller's full stats use the membership timezone snapshot.
 
+**Invite visibility.** Every current member may invite others; `join_code`
+is intentionally returned to members in list/detail and to the owner on create.
+The existing database read policy also permits members to read it directly.
+
+**Privacy limitation requiring a database follow-up.** The Express response
+does not expose other members' exact log dates. However,
+`shared_habit_member_logs` is executable directly by authenticated members and
+returns daily dates/counts. The stronger “dates never leave the backend” guarantee
+is not currently enforced by Supabase. Enforcing it requires a redesigned summary
+RPC or a separately authorized server-only path; hiding fields in Express alone
+cannot fix it. Single-day period summaries can also reveal daily activity.
+
+**List implementation limits.** Member lookups run for at most four habits at
+once, in list order. This still uses per-habit RPCs; batching is a follow-up.
+Counts are deliberately expanded to reuse existing domain calculations, so memory
+and CPU scale with total logs. A count-aware calculation API is a follow-up.
+If membership disappears between queries, the list omits that habit; database
+failures still fail the request. `total` reflects the initial list query, so a
+concurrent departure can produce a short page.
+
+**Frontend integration.** Group `current_period.count` may be fractional.
+The existing personal-habit ProgressBar requires integer counts and must not
+receive this value unchanged. Shared UI work must support fractional averages
+explicitly; rounding the API value would discard information.
+
 **Creating.** The body has the same goal fields as a personal habit (section 6.1) plus `join_by` and `max_members`. `start_date` must be today or later. `join_by` must be between today and `start_date`. `max_members` is at least 2 and at most the system maximum. The calling user's timezone is copied to their member row.
 
 **Editing (owner only).** Nobody can edit after the start date.
@@ -273,7 +298,7 @@ inside the backend. The caller's full stats use the membership timezone snapshot
 
 **Logging.** The same rules as section 8.1, with two differences: nobody can log before the start date, and a member only ever adds or deletes their own logs.
 
-**Stats.** The list gives each shared habit the short block from 6.4 with the group values. The detail adds the group `stats` block, a `members` list with each member's summary (`display_name`, `is_owner`, overall progress, current period count, streak and health) and the caller's own full stats. Other members' exact log dates never leave the backend.
+**Stats.** The list gives each shared habit the short block from 6.4 with the group values. The detail adds the group `stats` block, a `members` list with each member's summary (`display_name`, `is_owner`, overall progress, current period count, streak and health) and the caller's own full stats. Other members' exact log dates are excluded from Express responses; see the direct-RPC privacy limitation above.
 
 ---
 
@@ -388,7 +413,7 @@ The rules for the group numbers. Each member's own numbers use sections 8.2 to 8
 - **Group health** is the average of the members' health rates (met periods over completed periods, over the last four), turned into a state with the thresholds in 8.8. The three labels are not averaged.
 - **Leaving.** A member who leaves drops out of the averages and their past logs are kept, so the stage can rise or fall when someone leaves.
 - **Completion.** The habit expires when the group's `today` reaches the end date. Each member gets their own badge from their own progress and consistency (8.9). Group badges are not decided yet.
-- **Visibility.** Members see names and progress summaries. The exact log dates of other members are used for the calculation and never returned.
+- **Visibility.** Members see names and progress summaries. The exact log dates of other members are used for the calculation and never returned by Express. Direct RPC access currently violates the stronger intended privacy guarantee; see section 6.6.
 
 ---
 

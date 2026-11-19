@@ -1,7 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { todayInZone } from "../domain/dates.js";
 import { endDate } from "../domain/periods.js";
-import { currentPeriodProgress } from "../domain/progress.js";
+import { plantHealth } from "../domain/growth.js";
+import {
+  currentPeriodProgress,
+  overallProgress,
+  currentStreak,
+} from "../domain/progress.js";
 import { sharedHabitStats } from "../domain/sharedHabits.js";
 import { fullStats, type LogEntry } from "../domain/stats.js";
 import { AppError, notFound, validationFailed } from "../lib/errors.js";
@@ -40,6 +45,22 @@ function databaseFailure(error: unknown): never {
     "internal_error",
     "Could not load or save shared habit",
   );
+}
+
+// Both RPC counts and own logs use stable ordering supplied by the caller.
+async function* readPages<T>(
+  query: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: unknown; error: unknown }>,
+) {
+  for (let offset = 0; ; offset += BATCH) {
+    const { data, error } = await query(offset, offset + BATCH - 1);
+    if (error) databaseFailure(error);
+    const rows = (data ?? []) as T[];
+    yield rows;
+    if (rows.length < BATCH) break;
+  }
 }
 
 export async function createSharedHabit(
@@ -82,21 +103,21 @@ async function memberData(
   const dates = new Map(
     members.map((member) => [member.user_id, [] as string[]]),
   );
-  for (let offset = 0; ; offset += BATCH) {
-    const result = await client
+  for await (const rows of readPages<DailyCount>((from, to) =>
+    client
       .rpc("shared_habit_member_logs", { p_shared_habit_id: habitId })
       .order("user_id")
       .order("occurred_on")
-      .range(offset, offset + BATCH - 1);
-    if (result.error) databaseFailure(result.error);
-    const rows = (result.data ?? []) as DailyCount[];
+      .range(from, to),
+  )) {
     for (const row of rows) {
       const memberDates = dates.get(row.user_id);
-      // Reuse the existing log-date calculations; RPC counts represent distinct logs.
+      // [PLACEHOLDER] Deliberately expand counts to reuse tested domain rules.
+      // Memory/CPU grows with total logs, not daily rows. A count-aware domain
+      // API can remove this cost later without truncating valid activity.
       if (memberDates)
         for (let i = 0; i < row.count; i++) memberDates.push(row.occurred_on);
     }
-    if (rows.length < BATCH) break;
   }
   return { members, dates };
 }
@@ -148,11 +169,28 @@ export async function listSharedHabits(
     .range(page.offset, page.offset + page.limit - 1);
   if (error) databaseFailure(error);
   const now = new Date();
-  const habits = [];
-  for (const habit of (data ?? []) as SharedHabit[]) {
-    const members = await memberData(client, habit.id, userId);
-    habits.push({ ...habit, stats: groupStats(habit, members, now) });
+  const habits: (SharedHabit & { stats: ReturnType<typeof groupStats> })[] = [];
+  const rows = (data ?? []) as SharedHabit[];
+  // [PLACEHOLDER] Still two RPCs per habit plus paging. Bound concurrency to
+  // four habits instead of serial calls or up to 100 simultaneous RPC chains.
+  for (let offset = 0; offset < rows.length; offset += 4) {
+    const batch = await Promise.all(
+      rows.slice(offset, offset + 4).map(async (habit) => {
+        try {
+          const members = await memberData(client, habit.id, userId);
+          return { ...habit, stats: groupStats(habit, members, now) };
+        } catch (error) {
+          // Membership can disappear after the initial RLS-filtered list query.
+          // Do not expose that habit or discard the other accessible results.
+          if (error instanceof AppError && error.status === 404) return null;
+          throw error;
+        }
+      }),
+    );
+    for (const habit of batch) if (habit) habits.push(habit);
   }
+  // total is the initial query snapshot; a concurrent departure may shorten
+  // this page. Keep offset semantics rather than pretending the count is fresh.
   return { habits, total: count ?? 0, limit: page.limit, offset: page.offset };
 }
 
@@ -175,42 +213,34 @@ export async function getSharedHabit(
     (member) => member.user_id === userId,
   )!;
   const ownLogs: LogEntry[] = [];
-  for (let offset = 0; ; offset += BATCH) {
-    const result = await client
+  for await (const rows of readPages<LogEntry>((from, to) =>
+    client
       .from("shared_habit_logs")
       .select("id, occurred_on")
       .eq("shared_habit_id", id)
       .eq("user_id", userId)
       .order("occurred_on")
       .order("id")
-      .range(offset, offset + BATCH - 1);
-    if (result.error) databaseFailure(result.error);
-    const rows = (result.data ?? []) as LogEntry[];
+      .range(from, to),
+  )) {
     ownLogs.push(...rows);
-    if (rows.length < BATCH) break;
   }
   return {
     ...habit,
     stats: groupStats(habit, memberInfo, now),
     members: memberInfo.members.map((member) => {
-      const stats = fullStats(
-        habit,
-        (memberInfo.dates.get(member.user_id) ?? []).map((occurred_on) => ({
-          id: "",
-          occurred_on,
-        })),
-        todayInZone(member.timezone, now),
-      );
-      // Explicit allowlist: do not spread fullStats into another member's summary.
+      const dates = memberInfo.dates.get(member.user_id) ?? [];
+      const today = todayInZone(member.timezone, now);
+      // Calculate only public summary values; no synthetic log ids/calendar.
       return {
         user_id: member.user_id,
         display_name: member.display_name,
         avatar_url: member.avatar_url,
         is_owner: member.is_owner,
-        overall_progress: stats.overall_progress,
-        current_period_count: stats.current_period.count,
-        streak: stats.streak,
-        health: stats.health,
+        overall_progress: overallProgress(habit, dates, today),
+        current_period_count: currentPeriodProgress(habit, dates, today).count,
+        streak: currentStreak(habit, dates, today),
+        health: plantHealth(habit, dates, today),
       };
     }),
     own_stats: fullStats(habit, ownLogs, todayInZone(caller.timezone, now)),

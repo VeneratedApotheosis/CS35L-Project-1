@@ -233,24 +233,94 @@ describe("shared habit endpoints", () => {
       ).status,
     ).toBe(400);
   });
-});
 
-it("returns real log ids only for the caller and uses their saved member timezone", async () => {
-  db.setResult("shared_habits", "select", {
-    data: { ...habit, start_date: "2026-11-17" },
-    error: null,
+  it("returns real log ids only for the caller and uses their saved member timezone", async () => {
+    db.setResult("shared_habits", "select", {
+      data: { ...habit, start_date: "2026-11-17" },
+      error: null,
+    });
+    db.setResult("shared_habit_logs", "select", {
+      data: [{ id: "my-log", occurred_on: "2026-11-17" }],
+      error: null,
+    });
+    const res = await get();
+    expect(res.status).toBe(200);
+    expect(res.body.own_stats.current_period.number).toBe(1);
+    expect(res.body.own_stats.current_period_logs).toEqual([
+      { id: "my-log", occurred_on: "2026-11-17" },
+    ]);
+    expect(res.body.members[1]).not.toHaveProperty("log_days");
+    // Detail does not consult a possibly changed profile timezone.
+    expect(db.callsFor("profiles", "select")).toHaveLength(0);
   });
-  db.setResult("shared_habit_logs", "select", {
-    data: [{ id: "my-log", occurred_on: "2026-11-17" }],
-    error: null,
+  it("skips a membership lost during listing without hiding database failures", async () => {
+    const second = { ...habit, id: "8d3f9c1e-5b2a-4c8e-9f41-2a6b8d0e1c33" };
+    db.setResult("shared_habits", "select", {
+      data: [habit, second],
+      count: 2,
+      error: null,
+    });
+    db.queueResult("shared_habit_members_info", "select", {
+      data: [],
+      error: null,
+    });
+    const res = await request(app)
+      .get("/shared-habits")
+      .set("Authorization", auth);
+    expect(res.status).toBe(200);
+    expect(res.body.habits.map((h: { id: string }) => h.id)).toEqual([
+      second.id,
+    ]);
+    expect(res.body.total).toBe(2); // Initial database snapshot, not a new count.
+    db.setResult("shared_habit_members_info", "select", {
+      data: null,
+      error: { message: "failed" },
+    });
+    expect(
+      (await request(app).get("/shared-habits").set("Authorization", auth))
+        .status,
+    ).toBe(500);
   });
-  const res = await get();
-  expect(res.status).toBe(200);
-  expect(res.body.own_stats.current_period.number).toBe(1);
-  expect(res.body.own_stats.current_period_logs).toEqual([
-    { id: "my-log", occurred_on: "2026-11-17" },
-  ]);
-  expect(res.body.members[1]).not.toHaveProperty("log_days");
-  // Detail does not consult a possibly changed profile timezone.
-  expect(db.callsFor("profiles", "select")).toHaveLength(0);
+
+  it("shares invite codes with non-owner members and preserves fractional group counts", async () => {
+    db.setResult("shared_habits", "select", {
+      data: { ...habit, owner_id: other },
+      error: null,
+    });
+    db.setResult("shared_habit_member_logs", "select", {
+      data: [{ user_id: other, occurred_on: "2026-11-18", count: 1 }],
+      error: null,
+    });
+    const res = await get();
+    expect(res.status).toBe(200);
+    expect(res.body.join_code).toBe("secret-code");
+    expect(res.body.stats.current_period.count).toBe(0.5);
+  });
+
+  it("pages caller logs and preserves the profile lookup used for creation dates", async () => {
+    await post(input);
+    expect(db.callsFor("profiles", "select")[0]?.filter).toEqual({
+      column: "id",
+      value: TEST_USER.id,
+    });
+    db.queueResult("shared_habit_logs", "select", {
+      data: Array.from({ length: 500 }, (_, i) => ({
+        id: String(i),
+        occurred_on: "2026-11-18",
+      })),
+      error: null,
+    });
+    db.setResult("shared_habit_logs", "select", {
+      data: [{ id: "last", occurred_on: "2026-11-18" }],
+      error: null,
+    });
+    const res = await get();
+    expect(res.body.own_stats.log_days).toEqual([
+      { date: "2026-11-18", count: 501 },
+    ]);
+    expect(db.callsFor("shared_habit_logs", "select")[1]?.range).toEqual({
+      from: 500,
+      to: 999,
+    });
+  });
 });
