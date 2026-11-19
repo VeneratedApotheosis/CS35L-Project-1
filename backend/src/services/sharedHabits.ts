@@ -7,7 +7,7 @@ import {
   overallProgress,
   currentStreak,
 } from "../domain/progress.js";
-import { sharedHabitStats } from "../domain/sharedHabits.js";
+import { sharedHabitStats, isSharedLogDate } from "../domain/sharedHabits.js";
 import { fullStats, type LogEntry } from "../domain/stats.js";
 import { AppError, notFound, validationFailed } from "../lib/errors.js";
 import { logger } from "../lib/logger.js";
@@ -89,11 +89,11 @@ export async function createSharedHabit(
 
 async function memberData(
   client: SupabaseClient,
-  habitId: string,
+  habit: SharedHabit,
   userId: string,
 ) {
   const { data, error } = await client.rpc("shared_habit_members_info", {
-    p_shared_habit_id: habitId,
+    p_shared_habit_id: habit.id,
   });
   if (error) databaseFailure(error);
   const members = (data ?? []) as Member[];
@@ -105,12 +105,13 @@ async function memberData(
   );
   for await (const rows of readPages<DailyCount>((from, to) =>
     client
-      .rpc("shared_habit_member_logs", { p_shared_habit_id: habitId })
+      .rpc("shared_habit_member_logs", { p_shared_habit_id: habit.id })
       .order("user_id")
       .order("occurred_on")
       .range(from, to),
   )) {
     for (const row of rows) {
+      if (!isSharedLogDate(habit, row.occurred_on)) continue;
       const memberDates = dates.get(row.user_id);
       // [PLACEHOLDER] Deliberately expand counts to reuse tested domain rules.
       // Memory/CPU grows with total logs, not daily rows. A count-aware domain
@@ -177,7 +178,7 @@ export async function listSharedHabits(
     const batch = await Promise.all(
       rows.slice(offset, offset + 4).map(async (habit) => {
         try {
-          const members = await memberData(client, habit.id, userId);
+          const members = await memberData(client, habit, userId);
           return { ...habit, stats: groupStats(habit, members, now) };
         } catch (error) {
           // Membership can disappear after the initial RLS-filtered list query.
@@ -207,7 +208,7 @@ export async function getSharedHabit(
   if (error) databaseFailure(error);
   if (!data) throw notFound("Shared habit not found");
   const habit = data as SharedHabit;
-  const memberInfo = await memberData(client, id, userId);
+  const memberInfo = await memberData(client, habit, userId);
   const now = new Date();
   const caller = memberInfo.members.find(
     (member) => member.user_id === userId,
@@ -223,7 +224,9 @@ export async function getSharedHabit(
       .order("id")
       .range(from, to),
   )) {
-    ownLogs.push(...rows);
+    ownLogs.push(
+      ...rows.filter((log) => isSharedLogDate(habit, log.occurred_on)),
+    );
   }
   return {
     ...habit,

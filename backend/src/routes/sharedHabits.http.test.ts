@@ -323,4 +323,57 @@ describe("shared habit endpoints", () => {
       to: 999,
     });
   });
+  it.each(["2026-11-18T12:00:00Z", "2026-11-19T12:00:00Z"])(
+    "ignores pre-start logs consistently on %s",
+    async (instant) => {
+      vi.setSystemTime(new Date(instant));
+      const valid = [{ id: "valid", occurred_on: "2026-11-18" }];
+      const invalid = { id: "early", occurred_on: "2026-11-17" };
+      const summaries = members.map((member) => ({
+        user_id: member.user_id,
+        occurred_on: "2026-11-18",
+        count: 1,
+      }));
+      db.setResult("shared_habit_member_logs", "select", {
+        data: summaries,
+        error: null,
+      });
+      db.setResult("shared_habit_logs", "select", { data: valid, error: null });
+      const baseline = await get();
+      expect(baseline.status).toBe(200);
+      db.setResult("shared_habit_member_logs", "select", {
+        data: [
+          ...summaries,
+          ...members.map((member) => ({
+            user_id: member.user_id,
+            occurred_on: "2026-11-17",
+            count: 20,
+          })),
+        ],
+        error: null,
+      });
+      db.setResult("shared_habit_logs", "select", {
+        data: [invalid, ...valid],
+        error: null,
+      });
+      const res = await get();
+      expect(res.status).toBe(200);
+      // Includes group count/health, every member summary, and caller calendar,
+      // consistency, streak, progress, and deletable log ids.
+      expect(res.body).toEqual(baseline.body);
+      expect(res.body.own_stats.log_days).toEqual([
+        { date: "2026-11-18", count: 1 },
+      ]);
+      db.setResult("shared_habits", "select", {
+        data: [habit],
+        count: 1,
+        error: null,
+      });
+      const list = await request(app)
+        .get("/shared-habits")
+        .set("Authorization", auth);
+      expect(list.status).toBe(200);
+      expect(list.body.habits[0].stats).toEqual(baseline.body.stats);
+    },
+  );
 });
