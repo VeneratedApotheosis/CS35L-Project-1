@@ -13,6 +13,7 @@ import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { durationPhrase, formatDate, periodPhrase } from "@/lib/goal"
 import { habitKeys, listHabits } from "@/lib/habits"
+import { habitHref } from "@/lib/paths"
 import { useProfile } from "@/lib/useProfile"
 
 /** Shared saved-habit list for the Garden and the basic dashboard. */
@@ -129,13 +130,13 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
                       periodLabel={habit.stats.state === "not_started" ? "First period" : habit.stats.state === "expired" ? "Final period" : "Current period"}
                       loggingDisabled={busy}
                       onLogActivity={today && habit.stats.state !== "expired" ? () => { void logToday(habit.id) } : undefined}
-                      detailsHref={`/habits/${habit.id}`} />
+                      detailsHref={habitHref(habit.id)} />
                     {habit.stats.state === "not_started" && <p className="text-body-sm">Not started yet · Starts {formatDate(habit.start_date)}</p>}
                     {habit.stats.state === "expired" && <p className="text-body-sm">Finished</p>}
                   </div>
                 ) : <Card className="stack-sm">
                   <h2 className="text-h3 garden-name">
-                    <Link className="garden-link" href={`/habits/${habit.id}`}>{habit.name}</Link>
+                    <Link className="garden-link" href={habitHref(habit.id)}>{habit.name}</Link>
                   </h2>
                   <p className="text-body text-secondary">
                     {habit.target_count} {habit.target_count === 1 ? "time" : "times"}{" "}
