@@ -1,4 +1,5 @@
 import express from "express";
+import { safeHttpRequest } from "./lib/logPrivacy.js";
 import cors from "cors";
 import { pinoHttp } from "pino-http";
 import { env } from "./config/env.js";
@@ -14,7 +15,7 @@ import { sharedHabitsRouter } from "./routes/sharedHabits.js";
 
 export const app = express();
 
-app.use(pinoHttp({ logger }));
+app.use(pinoHttp({ logger, serializers: { req: safeHttpRequest } }));
 app.use(cors({ origin: env.FRONTEND_ORIGIN }));
 app.use(express.json());
 

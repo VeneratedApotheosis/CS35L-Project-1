@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { AppError, notFound } from "../lib/errors.js";
+import { safeRequestPath, isInvitePath } from "../lib/logPrivacy.js";
 import { logger } from "../lib/logger.js";
 
 // Unknown route.
@@ -36,7 +37,17 @@ export function errorHandler(
     return;
   }
 
-  logger.error({ err, path: req.path }, "unhandled error");
+  // Error messages/stacks may echo a code or RPC payload. Invite failures use
+  // safe metadata only, never the raw exception.
+  logger.error(
+    {
+      ...(isInvitePath(req.originalUrl)
+        ? { errorType: "invite_request_failure" }
+        : { err }),
+      path: safeRequestPath(req.originalUrl),
+    },
+    "unhandled error",
+  );
   res.status(500).json({
     error: { code: "internal_error", message: "Something went wrong" },
   });

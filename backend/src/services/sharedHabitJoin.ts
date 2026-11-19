@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { todayInZone } from "../domain/dates.js";
 import { AppError, notFound } from "../lib/errors.js";
+import { logger } from "../lib/logger.js";
 import { getProfile } from "./profile.js";
 
 type Preview = {
@@ -17,6 +18,13 @@ type Preview = {
   member_count: number;
   max_members: number;
 };
+function logRpcFailure(operation: string, error?: { code?: string }) {
+  // SQLSTATE is useful for diagnosis; free-text details may contain invite codes.
+  const sqlState =
+    error?.code && /^[A-Z0-9]{5}$/.test(error.code) ? error.code : undefined;
+  logger.error({ operation, sqlState }, "unexpected invite RPC failure");
+}
+
 const unavailable = () => notFound("Invite not available");
 
 export async function previewSharedHabit(
@@ -27,7 +35,10 @@ export async function previewSharedHabit(
   const { data, error } = await client.rpc("shared_habit_preview", {
     p_code: code,
   });
-  if (error) throw new AppError(500, "internal_error", "Could not load invite");
+  if (error) {
+    logRpcFailure("shared_habit_preview", error);
+    throw new AppError(500, "internal_error", "Could not load invite");
+  }
   const row = (data as Preview[] | null)?.[0];
   if (!row) throw unavailable();
   // The database preview only matches the code; enforce its local-date deadline here.
@@ -52,9 +63,12 @@ export async function joinSharedHabit(client: SupabaseClient, code: string) {
       throw new AppError(409, "shared_habit_full", "This shared habit is full");
     if (error.message === "shared_habit_join_ended")
       throw new AppError(400, "shared_habit_join_ended", "Joining has ended");
+    logRpcFailure("join_shared_habit", error);
     throw new AppError(500, "internal_error", "Could not join shared habit");
   }
-  if (typeof data !== "string")
+  if (typeof data !== "string") {
+    logRpcFailure("join_shared_habit.invalid_response");
     throw new AppError(500, "internal_error", "Could not join shared habit");
+  }
   return { id: data };
 }

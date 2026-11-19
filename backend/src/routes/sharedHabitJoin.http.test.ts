@@ -1,3 +1,4 @@
+import { logger } from "../lib/logger.js";
 import request from "supertest";
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
 import { app } from "../app.js";
@@ -40,7 +41,10 @@ beforeEach(() => {
   });
   db.setResult("join_shared_habit", "select", { data: id, error: null });
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 it("previews using local today and reports remaining places", async () => {
   const res = await request(app).get(url).set("Authorization", auth);
   expect(res.status).toBe(200);
@@ -121,4 +125,44 @@ it("limits guesses across preview and join and resets after the window", async (
 it("requires authentication for both routes", async () => {
   expect((await request(app).get(url)).status).toBe(401);
   expect((await request(app).post(url)).status).toBe(401);
+});
+
+it.each(["shared_habit_preview", "join_shared_habit"])(
+  "logs safe diagnostics for unexpected %s errors",
+  async (operation) => {
+    const logged = vi.spyOn(logger, "error").mockImplementation(() => {});
+    db.setResult(operation, "select", {
+      data: null,
+      error: { code: "XX000", message: "query included " + code },
+    });
+    const req =
+      operation === "shared_habit_preview"
+        ? request(app).get(url)
+        : request(app).post(url);
+    const res = await req.set("Authorization", auth);
+    expect(res.status).toBe(500);
+    expect(res.text).not.toContain(code);
+    expect(logged).toHaveBeenCalledWith(
+      { operation, sqlState: "XX000" },
+      "unexpected invite RPC failure",
+    );
+    expect(JSON.stringify(logged.mock.calls)).not.toContain(code);
+  },
+);
+
+it("redacts paths and raw exceptions on unexpected thrown errors", async () => {
+  const logged = vi.spyOn(logger, "error").mockImplementation(() => {});
+  vi.spyOn(db.client, "rpc").mockImplementationOnce(() => {
+    throw new Error("invite " + code);
+  });
+  const res = await request(app).post(url).set("Authorization", auth);
+  expect(res.status).toBe(500);
+  expect(logged).toHaveBeenCalledWith(
+    {
+      errorType: "invite_request_failure",
+      path: "/shared-habits/join/[REDACTED]",
+    },
+    "unhandled error",
+  );
+  expect(JSON.stringify(logged.mock.calls)).not.toContain(code);
 });

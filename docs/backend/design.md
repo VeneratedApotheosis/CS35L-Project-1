@@ -123,7 +123,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | Calls `delete_my_account` | No issue yet |
-| Shared habit routes | See section 6.6 | Planned (#216) |
+| Shared habit routes | Create/list/detail and preview/join built; see section 6.6 | Built (#268, #269); remaining routes planned |
 
 Routes have no version prefix. There is no route to edit a habit, because habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
 
@@ -227,7 +227,7 @@ metadata in batches, then loads logs only for the requested page.
 
 ### 6.6 Shared habits (planned)
 
-Create, list and detail are built (#268); the other routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
+Create, list and detail (#268), and invite preview and joining (#269), are built; logging and management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
 
 | Route | Purpose |
 | --- | --- |
@@ -322,7 +322,7 @@ Tests simulate cap-race RPC outcomes; actual locking requires a live database ch
 - **Validation.** zod schemas, one per request, applied by the `validate` middleware.
 - **Error shape.** Every error is `{ "error": { "code": "...", "message": "..." } }`. Codes are short strings such as `unauthorized`, `validation_failed`, `not_found`.
 - **Status codes.** 400 bad input, 401 no valid token, 404 not found or not yours, 500 unexpected. Another user's habit returns 404, the same as a missing one.
-- **Logging.** Each request is logged. The `authorization` header and tokens are never logged. The logger is pino.
+- **Logging.** Invite codes in request paths are redacted, URL query strings are omitted, and Referer headers are redacted. Unexpected invite RPC failures log only the operation and a valid SQLSTATE; raw error text and payloads are omitted because they can echo codes. Unhandled invite errors also omit raw exceptions. Each request is logged. The `authorization` header and tokens are never logged. The logger is pino.
 
 ---
 
