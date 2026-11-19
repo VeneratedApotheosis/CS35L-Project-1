@@ -122,6 +122,20 @@ it("limits guesses across preview and join and resets after the window", async (
     404,
   );
 });
+it("treats upper and lower case invite codes as the same code", async () => {
+  const upper = "/shared-habits/join/" + code.toUpperCase();
+  const previewRes = await request(app).get(upper).set("Authorization", auth);
+  expect(previewRes.status).toBe(200);
+  const joinRes = await request(app).post(upper).set("Authorization", auth);
+  expect(joinRes.status).toBe(200);
+  // The database compares codes exactly, so it must receive the lowercase form.
+  expect(db.callsFor("shared_habit_preview", "select")[0]?.payload).toEqual({
+    p_code: code,
+  });
+  expect(db.callsFor("join_shared_habit", "select")[0]?.payload).toEqual({
+    p_code: code,
+  });
+});
 it("requires authentication for both routes", async () => {
   expect((await request(app).get(url)).status).toBe(401);
   expect((await request(app).post(url)).status).toBe(401);

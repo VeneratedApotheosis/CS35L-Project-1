@@ -74,7 +74,8 @@ for (const method of ["get", "post"] as const) {
     requireAuth,
     inviteLimit,
     async (req, res) => {
-      const code = req.params.code as string;
+      // Invite codes are stored lowercase; accept any casing a user pastes.
+      const code = (req.params.code as string).toLowerCase();
       // Same public error for malformed, unknown and closed codes.
       if (!/^[a-f0-9]{32}$/.test(code)) throw notFound("Invite not available");
       const { user, supabase } = res.locals;
