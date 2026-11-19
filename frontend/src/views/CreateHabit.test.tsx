@@ -141,6 +141,7 @@ describe("create shared habit (#274)", () => {
     expect(screen.getByText(/The goal and start date lock once a friend joins/)).toBeTruthy()
     create()
     await screen.findByRole("heading", { name: "Your shared habit is ready" })
+    expect(screen.getByRole("link", { name: "View shared habit" }).getAttribute("href")).toBe("/shared-habit?id=shared-a")
     expect(field("Invite link").value).toBe(`${window.location.origin}/join?code=${saved.join_code}`)
     const [url, request] = fetchMock.mock.calls[0]
     expect(url).toBe("http://api.test/shared-habits")

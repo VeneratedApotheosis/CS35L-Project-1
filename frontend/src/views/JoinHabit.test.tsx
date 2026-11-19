@@ -135,6 +135,7 @@ describe("join shared habit (#275)", () => {
     setup()
     fireEvent.click(await screen.findByRole("button", { name: "Join" }))
     expect((await screen.findByRole("status")).textContent).toBe("You are now a member of Read together.")
+    expect(screen.getByRole("link", { name: "View shared habit" }).getAttribute("href")).toBe("/shared-habit?id=shared-habit")
     expect(posts()).toHaveLength(1)
     expect(posts()[0][0]).toBe(`http://api.test/shared-habits/join/${CODE}`)
     expect(posts()[0][1].headers.Authorization).toBe("Bearer second-user-token")
