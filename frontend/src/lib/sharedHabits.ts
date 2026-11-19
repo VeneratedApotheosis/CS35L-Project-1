@@ -1,5 +1,5 @@
 import { api } from "./api"
-import type { CreateHabitInput, Habit, IntervalUnit } from "./habits"
+import type { CreateHabitInput, Habit, HabitDetail, HabitStats, IntervalUnit } from "./habits"
 
 // Mirrors the shared-habit route schema and database constraint.
 export const SHARED_MEMBER_LIMITS = { min: 2, max: 50 } as const
@@ -42,6 +42,38 @@ export function previewSharedInvite(code: string): Promise<SharedInvitePreview> 
 
 export function joinSharedInvite(code: string): Promise<{ id: string }> {
   return api.post<{ id: string }>(`/shared-habits/join/${encodeURIComponent(code)}`, {})
+}
+
+export interface SharedGroupStats extends HabitStats {
+  today: string
+  end_date: string
+  overall_progress: number
+  health_rate: number
+}
+
+export interface SharedMemberSummary {
+  user_id: string
+  display_name: string | null
+  avatar_url: string | null
+  is_owner: boolean
+  overall_progress: number | null
+  current_period_count: number
+  streak: number
+  health: HabitStats["health"]
+}
+
+export interface SharedHabitDetail extends SharedHabit {
+  stats: SharedGroupStats
+  members: SharedMemberSummary[]
+  own_stats: HabitDetail["stats"]
+}
+
+export const sharedHabitKeys = {
+  detail: (userId: string, id: string) => ["shared-habits", userId, "detail", id] as const,
+}
+
+export function getSharedHabit(id: string): Promise<SharedHabitDetail> {
+  return api.get<SharedHabitDetail>(`/shared-habits/${encodeURIComponent(id)}`)
 }
 
 /** Default to the preceding calendar day, but never before the owner's today. */

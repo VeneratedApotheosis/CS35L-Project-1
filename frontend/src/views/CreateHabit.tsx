@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
 import { ArrowLeft, Dices } from "lucide-react"
@@ -9,7 +10,7 @@ import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { useProfile } from "@/lib/useProfile"
-import { sharedInviteUrl } from "@/lib/paths"
+import { sharedHabitHref, sharedInviteUrl } from "@/lib/paths"
 import { createSharedHabit, defaultJoinBy, SHARED_MEMBER_LIMITS, type SharedHabit } from "@/lib/sharedHabits"
 import {
   buildCreateHabitPayload,
@@ -594,6 +595,7 @@ export default function CreateHabit() {
               <p role="status">Your habit was saved, but no invite link was returned.</p>
             )}
           </Card>
+          <Link className="button button--primary button--md self-start" href={sharedHabitHref(createdShared.id)}>View shared habit</Link>
           <Button onClick={() => router.replace("/dashboard")}>Go to dashboard</Button>
         </div>
       ) : (

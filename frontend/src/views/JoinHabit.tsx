@@ -11,6 +11,7 @@ import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { goalSentence, formatDate } from "@/lib/goal"
 import { joinSharedInvite, previewSharedInvite } from "@/lib/sharedHabits"
+import { sharedHabitHref } from "@/lib/paths"
 
 const UNAVAILABLE = "This invite isn't available. Ask your friend for a new link."
 
@@ -99,6 +100,7 @@ function InvitePreview({ code, userId }: { code: string; userId: string }) {
         <Card>
           <h2 className="text-h2">You&apos;re in!</h2>
           <p role="status">You are now a member of {habit?.name ?? "this shared habit"}.</p>
+          <Link href={sharedHabitHref(joinedId)} className="button button--primary button--md self-start">View shared habit</Link>
         </Card>
       ) : <>
         {preview.isPending && <p role="status">Loading invite…</p>}

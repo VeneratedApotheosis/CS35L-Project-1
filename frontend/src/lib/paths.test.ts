@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest"
-import { habitHref, sharedInviteUrl } from "./paths"
+import { habitHref, sharedHabitHref, sharedInviteUrl } from "./paths"
 
 afterEach(() => { vi.unstubAllEnvs(); vi.resetModules() })
 
@@ -9,6 +9,10 @@ it("puts the habit id in the query string", () => {
 
 it("escapes an id that has special characters", () => {
   expect(habitHref("a b&c")).toBe("/habit?id=a%20b%26c")
+})
+
+it("puts shared habit ids in the query string and escapes special characters", () => {
+  expect(sharedHabitHref("a b&c")).toBe("/shared-habit?id=a%20b%26c")
 })
 
 it("builds an absolute static-compatible invite URL and escapes the code", () => {

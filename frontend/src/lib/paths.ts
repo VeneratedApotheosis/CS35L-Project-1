@@ -15,6 +15,10 @@ export function habitHref(id: string): string {
   return `/habit?id=${encodeURIComponent(id)}`
 }
 
+export function sharedHabitHref(id: string): string {
+  return `/shared-habit?id=${encodeURIComponent(id)}`
+}
+
 /** Query-string invite codes work with the static GitHub Pages export too. */
 export function sharedInviteUrl(origin: string, code: string): string {
   return `${origin}${BASE_PATH}/join?code=${encodeURIComponent(code)}`
