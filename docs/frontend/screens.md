@@ -164,13 +164,13 @@ automatically. Profile setup failures show a retry action.
 
 ### 8 Shared habits (planned)
 
-Creation and invite copying are implemented in #274; the other shared screens below remain planned. The rules are in [the backend design](../backend/design.md#66-shared-habits-planned) and the tables are in [the database design](../database/design.md#8-shared-habits-planned).
+Creation and invite copying (#274), and joining (#275), are implemented; the other shared screens below remain planned. The rules are in [the backend design](../backend/design.md#66-shared-habits-planned) and the tables are in [the database design](../database/design.md#8-shared-habits-planned).
 
 **Create (#274).** Create Habit (screen 5) has a choice between "Just me" and "With friends". With friends adds **Join by**, between today and the start date (default: the day before the start, or today when starting today), and **Max members**, from 2 to 50 including the owner. Shared creation uses the saved profile timezone for today's date. The confirm step says the goal and start date lock once a friend joins, and that after the start nothing can be edited. After saving, the owner sees the invite link with a copy button and a manual-copy fallback. Personal creation still redirects to the dashboard.
 
 **Invite.** Invite links use `/join?code=...`, with the deployment base path included, to support the static GitHub Pages export (the same approach as personal habit details). The shared habit page will show the link with a copy button, **Get a new link**, and **Close joining**. Joining also closes by itself after the join by date.
 
-**Join (`/join?code=...`, #275, planned).** Signing in is required, and signing in returns here. The page shows the name, the goal as a sentence, the start date, the owner's name and how many places are left. It says that other members will see your display name. A wrong, closed or expired link shows one message that does not say which. A full habit and an ended joining window each have their own message. Someone who is already a member goes straight to the habit.
+**Join (`/join?code=...`, #275).** Signing in is required before fetching the preview, and Google sign-in returns here with the invite code. The page shows the name, the goal as a sentence, the start date, the owner's name and how many places are left. It says that other members will see your display name. A wrong, closed or expired link shows one message that does not say which. A full habit and an ended joining window each have their own message, including when the state changes between preview and Join. Network failures offer a retry, and expired sessions offer sign-in again. Successful joining currently shows a confirmation; navigation to the shared details page belongs to #276. Rejoining uses the backend's idempotent operation, which does not add duplicate membership. The preview does not currently expose an already-member flag or habit ID, so it cannot automatically skip this page for existing members.
 
 **Shared habit page.**
 - **Info:** name, description, goal, start and end dates, remaining duration.
