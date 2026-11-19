@@ -9,7 +9,8 @@ export interface AuthContextValue {
 
   // true until the stored session has been restored on page load
   loading: boolean
-  signInWithGoogle: () => Promise<void>
+  /** Preserve an invite through OAuth; ordinary sign-in still returns to Garden. */
+  signInWithGoogle: (inviteCode?: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
