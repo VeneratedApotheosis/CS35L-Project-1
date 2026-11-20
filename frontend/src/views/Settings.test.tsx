@@ -160,6 +160,27 @@ describe("timezone settings", () => {
   })
 })
 
+describe("sign out", () => {
+  it("shows who is signed in and signs the user out from the Account section", async () => {
+    auth.user = { id: "user-a", email: "sam@example.com" } as typeof auth.user
+    auth.signOut.mockResolvedValue(undefined)
+    render(<QueryProvider><Settings /></QueryProvider>)
+    await screen.findByRole("combobox", { name: "Timezone" })
+    expect(screen.getByText("Signed in as sam@example.com")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }))
+    await waitFor(() => expect(auth.signOut).toHaveBeenCalledTimes(1))
+  })
+
+  it("shows an error and keeps the button when signing out fails", async () => {
+    auth.signOut.mockRejectedValue(new Error("offline"))
+    render(<QueryProvider><Settings /></QueryProvider>)
+    await screen.findByRole("combobox", { name: "Timezone" })
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }))
+    expect((await screen.findByRole("alert")).textContent).toContain("Couldn't sign out")
+    expect((screen.getByRole("button", { name: "Sign out" }) as HTMLButtonElement).disabled).toBe(false)
+  })
+})
+
 describe("delete account", () => {
   const deleteCalls = () => fetchMock.mock.calls.filter(([, init]) => init.method === "DELETE")
   const open = async () => {

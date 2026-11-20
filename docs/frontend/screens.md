@@ -159,7 +159,7 @@ automatically. Profile setup failures show a retry action.
 - Username, email, and profile picture (from Google). Display name is editable, and saved through the backend.
 - **Timezone:** defaults to the browser's on first sign-in, and can be changed here.
 - Light/dark mode toggle, saved in the browser.
-- Log out (planned). **Delete account**, under Account: the button opens a dialog that lists what is deleted (habits, activity logs, badges) and asks the user to type `DELETE`. It then calls `DELETE /me`, signs the user out and the signed-in layout sends them to the login page. If deleting fails, an error shows and the user stays signed in. The code is in `views/settings/AccountSection.tsx`.
+- **Sign out**, under Account, with the signed-in email above it. It is no longer at the bottom of the Garden. **Delete account**, under Account: the button opens a dialog that lists what is deleted (habits, activity logs, badges) and asks the user to type `DELETE`. It then calls `DELETE /me`, signs the user out and the signed-in layout sends them to the login page. If deleting fails, an error shows and the user stays signed in. The code is in `views/settings/AccountSection.tsx`.
 - **Nav:** Overall Dashboard, My Garden, Badges.
 
 ### 8 Shared habits (planned)
