@@ -41,3 +41,19 @@ describe("NavBar", () => {
       .toContain('href="/settings"')
   })
 })
+
+describe("NavBar route boundaries", () => {
+  it.each([
+    ["/", "/"], ["/dashboard/", "/dashboard"], ["/settings/", "/settings"],
+    ["/create/", "/create"], ["/create/step/", "/create"],
+  ])("marks %s as %s", (path, href) => {
+    const markup = renderToStaticMarkup(<NavBar currentPath={path} />)
+    const active = markup.match(/<a[^>]*aria-current="page"[^>]*>/g) ?? []
+    expect(active).toHaveLength(1)
+    expect(active[0]).toContain(`href="${href}"`)
+  })
+
+  it.each(["/create-other", "/settings-extra", "/dashboard/other", "/habit"])("does not incorrectly select a destination for %s", (path) => {
+    expect(renderToStaticMarkup(<NavBar currentPath={path} />)).not.toContain('aria-current="page"')
+  })
+})

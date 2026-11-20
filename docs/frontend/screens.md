@@ -162,7 +162,7 @@ automatically. Profile setup failures offer **Try again** and **Sign in again** 
 
 - **Profile (#259):** shows the email and Google profile photo, with a default picture if none is available or loading fails. The display name is editable through `PATCH /me` with only `display_name` in the body. Surrounding spaces are trimmed; empty names and names longer than 50 characters are rejected without a request. Failed saves keep the draft, and success updates the cached profile and invalidates the caller's shared habit/invite summaries. Name and timezone saves share a per-account queue so their full-profile responses cannot overwrite each other's edits.
 - **Timezone:** defaults to the browser's on first sign-in, and can be changed here.
-- Light/dark mode toggle, saved in the browser.
+- **Appearance:** choose Light or Dark. The choice applies immediately and is saved in this browser; without a saved choice, the app starts with the system preference. The accessible controls are in a separate Appearance section.
 - **Sign out**, under Account, with the signed-in email above it. It is no longer at the bottom of the Garden. **Delete account**, under Account: the button opens a dialog that lists what is deleted (habits, activity logs, badges) and asks the user to type `DELETE`. It then calls `DELETE /me`, signs the user out and the signed-in layout sends them to the login page. If deleting fails, an error shows and the user stays signed in. The code is in `views/settings/AccountSection.tsx`.
 - **Nav:** Overall Dashboard, My Garden, Badges.
 
