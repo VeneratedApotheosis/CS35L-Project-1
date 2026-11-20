@@ -60,3 +60,30 @@ At setup, `npm audit --omit=dev` reported no vulnerabilities.
 The full audit reported moderate minimatch-related findings in the
 development tooling. These remain unresolved; the suggested forced
 fix would install an incompatible ESLint version.
+### Live shared-habit logging check
+
+The Vitest suite uses a fake database. To exercise issue #270 against a
+disposable Supabase project, start the backend with that project's migrations
+applied and configure `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in
+`backend/.env`. Add these existing, distinct test accounts to the same ignored
+file (fill in their values locally; never commit passwords):
+
+```ini
+TEST_USER_A_EMAIL=
+TEST_USER_A_PASSWORD=
+TEST_USER_B_EMAIL=
+TEST_USER_B_PASSWORD=
+TEST_USER_C_EMAIL=
+TEST_USER_C_PASSWORD=
+# Optional; defaults to http://localhost:3000
+TEST_API_URL=http://localhost:3000
+```
+
+From `backend/`, run `node scripts/shared-habit-logging-live.mjs`.
+The backend and script must point to the same disposable Supabase project. A
+and B must have the same current local date in their saved profile timezones.
+The script creates a temporary shared habit, joins B, checks logging, returned
+stats, non-member and other-member restrictions, and a direct RLS read; it
+then deletes the temporary habit using A's token. If cleanup fails, it prints
+the habit ID for manual removal. A crash or interruption may also leave it
+behind. This check does not simulate a past period or concurrent requests.

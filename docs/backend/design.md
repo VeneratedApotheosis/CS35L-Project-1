@@ -34,7 +34,8 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | `GET /dashboard` | Built (#201) |
 | Shared habits: create, list and detail | Built (#268), using group calculations (#267) |
 | Shared habits: preview and join | Built (#269), see section 6.6 |
-| Shared habits: logging, leave and management | Planned, see sections 6.6 and 8.11 |
+| Shared habits: logging | Built (#270), see section 6.6 |
+| Shared habits: leave and management | Planned, see sections 6.6 and 8.11 |
 | Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
@@ -123,7 +124,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | Calls `delete_my_account` | No issue yet |
-| Shared habit routes | Create/list/detail and preview/join built; see section 6.6 | Built (#268, #269); remaining routes planned |
+| Shared habit routes | Create/list/detail, preview/join and logging built; see section 6.6 | Built (#268, #269, #270); remaining routes planned |
 
 Routes have no version prefix. There is no route to edit a habit, because habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
 
@@ -227,7 +228,7 @@ metadata in batches, then loads logs only for the requested page.
 
 ### 6.6 Shared habits (planned)
 
-Create, list and detail (#268), and invite preview and joining (#269), are built; logging and management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
+Create, list and detail (#268), invite preview and joining (#269), and logging (#270) are built; management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
 
 | Route | Purpose |
 | --- | --- |
@@ -311,7 +312,9 @@ Tests simulate cap-race RPC outcomes; actual locking requires a live database ch
 
 **Leaving and removal.** A member leaves with their past logs kept. Group numbers cover current members only. The owner can remove a member, which counts as that member leaving. The owner transfers ownership first if they want to leave. Deleting the habit removes every member and log.
 
-**Logging.** The same rules as section 8.1, with two differences: nobody can log before the start date, and a member only ever adds or deletes their own logs.
+**Logging.** The same rules as section 8.1, with two differences: nobody can log before the start date, and a member only ever adds or deletes their own logs. The optional POST body and date validation match personal logging. The caller's saved membership timezone determines today, the current period, and expiry; group stats use the earliest member date. POST returns `{ log, stats, own_stats }` (201); DELETE returns `{ stats, own_stats }` (200). `stats` is the group block and `own_stats` is the caller's short stats. Missing habits, memberships, and other members' logs return 404.
+
+The database policies enforce ownership and membership for inserts, but do not enforce date windows on direct database calls. The checks and write are separate requests, so a concurrent membership change or period boundary can affect a request, and a successful write followed by a failed stats read can return 500 despite the write. Transactional enforcement would require a database follow-up. Live database verification of RLS and concurrency is still needed.
 
 **Stats.** The list gives each shared habit the short block from 6.4 with the group values. The detail adds the group `stats` block, a `members` list with each member's summary (`display_name`, `is_owner`, overall progress, current period count, streak and health) and the caller's own full stats. Other members' exact log dates are excluded from Express responses; see the direct-RPC privacy limitation above.
 
