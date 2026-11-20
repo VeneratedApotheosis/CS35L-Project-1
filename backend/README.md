@@ -96,4 +96,4 @@ backend and run `node scripts/shared-habit-members-live.mjs` from `backend/`.
 All three accounts need the same current local date. The script creates and
 removes a temporary habit, checks leave, removal, transfer, retained logs, and
 group averages. If cleanup fails, remove the printed habit ID as its owner.
-It verifies sequential behavior, not concurrent transfer and deletion.
+Apply migration `20261119_01_serialize_shared_membership.sql` to the disposable project first. It exercises both launch orders using direct RPCs, and checks direct table deletion is denied. Delays bias the ordering but do not guarantee overlapping transactions; use a controlled multi-session test to verify lock waiting.

@@ -7,32 +7,6 @@ function fail(error: unknown): never {
   throw new AppError(500, "internal_error", "Could not update membership");
 }
 
-async function membershipContext(
-  client: SupabaseClient,
-  userId: string,
-  habitId: string,
-) {
-  const { data: habit, error } = await client
-    .from("shared_habits")
-    .select("id, owner_id")
-    .eq("id", habitId)
-    .maybeSingle();
-  if (error) fail(error);
-  if (!habit) throw notFound("Shared habit not found");
-  const { data: members, error: membersError } = await client.rpc(
-    "shared_habit_members_info",
-    { p_shared_habit_id: habitId },
-  );
-  if (membersError) fail(membersError);
-  if (
-    !(members as { user_id: string }[] | null)?.some(
-      (member) => member.user_id === userId,
-    )
-  )
-    throw notFound("Shared habit not found");
-  return habit as { id: string; owner_id: string };
-}
-
 export async function removeSharedMember(
   client: SupabaseClient,
   userId: string,
@@ -40,22 +14,23 @@ export async function removeSharedMember(
   targetId: string,
   leaving: boolean,
 ) {
-  const habit = await membershipContext(client, userId, habitId);
-  if (leaving && habit.owner_id === userId)
-    throw validationFailed("Transfer ownership before leaving");
-  if (!leaving && habit.owner_id !== userId)
+  const { error } = await client.rpc("delete_shared_habit_member", {
+    p_shared_habit_id: habitId,
+    p_user_id: leaving ? userId : targetId,
+    p_leave: leaving,
+  });
+  if (!error) return;
+  if (error.message === "shared_habit_not_found")
+    throw notFound("Shared habit not found");
+  if (error.message === "shared_habit_member_not_found")
+    throw notFound("Member not found");
+  if (error.message === "shared_habit_not_owner")
     throw new AppError(403, "forbidden", "Only the owner can remove members");
-  if (!leaving && targetId === userId)
+  if (error.message === "shared_habit_owner_cannot_leave")
     throw validationFailed("Transfer ownership before leaving");
-  const { data, error } = await client
-    .from("shared_habit_members")
-    .delete()
-    .eq("shared_habit_id", habitId)
-    .eq("user_id", targetId)
-    .select("user_id")
-    .maybeSingle();
-  if (error) fail(error);
-  if (!data) throw notFound("Member not found");
+  if (error.message === "shared_habit_invalid_request")
+    throw validationFailed("Invalid membership request");
+  fail(error);
 }
 
 export async function transferSharedHabit(

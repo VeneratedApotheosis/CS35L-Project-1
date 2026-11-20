@@ -40,16 +40,8 @@ const transfer = (body = { user_id: other }) =>
 
 beforeEach(() => {
   db.reset();
-  db.setResult("shared_habits", "select", {
-    data: { id, owner_id: self },
-    error: null,
-  });
-  db.setResult("shared_habit_members_info", "select", {
-    data: [{ user_id: self }, { user_id: other }],
-    error: null,
-  });
-  db.setResult("shared_habit_members", "delete", {
-    data: { user_id: other },
+  db.setResult("delete_shared_habit_member", "select", {
+    data: null,
     error: null,
   });
   db.setResult("transfer_shared_habit_ownership", "select", {
@@ -58,59 +50,50 @@ beforeEach(() => {
   });
 });
 describe("shared habit membership", () => {
-  it("lets a non-owner leave, retaining logs", async () => {
-    db.setResult("shared_habits", "select", {
-      data: { id, owner_id: other },
-      error: null,
-    });
+  it("leaves through the locked RPC, keeping logs", async () => {
     expect((await leave()).status).toBe(204);
-    expect(db.callsFor("shared_habit_members", "delete")[0]).toMatchObject({
-      filter: { column: "shared_habit_id", value: id },
-      moreFilters: [{ column: "user_id", value: self }],
+    expect(
+      db.callsFor("delete_shared_habit_member", "select")[0]?.payload,
+    ).toEqual({
+      p_shared_habit_id: id,
+      p_user_id: self,
+      p_leave: true,
     });
+    expect(db.callsFor("shared_habit_members", "delete")).toHaveLength(0);
     expect(db.callsFor("shared_habit_logs", "delete")).toHaveLength(0);
   });
-  it("blocks an owner from leaving or removing themselves", async () => {
-    expect((await leave()).status).toBe(400);
-    expect((await remove(self)).status).toBe(400);
-    expect(db.callsFor("shared_habit_members", "delete")).toHaveLength(0);
-  });
-  it("lets the owner remove a member", async () => {
+  it("removes through the locked RPC", async () => {
     expect((await remove()).status).toBe(204);
     expect(
-      db.callsFor("shared_habit_members", "delete")[0]?.moreFilters,
-    ).toContainEqual({ column: "user_id", value: other });
+      db.callsFor("delete_shared_habit_member", "select")[0]?.payload,
+    ).toEqual({
+      p_shared_habit_id: id,
+      p_user_id: other,
+      p_leave: false,
+    });
   });
-  it("forbids a member from removing anyone via the owner route", async () => {
-    db.setResult("shared_habits", "select", {
-      data: { id, owner_id: other },
-      error: null,
+  it.each([
+    ["shared_habit_not_found", 404],
+    ["shared_habit_member_not_found", 404],
+    ["shared_habit_not_owner", 403],
+    ["shared_habit_owner_cannot_leave", 400],
+    ["shared_habit_invalid_request", 400],
+    ["private error", 500],
+  ] as const)("maps deletion error %s", async (message, status) => {
+    db.setResult("delete_shared_habit_member", "select", {
+      data: null,
+      error: { message },
     });
-    expect((await remove(self)).status).toBe(403);
-    expect(db.callsFor("shared_habit_members", "delete")).toHaveLength(0);
+    const res = await remove();
+    expect(res.status).toBe(status);
+    if (status === 500) expect(res.text).not.toContain(message);
   });
-  it("returns 404 for missing habits, non-members and absent targets", async () => {
-    db.setResult("shared_habits", "select", { data: null, error: null });
-    expect((await leave()).status).toBe(404);
-    db.setResult("shared_habits", "select", {
-      data: { id, owner_id: other },
-      error: null,
+  it("maps an owner attempting to leave to 400", async () => {
+    db.setResult("delete_shared_habit_member", "select", {
+      data: null,
+      error: { message: "shared_habit_owner_cannot_leave" },
     });
-    db.setResult("shared_habit_members_info", "select", {
-      data: [],
-      error: null,
-    });
-    expect((await leave()).status).toBe(404);
-    db.setResult("shared_habits", "select", {
-      data: { id, owner_id: self },
-      error: null,
-    });
-    db.setResult("shared_habit_members_info", "select", {
-      data: [{ user_id: self }],
-      error: null,
-    });
-    db.setResult("shared_habit_members", "delete", { data: null, error: null });
-    expect((await remove()).status).toBe(404);
+    expect((await leave()).status).toBe(400);
   });
   it("transfers via the authorization-enforcing RPC", async () => {
     expect((await transfer()).status).toBe(204);
@@ -133,7 +116,7 @@ describe("shared habit membership", () => {
     if (status === 500) expect(res.text).not.toContain(message);
   });
   it("handles database failures and invalid requests", async () => {
-    db.setResult("shared_habit_members", "delete", {
+    db.setResult("delete_shared_habit_member", "select", {
       data: null,
       error: { message: "private error" },
     });

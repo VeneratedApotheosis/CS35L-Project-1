@@ -80,6 +80,68 @@ async function main() {
     const base = `/shared-habits/${habitId}`;
     await api(b, "POST", `/shared-habits/join/${habit.join_code}`, 200);
     await api(c, "POST", `/shared-habits/join/${habit.join_code}`, 200);
+    // Direct table DELETE must be denied even for a current member or owner.
+    for (const actor of [a, b]) {
+      const { error: directError } = await actor.client
+        .from("shared_habit_members")
+        .delete()
+        .eq("shared_habit_id", habitId)
+        .eq("user_id", b.id);
+      assert.ok(directError, "Direct membership deletion must be denied");
+    }
+    // Race the two RPCs in both launch orders. The delay biases the order but
+    // does not prove lock waiting; unexpected scheduling fails the test.
+    for (const leave of [true, false]) {
+      for (const deleteFirst of [true, false]) {
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const deletion = async () => {
+          if (!deleteFirst) await delay(100);
+          return (leave ? b : a).client.rpc("delete_shared_habit_member", {
+            p_shared_habit_id: habitId,
+            p_user_id: b.id,
+            p_leave: leave,
+          });
+        };
+        const transfer = async () => {
+          if (deleteFirst) await delay(100);
+          return a.client.rpc("transfer_shared_habit_ownership", {
+            p_shared_habit_id: habitId,
+            p_new_owner: b.id,
+          });
+        };
+        const [removed, transferred] = await Promise.all([
+          deletion(),
+          transfer(),
+        ]);
+        // Track actual ownership before any assertion so cleanup uses its owner.
+        if (!transferred.error) owner = b;
+        if (deleteFirst) {
+          assert.ifError(removed.error);
+          assert.equal(transferred.error?.message, "shared_habit_not_member");
+        } else {
+          assert.ifError(transferred.error);
+          assert.equal(
+            removed.error?.message,
+            leave
+              ? "shared_habit_owner_cannot_leave"
+              : "shared_habit_not_owner",
+          );
+        }
+        const snapshot = await api(a, "GET", base, 200);
+        assert.ok(
+          snapshot.members.some(
+            (member) => member.user_id === snapshot.owner_id,
+          ),
+          "Owner must remain a member",
+        );
+        if (deleteFirst) {
+          await api(b, "POST", `/shared-habits/join/${habit.join_code}`, 200);
+        } else {
+          await api(b, "POST", `${base}/transfer`, 204, { user_id: a.id });
+          owner = a;
+        }
+      }
+    }
     const log = await api(b, "POST", `${base}/logs`, 201, {});
     await api(b, "POST", `${base}/logs`, 201, {});
     const before = await api(a, "GET", base, 200);
