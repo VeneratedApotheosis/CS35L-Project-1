@@ -10,6 +10,7 @@ import { habitKeys } from "@/lib/habits"
 import { isValidTimezone, profileKeys, profileWithToday, updateTimezone } from "@/lib/profile"
 import { useProfile } from "@/lib/useProfile"
 import { AccountSection } from "./settings/AccountSection"
+import { AppearanceSection } from "./settings/AppearanceSection"
 
 export default function Settings() {
   const { user, signOut } = useAuth()
@@ -101,6 +102,7 @@ export default function Settings() {
           </form>
         </Card>
       )}
+      <AppearanceSection />
       <AccountSection profile={profile.data} />
     </main>
   )
