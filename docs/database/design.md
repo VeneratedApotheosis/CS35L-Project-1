@@ -212,6 +212,7 @@ The goal columns copy `habits`, with the same limits, so the backend's calculati
 | `join_by` | date | Required. Must be on or before `start_date` |
 | `max_members` | int | Required. At least 2 and at most the system maximum (proposed 50) |
 | `join_code` | text | Unique. Defaults to 32 random characters. **Null means joining is closed.** The owner regenerates it by setting a new value |
+| `management_locked` | boolean | Set by the membership deletion trigger when a member who has reached the start departs; not directly editable by authenticated users |
 | `created_at` | timestamptz | Defaults to now |
 
 - The backend checks that `start_date` is today or later and that `join_by` is not in the past, as it does for a personal habit's start date.
@@ -263,15 +264,15 @@ Column grants:
 | `shared_habit_members` | Nothing |
 | `shared_habit_logs` | Nothing. Revoke `update`, but never revoke `delete` |
 
-Whether a column may change right now (while the owner is alone, once someone has joined, or after the start) depends on state, so it is not a column grant. The backend enforces it.
+Migration `20261120_01_shared_habit_management.sql` enforces edit state in database triggers as well as API validation. Updates serialize on the habit row with join, leave and transfer. The latest member-local date locks edits and code management once any member reaches the start; the earliest date still controls group calculations. When a member who has reached the start leaves, is removed, or deletes their account, a membership deletion trigger sets the permanent `management_locked` flag before the timezone snapshot disappears. The flag is not updatable by authenticated users. On first application, the migration conservatively locks existing habits whose start date has arrived anywhere in the world (UTC+14), because timezone history for departed members is unavailable. This can lock a previously existing habit up to about a day before its current members reach the start. The owner can delete at any time. The migration also updates preview and join: a new member cannot join once any current member reaches the start, and the joiner's own `join_by` deadline still applies. The locking join RPC keeps repeat joins idempotent.
 
 ### 8.4 Functions and triggers
 
 | Name | Who can call it | What it does |
 | --- | --- | --- |
 | `is_shared_habit_member(shared_habit_id)` | Authenticated | Returns true when the caller has a member row. `stable`. Used by the policies |
-| `shared_habit_preview(code)` | Authenticated | For the join screen. If the code is valid and joining is open, returns the name, description, plant type, goal, dates, the owner's display name, the member count and `max_members`. Otherwise returns nothing, and never says why |
-| `join_shared_habit(code)` | Authenticated | Locks the habit row, then checks that the code matches and is not null, the caller is not already a member (if so, it returns the id and does nothing), the caller's **own local date** is on or before `join_by`, and the member count is below `max_members`. Then inserts the member row with the timezone copy and returns the habit id. Raises a named error for each failure |
+| `shared_habit_preview(code)` | Authenticated | Returns invite details only for an available code before the caller deadline and before any current member reaches the start; otherwise returns nothing |
+| `join_shared_habit(code)` | Authenticated | Locks the habit row, then checks that the code matches and is not null, the caller is not already a member (if so, it returns the id and does nothing), the caller's **own local date** is on or before `join_by`, no current member has reached the start, and the member count is below `max_members`. Then inserts the member row with the timezone copy and returns the habit id. Raises a named error for each failure |
 | `shared_habit_members_info(shared_habit_id)` | Members | Returns `user_id`, `display_name`, `avatar_url`, `joined_at`, `timezone` and `is_owner` for the current members |
 | `shared_habit_member_logs(shared_habit_id)` | Members | Returns `(user_id, occurred_on, count)` per day, only for current members. It counts per day, not one row per log, to keep the result small. It can still exceed the API's row limit (1000 by default), so the backend pages through it |
 | `transfer_shared_habit_ownership(shared_habit_id, new_owner)` | The owner | The new owner must be a member. Sets `owner_id` |
@@ -279,7 +280,7 @@ Whether a column may change right now (while the owner is alone, once someone ha
 | Trigger `add_shared_habit_owner` | Runs after an insert on `shared_habits` | Inserts the owner's member row with their timezone copy. `security definer`, because the members table has no insert policy |
 | Trigger `check_member_cap` | Runs before an insert on the members table | A backstop. Locks the habit row and refuses an insert past `max_members` |
 | Trigger `check_max_members` | Runs before `max_members` is updated on `shared_habits` | Refuses a `max_members` below the current member count |
-| Trigger `lock_started_shared_habit` | Runs before an update on `shared_habits` | Once the start date has passed, refuses a change to `target_count`, `interval_count`, `interval_unit`, `num_periods`, `start_date` or `join_by`. "Passed" uses the group's today, the earliest local date among the members' stored timezones. `name`, `description`, `plant_type`, `max_members` and `join_code` stay editable |
+| Triggers `guard_shared_habit_edit` and `guard_shared_habit_code` | Run before owner updates | Lock edits and code management when any member reaches start, guard goal changes with multiple members, validate dates and plant, and preserve cap checks |
 
 The functions raise errors with stable messages so the backend can map them:
 
@@ -287,10 +288,12 @@ The functions raise errors with stable messages so the backend can map them:
 | --- | --- | --- |
 | `shared_habit_not_found` | 404 | The code is wrong or closed, or the habit is not yours (transfer) |
 | `shared_habit_full` | 409 | The member cap is reached |
-| `shared_habit_join_ended` | 400 | The caller's local date is past `join_by` |
+| `shared_habit_join_ended` | 400 | The caller is past `join_by` or a current member has reached the start |
 | `shared_habit_not_owner` | 403 | Transfer, by someone who is not the owner |
 | `shared_habit_not_member` | 400 | Transfer, to someone who is not a member |
-| `shared_habit_started` | 400 | An update of the goal or the dates after the start |
+| `shared_habit_started` | 400 | An edit or invite-code change once any member reaches the start |
+| `shared_habit_goal_locked` | 400 | A goal or start date change with multiple members |
+| `shared_habit_invalid_dates` | 400 | New dates are before the latest member-local date or join_by exceeds start |
 | `shared_habit_cap_below_members` | 400 | `max_members` set below the member count |
 
 The owner cannot leave: the membership deletion RPC rejects it. Migration `20261119_01_serialize_shared_membership.sql` revokes direct authenticated deletion and adds `delete_shared_habit_member(habit_id, user_id, leave)`. It and the transfer RPC lock the habit row first, then recheck authorization and membership inside the same transaction. Account deletion locks the caller's existing shared habits in id order before choosing successors and cascading; a habit deletion still cascades normally. Apply the migration before using the updated backend. Controlled tests against a disposable local database confirmed the lock waits for both leave/removal orderings and both account-deletion/transfer orderings, as well as direct deletion denial and habit cascade deletion.

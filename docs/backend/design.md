@@ -36,7 +36,7 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | Shared habits: preview and join | Built (#269), see section 6.6 |
 | Shared habits: logging | Built (#270), see section 6.6 |
 | Shared habits: leave, remove and transfer | Built (#271), see section 6.6 |
-| Shared habits: other management | Planned, see sections 6.6 and 8.11 |
+| Shared habits: edit, invite code and delete | Built (#272), see section 6.6 |
 | Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
@@ -126,9 +126,9 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | `DELETE /me` calls `delete_my_account` | Built (#257) |
-| Shared habit routes | Create/list/detail, preview/join, logging and membership management built; see section 6.6 | Built (#268–#271); remaining routes planned |
+| Shared habit routes | Create/list/detail, preview/join, logging and management built; see section 6.6 | Built (#268–#272) |
 
-Routes have no version prefix. There is no route to edit a habit, because habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
+Routes have no version prefix. There is no route to edit a personal habit, because personal habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
 
 ### 6.1 Create a habit
 
@@ -228,9 +228,9 @@ metadata in batches, then loads logs only for the requested page.
 | `needs_attention` | Active habits whose plant is not healthy, wilted first. A missed last period always makes the plant at least slightly wilted, so this covers both |
 | `finished` | Expired habits with `end_date`, `progress`, `consistency` and `badge`, most recently ended first. A badge of `none` means the habit failed |
 
-### 6.6 Shared habits (planned)
+### 6.6 Shared habits
 
-Create, list and detail (#268), invite preview and joining (#269), logging (#270), and leave, removal and transfer (#271) are built; other management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
+Create, list and detail (#268), invite preview and joining (#269), logging (#270), leave, removal and transfer (#271), and editing, invite management and deletion (#272) are built. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits).
 
 | Route | Purpose |
 | --- | --- |
@@ -288,13 +288,17 @@ explicitly; rounding the API value would discard information.
 
 **Creating.** The body has the same goal fields as a personal habit (section 6.1) plus `join_by` and `max_members`. `start_date` must be today or later. `join_by` must be between today and `start_date`. `max_members` is at least 2 and at most the system maximum. The calling user's timezone is copied to their member row.
 
-**Editing (owner only).** Nobody can edit after the start date.
+**Editing (owner only).** Edits and invite code management lock as soon as any current member reaches the start date in their saved membership timezone. This uses the latest member-local date; group stats and completion still use the earliest member-local date, and personal logging uses the member's own date. PATCH takes any nonempty subset of the editable fields. A missing or non-owner habit returns 404; invalid fields and state restrictions return 400. Description may be set to null.
 
 | State | What can change |
 | --- | --- |
 | Owner is the only member, before the start | Everything: goal, dates, `join_by`, `max_members`, name, description, plant |
-| Someone else has joined, before the start | Name, description, plant, `join_by` and `max_members` (not below the member count). The goal and start date are locked |
+| Multiple current members, before the start | Name, description, plant, `join_by` and `max_members` (not below the member count). The goal and start date are locked |
 | After the start | Nothing |
+
+`join_by` must be no earlier than the latest member-local date and no later than `start_date` when the dates are changed. Changing it never reopens a closed code. Allowing `join_by` after another member joins is an explicit decision that clarifies the shorter field list in issue #272. The owner may regenerate or close joining only before any member reaches the start; regeneration returns `{ join_code }`, closing returns 204. Deletion returns 204 and is allowed at any time, including after expiry; it cascades members and logs.
+
+Migration `20261120_01_shared_habit_management.sql` enforces these restrictions for direct Supabase updates as well as Express. Updates lock the habit row before the trigger checks membership, so a simultaneous join, leave or transfer cannot invalidate its state check. If a member who has reached the start leaves, is removed, or deletes their account, a membership deletion trigger permanently records that start before removing their timezone snapshot. The lock cannot be cleared through authenticated table updates. On first application, existing habits whose start date has arrived anywhere in the world are conservatively locked because prior departed members have no retained timezone history; this can lock an existing habit before its current members reach the start. Apply the migration before running these endpoints.
 
 **Invite endpoints (#269).** Preview returns the database preview fields plus
 `places_left`. Unknown, malformed, closed, and expired previews return the same
@@ -310,7 +314,7 @@ restart; shared storage is required for multiple replicas. Direct Supabase RPC
 calls bypass this Express limiter, so it is not database-wide guessing protection.
 Tests simulate cap-race RPC outcomes; actual locking requires a live database check.
 
-**Joining.** The join screen first calls the preview route, which returns nothing for a wrong, closed or expired code and never says which. Joining succeeds only while the joiner's own local date is on or before `join_by` and the habit is not full. Joining twice does nothing. Nobody joins after the start date.
+**Joining.** The join screen first calls the preview route, which returns nothing for a wrong, closed or expired code and never says which. Joining succeeds only while the joiner's own local date is on or before `join_by`, the habit is not full, and no current member has reached the start date. The database preview and join functions both enforce the start boundary and deadline; an existing member's repeat join remains a no-op. Preview is a point-in-time read, so a concurrent join, closure, or date boundary can make a later join fail; the locked join operation is authoritative.
 
 **Leaving and removal.** A member leaves with their past logs kept. Group numbers cover current members only. The owner can remove a member, which counts as that member leaving. The owner transfers ownership first if they want to leave. Deleting the habit removes every member and log.
 
@@ -428,7 +432,7 @@ With 4 periods, 80% consistency means no misses (3/4 = 75%).
 
 `num_periods` is required by the backend for now. What is out of scope for the whole app is listed in [design.md](../design.md#6-out-of-scope).
 
-### 8.11 Shared habits (planned)
+### 8.11 Shared habits
 
 The rules for the group numbers. Each member's own numbers use sections 8.2 to 8.9 unchanged, with the shared goal and the member's own logs.
 

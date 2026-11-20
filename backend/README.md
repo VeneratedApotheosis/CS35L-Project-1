@@ -97,3 +97,24 @@ All three accounts need the same current local date. The script creates and
 removes a temporary habit, checks leave, removal, transfer, retained logs, and
 group averages. If cleanup fails, remove the printed habit ID as its owner.
 Apply migration `20261119_01_serialize_shared_membership.sql` to the disposable project first. It exercises both launch orders using direct RPCs, and checks direct table deletion is denied. Delays bias the ordering but do not guarantee overlapping transactions; use a controlled multi-session test to verify lock waiting.
+
+### Local shared-habit management database checks
+
+After applying `supabase/migrations/20261120_01_shared_habit_management.sql` to
+an isolated local Supabase database, run from the repository root:
+
+```bash
+python3 supabase/tests/shared_habit_management_local.py
+```
+
+The script uses Docker and creates and deletes disposable local users and habits.
+It defaults to `supabase_db_codex-271-local-supabase`; set `TEST_DB_CONTAINER`
+to the database container of a separate local Supabase project if needed.
+It exercises the edit states, invite deadline and start boundary, permissions,
+and a join/edit lock race. Do not point it at a shared database.
+
+For the local HTTP integration check, start the backend with the local
+`SUPABASE_URL` and local `SUPABASE_PUBLISHABLE_KEY` in its environment, then
+run `node scripts/shared-habit-management-local.mjs` with those same two
+variables and `TEST_API_URL` (default `http://127.0.0.1:31973`). The script
+rejects non-local URLs and creates and deletes disposable local accounts.
