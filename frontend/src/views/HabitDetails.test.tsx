@@ -16,6 +16,7 @@ const auth = vi.hoisted(() => {
 vi.mock("@/auth/useAuth", () => ({ useAuth: () => auth }))
 vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: auth.getSession } } }))
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }))
 vi.mock("@/lib/useProfile", () => ({ useProfile: () => ({ data: { today: auth.today } }) }))
 
 const baseHabit = {
@@ -47,6 +48,13 @@ afterEach(() => {
 })
 
 describe("habit details", () => {
+  it("offers to delete the habit", async () => {
+    fetchMock.mockResolvedValue(habitJson())
+    render(<QueryProvider><HabitDetails id="mine" /></QueryProvider>)
+    await screen.findByRole("heading", { name: "Read" })
+    expect(screen.getByRole("button", { name: "Delete habit" })).toBeTruthy()
+  })
+
   it("loads the selected habit from the authenticated API and shows its name", async () => {
     let resolve!: (response: Response) => void
     fetchMock.mockImplementation(() => new Promise<Response>((done) => { resolve = done }))

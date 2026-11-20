@@ -9,6 +9,7 @@ const auth = vi.hoisted(() => {
   return { user: { id: "user-a" }, today: "2026-11-11" as string | undefined, signOut: vi.fn(), getSession: vi.fn() }
 })
 vi.mock("@/auth/useAuth", () => ({ useAuth: () => auth }))
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }))
 vi.mock("@/lib/useProfile", () => ({ useProfile: () => ({ data: { today: auth.today } }) }))
 vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: auth.getSession } } }))
 
