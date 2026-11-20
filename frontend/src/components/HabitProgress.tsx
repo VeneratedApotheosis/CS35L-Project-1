@@ -4,14 +4,18 @@ import { ProgressRing } from "./ProgressRing"
 import type { HabitProgressStats } from "@/lib/habits"
 
 /** Displays server-calculated values; no log or streak calculations live here. */
-export function HabitProgress({ stats }: { stats: HabitProgressStats }) {
+export function HabitProgress({ stats, heading = "Progress", headingId = "habit-progress-heading" }: {
+  stats: HabitProgressStats
+  heading?: string
+  headingId?: string
+}) {
   const period = stats.current_period
   const label = stats.state === "not_started" ? "First period" : stats.state === "expired" ? "Final period" : "Current period"
   const rate = stats.consistency.rate
   return (
-    <section className="stack-md" aria-labelledby="habit-progress-heading">
+    <section className="stack-md" aria-labelledby={headingId}>
       <Card className="stack-lg progress-panel">
-        <h2 id="habit-progress-heading" className="text-h2">Progress</h2>
+        <h2 id={headingId} className="text-h2">{heading}</h2>
         <div className="progress-panel-top">
         <div className="stack-sm">
           <ProgressBar label={label} count={period.count} target={period.target} />

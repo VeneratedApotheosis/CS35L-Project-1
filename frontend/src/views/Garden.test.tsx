@@ -175,7 +175,7 @@ describe("Garden", () => {
   })
 
   it("stays on the creation form and shows an error when saving fails", async () => {
-    fetchMock.mockResolvedValue(jsonResponseError())
+    respondWithHabits(jsonResponseError)
     render(<QueryProvider><CreateHabit /></QueryProvider>)
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Practice" } })
     fireEvent.change(screen.getByLabelText("Number of periods"), { target: { value: "4" } })

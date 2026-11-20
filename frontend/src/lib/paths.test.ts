@@ -1,5 +1,7 @@
-import { expect, it } from "vitest"
-import { habitHref } from "./paths"
+import { afterEach, expect, it, vi } from "vitest"
+import { habitHref, sharedHabitHref, sharedInviteUrl } from "./paths"
+
+afterEach(() => { vi.unstubAllEnvs(); vi.resetModules() })
 
 it("puts the habit id in the query string", () => {
   expect(habitHref("abc-123")).toBe("/habit?id=abc-123")
@@ -7,4 +9,21 @@ it("puts the habit id in the query string", () => {
 
 it("escapes an id that has special characters", () => {
   expect(habitHref("a b&c")).toBe("/habit?id=a%20b%26c")
+})
+
+it("puts shared habit ids in the query string and escapes special characters", () => {
+  expect(sharedHabitHref("a b&c")).toBe("/shared-habit?id=a%20b%26c")
+})
+
+it("builds an absolute static-compatible invite URL and escapes the code", () => {
+  expect(sharedInviteUrl("https://garden.test", "a b&c")).toBe("https://garden.test/join?code=a%20b%26c")
+})
+
+it("includes the GitHub Pages base path in copied invitations", async () => {
+  vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/CS35L-Project-1")
+  vi.resetModules()
+  const paths = await import("./paths")
+  expect(paths.sharedInviteUrl("https://example.github.io", "abc123")).toBe(
+    "https://example.github.io/CS35L-Project-1/join?code=abc123",
+  )
 })

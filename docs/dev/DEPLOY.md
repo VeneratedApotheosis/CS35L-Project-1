@@ -111,7 +111,7 @@ The workflow `.github/workflows/pages.yml` builds `frontend/` as a static export
 | `NEXT_PUBLIC_SUPABASE_URL` | Same as `frontend/.env.local` |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Same as `frontend/.env.local` |
 
-3. **Supabase > Authentication > URL Configuration:** add `https://<owner>.github.io/CS35L-Project-1` and `https://<owner>.github.io/CS35L-Project-1/**` to **Redirect URLs**. Keep the local one.
+3. **Supabase > Authentication > URL Configuration:** add `https://<owner>.github.io/CS35L-Project-1` and `https://<owner>.github.io/CS35L-Project-1/**` to **Redirect URLs**. Keep the local one, and allow `http://localhost:5173/**` for local invite sign-in (#275). Invite sign-in returns to `/join?code=...`; if that URL is not allowed, Supabase may fall back to the Site URL and lose the invite.
 4. **Google Cloud Console:** the Google redirect goes to Supabase, so it usually needs no change. Only if sign-in fails with a redirect error, check that the Supabase callback URL is already in the OAuth client.
 5. On Render, `FRONTEND_ORIGIN` must include `https://<owner>.github.io` (an origin has no path).
 6. Run the workflow once, then open the site. A changed variable only takes effect after a new run, because the values are built into the files.
