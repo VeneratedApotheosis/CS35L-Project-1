@@ -85,8 +85,8 @@ export const MONSTERA_CONFIG: StagedPlantConfig = {
     shrinkStep: 0.9,
   },
 
-  // A few big leaves pack the canopy loosely; aim as high as the pothos so even
-  // the two-leaf first stage reads as filled.
+  // The solver targets the full five-leaf canopy, as for the pothos. Earlier
+  // two-leaf stages keep those proportions and intentionally fill less space.
   coverage: {
     target: 0.6,
     canopyFloor: 0.2,
