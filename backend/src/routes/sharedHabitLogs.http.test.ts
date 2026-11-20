@@ -67,27 +67,74 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("shared habit logging", () => {
-  it("logs the caller's local today and returns group and caller stats", async () => {
-    const res = await post();
-    expect(res.status).toBe(201);
-    expect(res.body.log).toEqual(log);
-    expect(res.body.stats.current_period.count).toBe(1);
-    expect(res.body.own_stats.current_period.count).toBe(1);
-    expect(db.callsFor("shared_habit_logs", "insert")[0]?.payload).toEqual({
-      shared_habit_id: id,
-      user_id: TEST_USER.id,
-      occurred_on: "2026-11-19",
-    });
-  });
-  it("deletes an own current-period log and returns updated stats", async () => {
-    const res = await del();
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("stats");
-    expect(res.body).toHaveProperty("own_stats");
-    expect(
-      db.callsFor("shared_habit_logs", "delete")[0]?.moreFilters,
-    ).toContainEqual({ column: "user_id", value: TEST_USER.id });
-  });
+  it.each([
+    { action: "add", callerCount: 1, groupCount: 2, groupProgress: 0.5 },
+    { action: "delete", callerCount: 0, groupCount: 1.5, groupProgress: 0.375 },
+  ])(
+    "returns updated group and caller stats after $action",
+    async ({ action, callerCount, groupCount, groupProgress }) => {
+      const other = "33333333-3333-4333-8333-333333333333";
+      db.setResult("shared_habit_members_info", "select", {
+        data: [
+          member,
+          { user_id: other, timezone: "Asia/Tokyo", is_owner: false },
+        ],
+        error: null,
+      });
+      // The fake supplies the database's post-write snapshot: the caller gained
+      // or lost one log while the other member retained three.
+      db.setResult("shared_habit_member_logs", "select", {
+        data: [
+          ...(callerCount
+            ? [
+                {
+                  user_id: TEST_USER.id,
+                  occurred_on: "2026-11-19",
+                  count: callerCount,
+                },
+              ]
+            : []),
+          { user_id: other, occurred_on: "2026-11-19", count: 3 },
+        ],
+        error: null,
+      });
+      const res = action === "add" ? await post() : await del();
+      expect(res.status).toBe(action === "add" ? 201 : 200);
+      expect(res.body.stats).toMatchObject({
+        today: "2026-11-19",
+        overall_progress: groupProgress,
+        current_period: { count: groupCount, target: 2 },
+      });
+      expect(res.body.own_stats).toMatchObject({
+        overall_progress: callerCount / 4,
+        current_period: { count: callerCount, target: 2 },
+      });
+      if (action === "add") {
+        expect(res.body.log).toEqual(log);
+        expect(db.callsFor("shared_habit_logs", "insert")[0]?.payload).toEqual({
+          shared_habit_id: id,
+          user_id: TEST_USER.id,
+          occurred_on: "2026-11-19",
+        });
+      } else {
+        expect(
+          db.callsFor("shared_habit_logs", "delete")[0]?.moreFilters,
+        ).toContainEqual({ column: "user_id", value: TEST_USER.id });
+      }
+      // Only the post-write stats read needs the group's activity history.
+      const calls = db.calls;
+      const write = calls.findIndex(
+        (call) =>
+          call.table === "shared_habit_logs" &&
+          call.operation === (action === "add" ? "insert" : "delete"),
+      );
+      const history = calls.findIndex(
+        (call) => call.table === "shared_habit_member_logs",
+      );
+      expect(history).toBeGreaterThan(write);
+      expect(db.callsFor("shared_habit_member_logs", "select")).toHaveLength(1);
+    },
+  );
   it.each(["2026-11-17", "2026-11-20", "2026-02-30"])(
     "rejects invalid or outside dates %s",
     async (occurred_on) => {

@@ -228,7 +228,7 @@ metadata in batches, then loads logs only for the requested page.
 
 ### 6.6 Shared habits (planned)
 
-Create, list and detail (#268), and invite preview and joining (#269), are built; logging and management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
+Create, list and detail (#268), invite preview and joining (#269), and logging (#270) are built; management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
 
 | Route | Purpose |
 | --- | --- |

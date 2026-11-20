@@ -88,11 +88,11 @@ export async function createSharedHabit(
   return data as SharedHabit;
 }
 
-async function memberData(
+async function getMembers(
   client: SupabaseClient,
   habit: SharedHabit,
   userId: string,
-) {
+): Promise<Member[]> {
   const { data, error } = await client.rpc("shared_habit_members_info", {
     p_shared_habit_id: habit.id,
   });
@@ -100,7 +100,15 @@ async function memberData(
   const members = (data ?? []) as Member[];
   if (!members.some((member) => member.user_id === userId))
     throw notFound("Shared habit not found");
+  return members;
+}
 
+async function memberData(
+  client: SupabaseClient,
+  habit: SharedHabit,
+  userId: string,
+) {
+  const members = await getMembers(client, habit, userId);
   const dates = new Map(
     members.map((member) => [member.user_id, [] as string[]]),
   );
@@ -264,8 +272,8 @@ async function loggingContext(
   if (error) databaseFailure(error);
   if (!data) throw notFound("Shared habit not found");
   const habit = data as SharedHabit;
-  const members = await memberData(client, habit, userId);
-  const caller = members.members.find((member) => member.user_id === userId)!;
+  const members = await getMembers(client, habit, userId);
+  const caller = members.find((member) => member.user_id === userId)!;
   return { habit, today: todayInZone(caller.timezone) };
 }
 
