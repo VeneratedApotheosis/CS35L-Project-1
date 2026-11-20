@@ -20,6 +20,9 @@ export default function Settings() {
   const timezone = draft ?? profile.data?.timezone ?? ""
   const save = useMutation({
     mutationFn: updateTimezone,
+    // Profile patches return a full profile. Queue edits so an older response
+    // cannot replace a newer display name or timezone in the shared cache.
+    scope: { id: `profile:${user?.id ?? "signed-out"}` },
     onMutate: async () => {
       if (user) await client.cancelQueries({ queryKey: profileKeys.user(user.id) })
     },
@@ -98,7 +101,7 @@ export default function Settings() {
           </form>
         </Card>
       )}
-      <AccountSection />
+      <AccountSection profile={profile.data} />
     </main>
   )
 }

@@ -20,6 +20,10 @@ export function updateTimezone(timezone: string): Promise<Profile> {
   return api.patch<Profile>("/me", { timezone })
 }
 
+export function updateDisplayName(displayName: string): Promise<Profile> {
+  return api.patch<Profile>("/me", { display_name: displayName })
+}
+
 /** Deletes the signed-in user's account and everything they own. The server answers 204 with no body. */
 export function deleteAccount(): Promise<void> {
   return api.delete<void>("/me")

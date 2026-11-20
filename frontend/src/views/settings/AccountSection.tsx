@@ -7,13 +7,14 @@ import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { Modal } from "@/components/Modal"
 import { ApiError } from "@/lib/api"
-import { deleteAccount } from "@/lib/profile"
+import { deleteAccount, type Profile } from "@/lib/profile"
+import { ProfileDetails } from "./ProfileDetails"
 
 /** The word that has to be typed before the account can be deleted. */
 export const CONFIRM_WORD = "DELETE"
 
 /** The Account section of Settings. Other account actions, such as sign out, go here too. */
-export function AccountSection() {
+export function AccountSection({ profile }: { profile?: Profile }) {
   const { user, signOut } = useAuth()
   const client = useQueryClient()
   const [open, setOpen] = useState(false)
@@ -55,7 +56,8 @@ export function AccountSection() {
       <h2 id="account-heading" className="text-h2">Account</h2>
       <Card>
         <div className="stack-md">
-          {user?.email && <p className="text-body text-secondary">Signed in as {user.email}</p>}
+          {profile ? <ProfileDetails key={user?.id} profile={profile} />
+            : user?.email && <p className="text-body text-secondary">Signed in as {user.email}</p>}
           <Button variant="secondary" className="self-start" onClick={() => leave.mutate()} disabled={leave.isPending}>
             {leave.isPending ? "Signing out…" : "Sign out"}
           </Button>
