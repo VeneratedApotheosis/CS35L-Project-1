@@ -122,7 +122,7 @@ the date picker mirrors that exception.
 - **Undo** toast for about 5 seconds after logging.
 - **Delete a log** from the current period.
 - **No editing.** A habit cannot be changed after it is created, so the name, description, plant, goal and duration are all fixed. To change one, delete it and create a new one.
-- **Delete habit** (with confirmation). Removes the habit and its logs.
+- **Delete habit** (with confirmation). At the bottom of the page, the button opens a dialog that names the habit and says it can't be undone. Confirming calls `DELETE /habits/:id`, removes the habit and its logs, and goes back to the Garden. If the habit is already gone it counts as deleted. If deleting fails, the dialog stays open with an error. The code is `components/DeleteHabit.tsx`.
 
 ### 5 Create Habit
 

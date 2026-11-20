@@ -8,6 +8,7 @@ import { HabitPlant } from "@/components/HabitPlant"
 import { HabitProgress } from "@/components/HabitProgress"
 import { HabitHistory } from "@/components/HabitHistory"
 import { HabitActivity } from "@/components/HabitActivity"
+import { DeleteHabit } from "@/components/DeleteHabit"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { getHabit, habitKeys, type Habit } from "@/lib/habits"
@@ -76,6 +77,7 @@ export default function HabitDetails({ id }: { id: string }) {
           </div>
           <HabitHistory key={`history-${habit.data.id}`} habit={habit.data} today={profile.data?.today} />
           </div>
+          <DeleteHabit id={habit.data.id} name={habit.data.name} />
         </>
       ) : null}
     </main>

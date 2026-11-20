@@ -155,6 +155,11 @@ export interface HabitDetail extends HabitWithStats {
   }
 }
 
+/** Deletes a habit and, in the database, its logs. The server answers 204 with no body. */
+export function deleteHabit(id: string): Promise<void> {
+  return api.delete<void>(`/habits/${encodeURIComponent(id)}`)
+}
+
 export function getHabit(id: string): Promise<HabitDetail> {
   return api.get<HabitDetail>(`/habits/${encodeURIComponent(id)}`)
 }
