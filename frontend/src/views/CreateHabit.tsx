@@ -11,7 +11,7 @@ import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { useProfile } from "@/lib/useProfile"
 import { sharedHabitHref, sharedInviteUrl } from "@/lib/paths"
-import { createSharedHabit, defaultJoinBy, SHARED_MEMBER_LIMITS, type SharedHabit } from "@/lib/sharedHabits"
+import { createSharedHabit, defaultJoinBy, sharedHabitKeys, SHARED_MEMBER_LIMITS, type SharedHabit } from "@/lib/sharedHabits"
 import {
   buildCreateHabitPayload,
   createHabit,
@@ -223,6 +223,7 @@ export default function CreateHabit() {
           max_members: parseWholeNumber(maxMembers),
         })
         setCreatedShared(saved)
+        if (user) void queryClient.invalidateQueries({ queryKey: sharedHabitKeys.all(user.id) })
         setInviteUrl(saved.join_code ? sharedInviteUrl(window.location.origin, saved.join_code) : "")
         setStep("invite")
         setSubmitting(false)

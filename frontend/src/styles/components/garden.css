@@ -351,3 +351,23 @@
   .garden-plant[data-holding="true"] .garden-plant__ring { animation: none; --garden-hold: 100%; }
   .garden-card__surface, .garden-card { animation: none; }
 }
+
+.shared-garden-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: var(--space-6);
+}
+
+.shared-garden-card,
+.shared-garden-card > .card {
+  min-width: 0;
+  height: 100%;
+  overflow-wrap: anywhere;
+}
+
+.shared-garden-card__badge {
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-secondary);
+}

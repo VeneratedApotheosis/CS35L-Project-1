@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import Link from "next/link"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
 import { ProfileSetup } from "@/auth/ProfileSetup"
 import { AppShell } from "@/components/AppShell"
@@ -10,7 +10,7 @@ import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { goalSentence, formatDate } from "@/lib/goal"
-import { joinSharedInvite, previewSharedInvite } from "@/lib/sharedHabits"
+import { joinSharedInvite, previewSharedInvite, sharedHabitKeys } from "@/lib/sharedHabits"
 import { sharedHabitHref } from "@/lib/paths"
 
 const UNAVAILABLE = "This invite isn't available. Ask your friend for a new link."
@@ -69,6 +69,7 @@ function InviteSignIn({ code }: { code: string }) {
 }
 
 function InvitePreview({ code, userId }: { code: string; userId: string }) {
+  const client = useQueryClient()
   const { signOut } = useAuth()
   const joiningRef = useRef(false)
   const [joinedId, setJoinedId] = useState<string | null>(null)
@@ -81,7 +82,10 @@ function InvitePreview({ code, userId }: { code: string; userId: string }) {
   const join = useMutation({
     mutationFn: () => joinSharedInvite(code),
     retry: false,
-    onSuccess: (result) => setJoinedId(result.id),
+    onSuccess: (result) => {
+      setJoinedId(result.id)
+      void client.invalidateQueries({ queryKey: sharedHabitKeys.all(userId) })
+    },
     onSettled: () => { joiningRef.current = false },
   })
   function handleJoin() {

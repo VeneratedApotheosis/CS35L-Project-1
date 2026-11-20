@@ -160,7 +160,17 @@ describe("shared habit endpoints", () => {
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ total: 7, limit: 2, offset: 2 });
     expect(res.body.habits[0].stats.overall_progress).toBe(0.25);
+    expect(res.body.habits[0]).toMatchObject({
+      member_count: 2,
+      own_today: "2026-11-17",
+      own_stats: { overall_progress: 0, current_period: { count: 0 } },
+    });
     expect(res.body.habits[0]).not.toHaveProperty("members");
+    expect(res.body.habits[0].own_stats).not.toHaveProperty("log_days");
+    expect(db.callsFor("shared_habits", "select")[0]?.orders).toEqual([
+      { column: "created_at", ascending: true },
+      { column: "id", ascending: true },
+    ]);
     expect(db.callsFor("shared_habits", "select")[0]?.range).toEqual({
       from: 2,
       to: 3,
@@ -177,6 +187,46 @@ describe("shared habit endpoints", () => {
       .set("Authorization", auth);
     expect(res.body.habits).toEqual([]);
     expect(db.callsFor("shared_habit_members_info", "select")).toHaveLength(0);
+  });
+  it("lists the caller's own progress and membership date even when someone else owns the habit", async () => {
+    db.setResult("shared_habits", "select", {
+      data: [
+        {
+          ...habit,
+          owner_id: other,
+          start_date: "2026-11-17",
+          join_by: "2026-11-17",
+        },
+      ],
+      error: null,
+      count: 1,
+    });
+    db.setResult("shared_habit_members_info", "select", {
+      data: [
+        { ...members[0], is_owner: false, timezone: "Asia/Tokyo" },
+        { ...members[1], is_owner: true, timezone: "America/Los_Angeles" },
+      ],
+      error: null,
+    });
+    db.setResult("shared_habit_member_logs", "select", {
+      data: [
+        { user_id: TEST_USER.id, occurred_on: "2026-11-18", count: 1 },
+        { user_id: other, occurred_on: "2026-11-17", count: 3 },
+      ],
+      error: null,
+    });
+    const res = await request(app)
+      .get("/shared-habits")
+      .set("Authorization", auth);
+    expect(res.status).toBe(200);
+    expect(res.body.habits[0]).toMatchObject({
+      member_count: 2,
+      own_today: "2026-11-18",
+      stats: { today: "2026-11-17", current_period: { count: 1.5 } },
+      own_stats: { current_period: { count: 1 } },
+    });
+    expect(db.callsFor("profiles", "select")).toHaveLength(0);
+    expect(db.callsFor("shared_habit_logs", "select")).toHaveLength(0);
   });
   it("pages through aggregate logs without losing counts", async () => {
     db.queueResult("shared_habit_member_logs", "select", {

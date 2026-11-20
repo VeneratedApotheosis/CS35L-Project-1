@@ -70,6 +70,24 @@ export interface SharedHabitDetail extends SharedHabit {
   own_today: string
 }
 
+export interface SharedGardenHabit extends SharedHabit {
+  stats: SharedGroupStats
+  member_count: number
+  own_stats: HabitStats
+  own_today: string
+}
+
+export interface SharedHabitPage {
+  habits: SharedGardenHabit[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export function listSharedHabits(offset = 0): Promise<SharedHabitPage> {
+  return api.get(`/shared-habits?limit=50&offset=${offset}`)
+}
+
 export interface SharedLogStats {
   stats: SharedGroupStats
   own_stats: HabitStats & { streak: number }
@@ -92,6 +110,8 @@ export function deleteSharedActivity(id: string, logId: string): Promise<SharedL
 }
 
 export const sharedHabitKeys = {
+  all: (userId: string) => ["shared-habits", userId] as const,
+  list: (userId: string) => ["shared-habits", userId, "list"] as const,
   detail: (userId: string, id: string) => ["shared-habits", userId, "detail", id] as const,
 }
 
