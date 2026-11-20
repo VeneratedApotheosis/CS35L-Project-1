@@ -9,6 +9,7 @@ import { ApiError } from "@/lib/api"
 import { habitKeys } from "@/lib/habits"
 import { isValidTimezone, profileKeys, profileWithToday, updateTimezone } from "@/lib/profile"
 import { useProfile } from "@/lib/useProfile"
+import { AccountSection } from "./settings/AccountSection"
 
 export default function Settings() {
   const { user, signOut } = useAuth()
@@ -97,6 +98,7 @@ export default function Settings() {
           </form>
         </Card>
       )}
+      <AccountSection />
     </main>
   )
 }

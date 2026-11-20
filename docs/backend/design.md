@@ -26,7 +26,7 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | Item | State |
 | --- | --- |
 | Project layout, per-request Supabase client, `requireAuth`, `validate`, error handler | Built (#143) |
-| `GET` and `PATCH /me` | Built (#131) |
+| `GET`, `PATCH` and `DELETE /me` | Built (#131, #257) |
 | `POST /habits` | Built (#129) |
 | `GET /habits` and `GET /habits/:id`, with `stats` | Built (#130, #199, #200) |
 | Calculations in `domain/` (periods, progress, streak, growth, health, badges) | Built (#191 to #194) |
@@ -116,6 +116,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `GET /health` | Liveness check | Built |
 | `GET /me` | Signed-in user, display name and timezone | Built (#131) |
 | `PATCH /me` | Update display name and timezone | Built (#131) |
+| `DELETE /me` | Delete the signed-in user's account and everything they own. Returns 204 | Built (#257) |
 | `POST /habits` | Create a habit | Built (#129) |
 | `GET /habits` | List own habits, each with short `stats` | Built (#130, #199) |
 | `GET /habits/:id` | Get one habit with full `stats` | Built (#130, #200) |
@@ -123,7 +124,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `POST /habits/:id/logs` | Add a log, current period only | Built (#196) |
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
-| Delete account | Calls `delete_my_account` | No issue yet |
+| Delete account | `DELETE /me` calls `delete_my_account` | Built (#257) |
 | Shared habit routes | Create/list/detail, preview/join and logging built; see section 6.6 | Built (#268, #269, #270); remaining routes planned |
 
 Routes have no version prefix. There is no route to edit a habit, because habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).

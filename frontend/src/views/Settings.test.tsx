@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryProvider } from "@/lib/QueryProvider"
 import { ProfileSetup } from "@/auth/ProfileSetup"
@@ -23,6 +23,10 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 })
 let savedTimezone: string | null
 let rejectSave: boolean
+
+// jsdom has no modal dialogs, so open and close them by hand.
+HTMLDialogElement.prototype.showModal = function showModal() { this.setAttribute("open", "") }
+HTMLDialogElement.prototype.close = function close() { this.removeAttribute("open") }
 
 beforeEach(() => {
   auth.user = { id: "user-a" }
@@ -153,5 +157,100 @@ describe("timezone settings", () => {
     view.rerender(<QueryProvider><Garden /></QueryProvider>)
     await screen.findByRole("heading", { name: "Read" })
     await waitFor(() => expect(screen.queryByText(/Not started yet/)).toBeNull())
+  })
+})
+
+describe("delete account", () => {
+  const deleteCalls = () => fetchMock.mock.calls.filter(([, init]) => init.method === "DELETE")
+  const open = async () => {
+    render(<QueryProvider><Settings /></QueryProvider>)
+    await screen.findByRole("combobox", { name: "Timezone" })
+    fireEvent.click(screen.getByRole("button", { name: "Delete account" }))
+  }
+  const dialog = () => screen.getByRole("dialog", { hidden: true })
+  const confirmButton = () => within(dialog()).getByRole("button", { name: /Delete account|Deleting/, hidden: true }) as HTMLButtonElement
+  const type = (value: string) =>
+    fireEvent.change(within(dialog()).getByLabelText(/Type DELETE to confirm/, { selector: "input" }), { target: { value } })
+  const answerDelete = (respond: () => Promise<Response>) => {
+    const normal = fetchMock.getMockImplementation()!
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => (init.method === "DELETE" ? respond() : normal(url, init)))
+  }
+
+  it("shows an Account section with the delete button and lists what is deleted", async () => {
+    await open()
+    expect(screen.getByRole("heading", { name: "Account" })).toBeTruthy()
+    const text = dialog().textContent ?? ""
+    expect(text).toContain("habits")
+    expect(text).toContain("activity logs")
+    expect(text).toContain("badges")
+    expect(deleteCalls()).toHaveLength(0)
+  })
+
+  it("needs the confirmation typed before it deletes", async () => {
+    await open()
+    expect(confirmButton().disabled).toBe(true)
+    type("delete me")
+    expect(confirmButton().disabled).toBe(true)
+    fireEvent.submit(within(dialog()).getByLabelText(/Type DELETE to confirm/, { selector: "input" }).closest("form")!)
+    expect(deleteCalls()).toHaveLength(0)
+    type("DELETE")
+    expect(confirmButton().disabled).toBe(false)
+  })
+
+  it("deletes, then signs the user out", async () => {
+    answerDelete(async () => new Response(null, { status: 204 }))
+    auth.signOut.mockResolvedValue(undefined)
+    await open()
+    type("DELETE")
+    fireEvent.click(confirmButton())
+    await waitFor(() => expect(auth.signOut).toHaveBeenCalledTimes(1))
+    expect(deleteCalls()).toHaveLength(1)
+    const [url, request] = deleteCalls()[0]
+    expect(url).toBe("http://api.test/me")
+    expect(request.headers.Authorization).toBe("Bearer token-user-a")
+  })
+
+  it("still ends the session when the server refuses to revoke a deleted user's token", async () => {
+    answerDelete(async () => new Response(null, { status: 204 }))
+    auth.signOut.mockRejectedValue(new Error("session not found"))
+    await open()
+    type("DELETE")
+    fireEvent.click(confirmButton())
+    await waitFor(() => expect(auth.signOut).toHaveBeenCalledTimes(1))
+    expect(screen.queryByText(/Couldn't delete/)).toBeNull()
+  })
+
+  it("shows an error and keeps the user signed in when deleting fails", async () => {
+    answerDelete(async () => json({ error: { code: "internal_error", message: "Could not delete account" } }, 500))
+    await open()
+    type("DELETE")
+    fireEvent.click(confirmButton())
+    const alert = await within(dialog()).findByRole("alert", { hidden: true })
+    expect(alert.textContent).toContain("Couldn't delete your account")
+    expect(alert.textContent).toContain("still signed in")
+    expect(auth.signOut).not.toHaveBeenCalled()
+    expect(confirmButton().disabled).toBe(false)
+  })
+
+  it("offers to sign in again when the session has expired", async () => {
+    answerDelete(async () => json({ error: { code: "unauthorized", message: "no" } }, 401))
+    await open()
+    type("DELETE")
+    fireEvent.click(confirmButton())
+    const alert = await within(dialog()).findByRole("alert", { hidden: true })
+    expect(alert.textContent).toContain("Your session has expired")
+    expect(confirmButton().disabled).toBe(true)
+    fireEvent.click(within(alert).getByRole("button", { name: "Sign in again", hidden: true }))
+    expect(auth.signOut).toHaveBeenCalledTimes(1)
+  })
+
+  it("cancels without deleting and asks again next time", async () => {
+    await open()
+    type("DELETE")
+    fireEvent.click(within(dialog()).getByRole("button", { name: "Cancel", hidden: true }))
+    expect(deleteCalls()).toHaveLength(0)
+    fireEvent.click(screen.getByRole("button", { name: "Delete account" }))
+    expect((within(dialog()).getByLabelText(/Type DELETE to confirm/, { selector: "input" }) as HTMLInputElement).value).toBe("")
+    expect(confirmButton().disabled).toBe(true)
   })
 })

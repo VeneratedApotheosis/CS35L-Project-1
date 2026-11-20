@@ -20,6 +20,11 @@ export function updateTimezone(timezone: string): Promise<Profile> {
   return api.patch<Profile>("/me", { timezone })
 }
 
+/** Deletes the signed-in user's account and everything they own. The server answers 204 with no body. */
+export function deleteAccount(): Promise<void> {
+  return api.delete<void>("/me")
+}
+
 export function isValidTimezone(timezone: string): boolean {
   if (!timezone.trim()) return false
   try {

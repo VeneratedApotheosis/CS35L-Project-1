@@ -108,3 +108,48 @@ describe("PATCH /me", () => {
     expect(fakeSupabase.calls).toHaveLength(0);
   });
 });
+
+describe("DELETE /me", () => {
+  it("deletes the account through delete_my_account and returns 204", async () => {
+    fakeSupabase.setResult("delete_my_account", "select", { data: null, error: null });
+
+    const res = await request(app).delete("/me").set("Authorization", auth);
+
+    expect(res.status).toBe(204);
+    expect(res.text).toBe("");
+    // No id is sent: the function can only delete the caller.
+    expect(fakeSupabase.calls).toEqual([
+      { table: "delete_my_account", operation: "select", payload: {} },
+    ]);
+  });
+
+  it("returns 401 without a token and does not delete anything", async () => {
+    const res = await request(app).delete("/me");
+
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe("unauthorized");
+    expect(fakeSupabase.calls).toHaveLength(0);
+  });
+
+  it("returns 401 for a bad token and does not delete anything", async () => {
+    const res = await request(app)
+      .delete("/me")
+      .set("Authorization", "Bearer bad-token");
+
+    expect(res.status).toBe(401);
+    expect(fakeSupabase.calls).toHaveLength(0);
+  });
+
+  it("returns 500 in the error envelope when the database fails", async () => {
+    fakeSupabase.setResult("delete_my_account", "select", {
+      data: null,
+      error: { message: "boom" },
+    });
+
+    const res = await request(app).delete("/me").set("Authorization", auth);
+
+    expect(res.status).toBe(500);
+    expect(res.body.error.code).toBe("internal_error");
+    expect(JSON.stringify(res.body)).not.toContain("boom");
+  });
+});

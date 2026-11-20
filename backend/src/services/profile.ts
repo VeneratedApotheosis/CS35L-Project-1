@@ -62,3 +62,17 @@ export async function updateProfile(
   }
   return data as Profile;
 }
+
+// Calls the database function that deletes the signed-in user from auth.users.
+// It takes no id, so it can only ever delete the caller. Everything the user
+// owns goes with them (cascade).
+export async function deleteAccount(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<void> {
+  const { error } = await supabase.rpc("delete_my_account", {});
+  if (error) {
+    logger.error({ err: error, userId }, "could not delete account");
+    throw new AppError(500, "internal_error", "Could not delete account");
+  }
+}
