@@ -8,6 +8,7 @@ import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { dashboardKey, getDashboard, type FinishedHabit } from "@/lib/dashboard"
 import { formatDate } from "@/lib/goal"
+import { habitHref } from "@/lib/paths"
 
 const periods = (count: number) => `${count} ${count === 1 ? "period" : "periods"}`
 
@@ -21,7 +22,7 @@ function FinalResult({ habit }: { habit: FinishedHabit }) {
     <li className={`dashboard-result stack-md ${noBadge ? "dashboard-result--no-badge" : "dashboard-result--awarded"}`}>
       <header className="dashboard-result-heading">
         <div className="stack-sm">
-          <h3 className="text-h3 garden-name"><Link className="garden-link" href={`/habits/${habit.id}`}>{habit.name}</Link></h3>
+          <h3 className="text-h3 garden-name"><Link className="garden-link" href={habitHref(habit.id)}>{habit.name}</Link></h3>
           <p className="text-body-sm text-secondary">Ended <time dateTime={habit.end_date}>{formatDate(habit.end_date)}</time></p>
         </div>
         <span className="dashboard-result-label text-caption">{badgeLabels[habit.badge]}</span>
@@ -98,7 +99,7 @@ export default function Dashboard() {
               <dd className="text-h2 dashboard-value">{data.best_streak ? periods(data.best_streak.streak) : "—"}</dd>
               <dd className="text-body-sm dashboard-value">
                 {data.best_streak ? (
-                  <Link className="garden-link" href={`/habits/${data.best_streak.id}`}>{data.best_streak.name}</Link>
+                  <Link className="garden-link" href={habitHref(data.best_streak.id)}>{data.best_streak.name}</Link>
                 ) : <span className="text-secondary">Meet a goal to start a streak.</span>}
               </dd>
             </Card>
@@ -113,7 +114,7 @@ export default function Dashboard() {
               <ul className="dashboard-habits">
                 {data.needs_attention.map((habit) => (
                   <li key={habit.id} className="dashboard-habit">
-                    <Link className="text-h3 garden-link garden-name" href={`/habits/${habit.id}`}>{habit.name}</Link>
+                    <Link className="text-h3 garden-link garden-name" href={habitHref(habit.id)}>{habit.name}</Link>
                     <span className="text-body-sm text-secondary">
                       {habit.health === "wilted" ? "Wilted" : habit.health === "slightly_wilted" ? "Slightly wilted" : "Ready for a little care"}
                     </span>
@@ -139,7 +140,7 @@ export default function Dashboard() {
                   return (
                     <li key={habit.id} className={`dashboard-habit${best ? " dashboard-habit--best" : ""}`}>
                       <div className="stack-sm">
-                        <Link className="text-h3 garden-link garden-name" href={`/habits/${habit.id}`}>{habit.name}</Link>
+                        <Link className="text-h3 garden-link garden-name" href={habitHref(habit.id)}>{habit.name}</Link>
                         {habit.state === "not_started" && <span className="text-body-sm text-secondary">Not started yet</span>}
                       </div>
                       <div className="dashboard-streak stack-sm">

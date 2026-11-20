@@ -32,7 +32,10 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | Calculations in `domain/` (periods, progress, streak, growth, health, badges) | Built (#191 to #194) |
 | `POST` and `DELETE` for logs | Built (#196, #197) |
 | `GET /dashboard` | Built (#201) |
-| Shared habits: endpoints, group stats, join and leave | Planned (design in #216), see sections 6.6 and 8.11 |
+| Shared habits: create, list and detail | Built (#268), using group calculations (#267) |
+| Shared habits: preview and join | Built (#269), see section 6.6 |
+| Shared habits: logging | Built (#270), see section 6.6 |
+| Shared habits: leave and management | Planned, see sections 6.6 and 8.11 |
 | Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
@@ -117,12 +120,12 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `POST /habits` | Create a habit | Built (#129) |
 | `GET /habits` | List own habits, each with short `stats` | Built (#130, #199) |
 | `GET /habits/:id` | Get one habit with full `stats` | Built (#130, #200) |
-| `DELETE /habits/:id` | Delete a habit | #125 (backlog) |
+| `DELETE /habits/:id` | Delete a habit | Built (#255) |
 | `POST /habits/:id/logs` | Add a log, current period only | Built (#196) |
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | `DELETE /me` calls `delete_my_account` | Built (#257) |
-| Shared habit routes | See section 6.6 | Planned (#216) |
+| Shared habit routes | Create/list/detail, preview/join and logging built; see section 6.6 | Built (#268, #269, #270); remaining routes planned |
 
 Routes have no version prefix. There is no route to edit a habit, because habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
 
@@ -144,6 +147,12 @@ Routes have no version prefix. There is no route to edit a habit, because habits
 - A start date in the past gets 400.
 - `owner_id` is the signed-in user. It is never read from the body.
 - The limits match the database constraints, except `plant_type`, which has no database constraint.
+
+Deleting a habit: `DELETE /habits/:id` permanently removes the caller's habit
+and its logs through the existing database cascade. Returns 204 with no body.
+A missing habit or another user's habit returns 404. Unlike deleting an
+individual log, deleting the whole habit is allowed regardless of its period
+or expiry state. The request uses the user's token and the existing delete policy.
 
 ### 6.2 Profile
 
@@ -194,6 +203,17 @@ Stats are calculated by the rules in section 8 whenever they are asked for, and 
 
 The list reads the logs of the whole page in one query, not one per habit.
 
+The short and full stats also include `badge` (`gold`, `silver`,
+`bronze`, or `none`), `final_progress`, and `final_consistency` for expired
+habits (#251). All three fields are null until expiry. Final rates are 0–1,
+calculated using `habitResult`.
+
+`GET /habits?status=active|finished|both` filters by the caller's local date;
+the default is `both`. Active includes not-yet-started and indefinite habits.
+Filtering happens before offset/limit pagination, and `total` counts matches.
+Because end dates are calculated rather than stored, the backend scans habit
+metadata in batches, then loads logs only for the requested page.
+
 ### 6.5 Dashboard
 
 `GET /dashboard` returns the overall view across all of the user's habits:
@@ -209,7 +229,7 @@ The list reads the logs of the whole page in one query, not one per habit.
 
 ### 6.6 Shared habits (planned)
 
-Not built yet. Route names are provisional. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
+Create, list and detail (#268), invite preview and joining (#269), and logging (#270) are built; management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
 
 | Route | Purpose |
 | --- | --- |
@@ -218,14 +238,52 @@ Not built yet. Route names are provisional. All routes need a token and return t
 | `GET /shared-habits/:id` | One shared habit with the group stats, every member's summary and the caller's own full stats |
 | `PATCH /shared-habits/:id` | The owner edits it, within the rules below |
 | `DELETE /shared-habits/:id` | The owner deletes the habit and everything in it |
-| `GET /shared-habits/preview/:code` | What the join screen shows for a code: name, goal, dates, owner, places left |
-| `POST /shared-habits/join` | Join with a code |
+| `GET /shared-habits/join/:code` | What the join screen shows for a code: name, goal, dates, owner, places left |
+| `POST /shared-habits/join/:code` | Join with a code |
 | `POST /shared-habits/:id/logs` | Add a log for the caller |
 | `DELETE /shared-habits/:id/logs/:logId` | Delete one of the caller's logs |
 | `DELETE /shared-habits/:id/members/me` | Leave. The owner cannot leave until they transfer ownership |
 | `DELETE /shared-habits/:id/members/:userId` | The owner removes a member |
 | `POST /shared-habits/:id/transfer` | The owner hands ownership to a member |
 | `POST /shared-habits/:id/code` and `DELETE /shared-habits/:id/code` | The owner regenerates the join code, or closes joining |
+
+**Implemented response contract (#268).** Create returns the saved habit with
+HTTP 201. List accepts `limit` and `offset` and returns
+`{ habits, total, limit, offset }`; each habit includes group `stats`.
+Detail returns the habit, group `stats`, `members`, and `own_stats`.
+Group stats include `today`, `state`, `overall_progress`, `stage`,
+`health_rate`, `health`, `end_date`, and `current_period`. The current-period
+count is the average member count against the per-member target; it may be fractional.
+There is no group streak or badge. Member summaries include `user_id`,
+`display_name`, `avatar_url`, `is_owner`, `overall_progress`,
+`current_period_count`, `streak`, and `health`.
+Only `own_stats` contains detailed logs. Aggregate per-day RPC results remain
+inside the backend. The caller's full stats use the membership timezone snapshot.
+
+**Invite visibility.** Every current member may invite others; `join_code`
+is intentionally returned to members in list/detail and to the owner on create.
+The existing database read policy also permits members to read it directly.
+
+**Privacy limitation requiring a database follow-up.** The Express response
+does not expose other members' exact log dates. However,
+`shared_habit_member_logs` is executable directly by authenticated members and
+returns daily dates/counts. The stronger “dates never leave the backend” guarantee
+is not currently enforced by Supabase. Enforcing it requires a redesigned summary
+RPC or a separately authorized server-only path; hiding fields in Express alone
+cannot fix it. Single-day period summaries can also reveal daily activity.
+
+**List implementation limits.** Member lookups run for at most four habits at
+once, in list order. This still uses per-habit RPCs; batching is a follow-up.
+Counts are deliberately expanded to reuse existing domain calculations, so memory
+and CPU scale with total logs. A count-aware calculation API is a follow-up.
+If membership disappears between queries, the list omits that habit; database
+failures still fail the request. `total` reflects the initial list query, so a
+concurrent departure can produce a short page.
+
+**Frontend integration.** Group `current_period.count` may be fractional.
+The existing personal-habit ProgressBar requires integer counts and must not
+receive this value unchanged. Shared UI work must support fractional averages
+explicitly; rounding the API value would discard information.
 
 **Creating.** The body has the same goal fields as a personal habit (section 6.1) plus `join_by` and `max_members`. `start_date` must be today or later. `join_by` must be between today and `start_date`. `max_members` is at least 2 and at most the system maximum. The calling user's timezone is copied to their member row.
 
@@ -237,13 +295,29 @@ Not built yet. Route names are provisional. All routes need a token and return t
 | Someone else has joined, before the start | Name, description, plant, `join_by` and `max_members` (not below the member count). The goal and start date are locked |
 | After the start | Nothing |
 
+**Invite endpoints (#269).** Preview returns the database preview fields plus
+`places_left`. Unknown, malformed, closed, and expired previews return the same
+404. Dates use the caller's profile timezone. POST returns `{ id }` with 200,
+including repeat joins. The database row lock enforces the member cap atomically;
+Express maps not-found/closed to 404, full to 409, and joining ended to 400.
+Unexpected failures return a generic 500.
+
+Both routes share a fixed-window budget of 20 requests per minute per verified
+user, including successful and malformed attempts. Excess requests return 429
+and `Retry-After`. [PLACEHOLDER] This limiter is process-local and resets on
+restart; shared storage is required for multiple replicas. Direct Supabase RPC
+calls bypass this Express limiter, so it is not database-wide guessing protection.
+Tests simulate cap-race RPC outcomes; actual locking requires a live database check.
+
 **Joining.** The join screen first calls the preview route, which returns nothing for a wrong, closed or expired code and never says which. Joining succeeds only while the joiner's own local date is on or before `join_by` and the habit is not full. Joining twice does nothing. Nobody joins after the start date.
 
 **Leaving and removal.** A member leaves with their past logs kept. Group numbers cover current members only. The owner can remove a member, which counts as that member leaving. The owner transfers ownership first if they want to leave. Deleting the habit removes every member and log.
 
-**Logging.** The same rules as section 8.1, with two differences: nobody can log before the start date, and a member only ever adds or deletes their own logs.
+**Logging.** The same rules as section 8.1, with two differences: nobody can log before the start date, and a member only ever adds or deletes their own logs. The optional POST body and date validation match personal logging. The caller's saved membership timezone determines today, the current period, and expiry; group stats use the earliest member date. POST returns `{ log, stats, own_stats }` (201); DELETE returns `{ stats, own_stats }` (200). `stats` is the group block and `own_stats` is the caller's short stats. Missing habits, memberships, and other members' logs return 404.
 
-**Stats.** The list gives each shared habit the short block from 6.4 with the group values. The detail adds the group `stats` block, a `members` list with each member's summary (`display_name`, `is_owner`, overall progress, current period count, streak and health) and the caller's own full stats. Other members' exact log dates never leave the backend.
+The database policies enforce ownership and membership for inserts, but do not enforce date windows on direct database calls. The checks and write are separate requests, so a concurrent membership change or period boundary can affect a request, and a successful write followed by a failed stats read can return 500 despite the write. Transactional enforcement would require a database follow-up. Live database verification of RLS and concurrency is still needed.
+
+**Stats.** The list gives each shared habit the short block from 6.4 with the group values. The detail adds the group `stats` block, a `members` list with each member's summary (`display_name`, `is_owner`, overall progress, current period count, streak and health) and the caller's own full stats. Other members' exact log dates are excluded from Express responses; see the direct-RPC privacy limitation above.
 
 ---
 
@@ -252,7 +326,7 @@ Not built yet. Route names are provisional. All routes need a token and return t
 - **Validation.** zod schemas, one per request, applied by the `validate` middleware.
 - **Error shape.** Every error is `{ "error": { "code": "...", "message": "..." } }`. Codes are short strings such as `unauthorized`, `validation_failed`, `not_found`.
 - **Status codes.** 400 bad input, 401 no valid token, 404 not found or not yours, 500 unexpected. Another user's habit returns 404, the same as a missing one.
-- **Logging.** Each request is logged. The `authorization` header and tokens are never logged. The logger is pino.
+- **Logging.** Invite codes in request paths are redacted, URL query strings are omitted, and Referer headers are redacted. Unexpected invite RPC failures log only the operation and a valid SQLSTATE; raw error text and payloads are omitted because they can echo codes. Unhandled invite errors also omit raw exceptions. Each request is logged. The `authorization` header and tokens are never logged. The logger is pino.
 
 ---
 
@@ -358,7 +432,7 @@ The rules for the group numbers. Each member's own numbers use sections 8.2 to 8
 - **Group health** is the average of the members' health rates (met periods over completed periods, over the last four), turned into a state with the thresholds in 8.8. The three labels are not averaged.
 - **Leaving.** A member who leaves drops out of the averages and their past logs are kept, so the stage can rise or fall when someone leaves.
 - **Completion.** The habit expires when the group's `today` reaches the end date. Each member gets their own badge from their own progress and consistency (8.9). Group badges are not decided yet.
-- **Visibility.** Members see names and progress summaries. The exact log dates of other members are used for the calculation and never returned.
+- **Visibility.** Members see names and progress summaries. The exact log dates of other members are used for the calculation and never returned by Express. Direct RPC access currently violates the stronger intended privacy guarantee; see section 6.6.
 
 ---
 
@@ -369,7 +443,7 @@ The rules for the group numbers. Each member's own numbers use sections 8.2 to 8
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_PUBLISHABLE_KEY` | Publishable key. Safe to expose |
 | `PORT` | Defaults to 3000 |
-| `FRONTEND_ORIGIN` | Allowed CORS origin. The frontend runs on port 5173. A trailing slash is removed, because a browser's origin never has one |
+| `FRONTEND_ORIGIN` | Allowed CORS origins, separated by commas, for example `http://localhost:5173,https://name.github.io`. The local frontend runs on port 5173. A trailing slash is removed from each, because a browser's origin never has one, and an origin has no path |
 
 - The file is `backend/.env`, loaded by `dotenv/config`.
 - `config/env.ts` validates these at startup, so a missing one fails with a clear message.
@@ -389,7 +463,7 @@ The rules for the group numbers. Each member's own numbers use sections 8.2 to 8
 
 ## 11. Deployment
 
-The backend is a normal Node service: `npm run build`, then `npm start`. Set the variables from section 9 on the host. The host and how the frontend is served are open, see [design.md](../design.md#4-deployment).
+The backend is a normal Node service: `npm run build`, then `npm start`. Set the variables from section 9 on the host. The test deploy runs on Render, described by `render.yaml` at the repo root. The steps are in [DEPLOY.md](../dev/DEPLOY.md), and the hosting decision is in [design.md](../design.md#4-deployment).
 
 ---
 
@@ -397,7 +471,7 @@ The backend is a normal Node service: `npm run build`, then `npm start`. Set the
 
 | Item | Notes |
 | --- | --- |
-| Hosting for the backend | Section 11 |
+| Hosting for the backend | Test deploy on Render (section 11). The final choice is still open |
 | Changing timezone mid-habit | Past `occurred_on` dates stay as stored. Not decided otherwise. For shared habits the member timezone copy is fixed when they join |
 | Shared habits: member cap maximum | The owner chooses the cap. A system maximum is proposed (50), and whether the owner can change it after the start |
 | Shared habits: join code | Whether the owner can regenerate or close it (proposed: yes to both), and rate limiting of wrong guesses |

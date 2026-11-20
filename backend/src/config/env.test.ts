@@ -11,23 +11,33 @@ const originFor = (value?: string) =>
 
 describe("FRONTEND_ORIGIN", () => {
   it("defaults to the local frontend", () => {
-    expect(originFor(undefined)).toBe("http://localhost:5173");
+    expect(originFor(undefined)).toEqual(["http://localhost:5173"]);
   });
 
   it("keeps an origin that has no trailing slash", () => {
-    expect(originFor("https://garden.example.com")).toBe(
+    expect(originFor("https://garden.example.com")).toEqual([
       "https://garden.example.com",
-    );
+    ]);
   });
 
   it("drops a trailing slash, which would never match a browser's origin", () => {
-    expect(originFor("http://localhost:5173/")).toBe("http://localhost:5173");
+    expect(originFor("http://localhost:5173/")).toEqual(["http://localhost:5173"]);
   });
 
   it("drops several trailing slashes and surrounding spaces", () => {
-    expect(originFor("  https://garden.example.com//  ")).toBe(
+    expect(originFor("  https://garden.example.com//  ")).toEqual([
       "https://garden.example.com",
-    );
+    ]);
+  });
+
+  it("accepts several origins separated by commas", () => {
+    expect(
+      originFor("http://localhost:5173, https://name.github.io/,"),
+    ).toEqual(["http://localhost:5173", "https://name.github.io"]);
+  });
+
+  it("rejects a value that holds no origin", () => {
+    expect(() => originFor(" , ")).toThrow();
   });
 
   it("still rejects an empty value", () => {

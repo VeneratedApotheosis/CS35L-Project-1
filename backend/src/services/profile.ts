@@ -70,7 +70,7 @@ export async function deleteAccount(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<void> {
-  const { error } = await supabase.rpc("delete_my_account");
+  const { error } = await supabase.rpc("delete_my_account", {});
   if (error) {
     logger.error({ err: error, userId }, "could not delete account");
     throw new AppError(500, "internal_error", "Could not delete account");

@@ -90,7 +90,7 @@ describe("Garden", () => {
     expect(screen.getAllByTestId("plant-preview")[0].getAttribute("data-stage")).toBe("3")
     expect(screen.getAllByTestId("plant-preview")[0].getAttribute("data-seed")).not.toBe(screen.getAllByTestId("plant-preview")[1].getAttribute("data-seed"))
     expect(screen.getAllByRole("button", { name: "Log activity" })).toHaveLength(2)
-    expect(screen.getByRole("link", { name: "Read" }).getAttribute("href")).toBe("/habits/habit-1")
+    expect(screen.getByRole("link", { name: "Read" }).getAttribute("href")).toBe("/habit?id=habit-1")
     expect(screen.getByRole("progressbar", { name: "Read: Current period" }).getAttribute("aria-valuenow")).toBe("3")
     expect(screen.getAllByText(/Not started yet/)).toHaveLength(1)
     expect(fetchMock.mock.calls.find(([url]) => url.includes("/habits"))?.[1].headers.Authorization).toBe("Bearer token-user-a")
@@ -175,7 +175,7 @@ describe("Garden", () => {
   })
 
   it("stays on the creation form and shows an error when saving fails", async () => {
-    fetchMock.mockResolvedValue(jsonResponseError())
+    respondWithHabits(jsonResponseError)
     render(<QueryProvider><CreateHabit /></QueryProvider>)
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Practice" } })
     fireEvent.change(screen.getByLabelText("Number of periods"), { target: { value: "4" } })

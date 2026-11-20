@@ -35,6 +35,9 @@ const createdHabit = {
 // The stats of a habit that started today (4 Nov in Los Angeles) with no logs.
 const freshStats = {
   state: "active",
+  badge: null,
+  final_progress: null,
+  final_consistency: null,
   current_period: {
     number: 1,
     total: 4,
@@ -451,5 +454,191 @@ describe("GET /habits/:id", () => {
 
     expect(res.status).toBe(401);
     expect(res.body.error.code).toBe("unauthorized");
+  });
+});
+
+describe("DELETE /habits/:id", () => {
+  const remove = (id = habitId) =>
+    request(app).delete(`/habits/${id}`).set("Authorization", auth);
+
+  it("deletes the owner's habit with one query and returns an empty 204", async () => {
+    fakeSupabase.setResult("habits", "delete", {
+      data: { id: habitId },
+      error: null,
+    });
+    const res = await remove();
+    expect(res.status).toBe(204);
+    expect(res.text).toBe("");
+    expect(fakeSupabase.calls).toEqual([
+      {
+        table: "habits",
+        operation: "delete",
+        columns: "id",
+        filter: { column: "id", value: habitId },
+        moreFilters: [{ column: "owner_id", value: TEST_USER.id }],
+      },
+    ]);
+    // No separate log deletion: the real database owns the FK cascade.
+  });
+
+  it("returns 404 for a missing habit, including a repeated deletion", async () => {
+    fakeSupabase.queueResult("habits", "delete", {
+      data: { id: habitId },
+      error: null,
+    });
+    fakeSupabase.setResult("habits", "delete", { data: null, error: null });
+    expect((await remove()).status).toBe(204);
+    const res = await remove();
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({
+      error: { code: "not_found", message: "Habit not found" },
+    });
+  });
+
+  it("returns the same 404 when another user's habit is filtered out", async () => {
+    // Supabase returns no deleted row when ownership/RLS excludes the habit.
+    fakeSupabase.setResult("habits", "delete", { data: null, error: null });
+    const res = await remove();
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({
+      error: { code: "not_found", message: "Habit not found" },
+    });
+    expect(
+      fakeSupabase.callsFor("habits", "delete")[0]?.moreFilters,
+    ).toContainEqual({ column: "owner_id", value: TEST_USER.id });
+  });
+
+  it("rejects malformed ids before touching the database", async () => {
+    expect((await remove("not-a-uuid")).status).toBe(400);
+    expect(fakeSupabase.calls).toHaveLength(0);
+  });
+
+  it.each([undefined, "Bearer invalid"])(
+    "rejects invalid authentication (%s)",
+    async (token) => {
+      const req = request(app).delete(`/habits/${habitId}`);
+      if (token) req.set("Authorization", token);
+      expect((await req).status).toBe(401);
+      expect(fakeSupabase.calls).toHaveLength(0);
+    },
+  );
+
+  it("returns a generic 500 on database failure, without leaking details", async () => {
+    fakeSupabase.setResult("habits", "delete", {
+      data: null,
+      error: { message: "private database details" },
+    });
+    const res = await remove();
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({
+      error: { code: "internal_error", message: "Could not delete habit" },
+    });
+  });
+});
+describe("GET /habits status filter", () => {
+  const finished = { ...createdHabit, id: habitId, start_date: "2026-10-01" };
+  const active = { ...createdHabit, id: "active", start_date: "2026-11-01" };
+  const future = { ...createdHabit, id: "future", start_date: "2026-12-01" };
+  beforeEach(() => {
+    fakeSupabase.setResult("profiles", "select", {
+      data: profile,
+      error: null,
+    });
+    fakeSupabase.setResult("habits", "select", {
+      data: [active, finished, future],
+      error: null,
+      count: 3,
+    });
+    fakeSupabase.setResult("activity_logs", "select", {
+      data: [],
+      error: null,
+    });
+  });
+  const filtered = (query: string) =>
+    request(app)
+      .get("/habits?" + query)
+      .set("Authorization", auth);
+
+  it("filters before paginating and reports matching totals", async () => {
+    const res = await filtered("status=active&limit=1&offset=1");
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(2);
+    expect(res.body.habits.map((habit: { id: string }) => habit.id)).toEqual([
+      "future",
+    ]);
+    expect(
+      fakeSupabase.callsFor("activity_logs", "select")[0]?.inFilter?.values,
+    ).toEqual(["future"]);
+    expect(fakeSupabase.callsFor("habits", "select")[0]?.filter).toEqual({
+      column: "owner_id",
+      value: TEST_USER.id,
+    });
+  });
+
+  it("returns finished results and skips log reads for an empty filtered page", async () => {
+    const res = await filtered("status=finished");
+    expect(res.body.total).toBe(1);
+    expect(res.body.habits[0].stats).toMatchObject({
+      badge: "none",
+      final_progress: 0,
+      final_consistency: 0,
+    });
+    const before = fakeSupabase.callsFor("activity_logs", "select").length;
+    const empty = await filtered("status=finished&offset=10");
+    expect(empty.body.habits).toEqual([]);
+    expect(empty.body.total).toBe(1);
+    expect(fakeSupabase.callsFor("activity_logs", "select")).toHaveLength(
+      before,
+    );
+  });
+
+  it("uses local expiry dates rather than UTC", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: [
+        {
+          ...createdHabit,
+          start_date: "2026-11-04",
+          interval_unit: "day",
+          num_periods: 1,
+        },
+      ],
+      error: null,
+    });
+    expect((await filtered("status=finished")).body.total).toBe(0);
+    fakeSupabase.setResult("profiles", "select", {
+      data: { ...profile, timezone: "UTC" },
+      error: null,
+    });
+    expect((await filtered("status=finished")).body.total).toBe(1);
+  });
+
+  it("continues scanning past the first database batch", async () => {
+    fakeSupabase.queueResult("habits", "select", {
+      data: Array(500).fill(active),
+      error: null,
+    });
+    fakeSupabase.setResult("habits", "select", {
+      data: [finished],
+      error: null,
+    });
+    const res = await filtered("status=finished");
+    expect(res.body.total).toBe(1);
+    expect(fakeSupabase.callsFor("habits", "select")[1]?.range).toEqual({
+      from: 500,
+      to: 999,
+    });
+  });
+
+  it("accepts both and rejects an unknown status", async () => {
+    expect((await filtered("status=both")).status).toBe(200);
+    expect((await filtered("status=unknown")).status).toBe(400);
+  });
+
+  it("reports database failure rather than an empty result", async () => {
+    fakeSupabase.setResult("habits", "select", {
+      data: null,
+      error: { message: "failed" },
+    });
+    expect((await filtered("status=finished")).status).toBe(500);
   });
 });

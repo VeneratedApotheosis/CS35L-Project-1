@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { M_PLUS_Rounded_1c } from "next/font/google"
 import { Providers } from "./providers"
 import { ThemeScript } from "./ThemeScript"
+import { BASE_PATH } from "@/lib/paths"
 import "@/styles/globalStyles.css"
 
 const mplus = M_PLUS_Rounded_1c({
@@ -14,7 +15,7 @@ const mplus = M_PLUS_Rounded_1c({
 export const metadata: Metadata = {
   title: "Habit Garden",
   description: "A habit tracker where every habit is a plant.",
-  icons: { icon: "/favicon.svg" },
+  icons: { icon: `${BASE_PATH}/favicon.svg` },
 }
 
 export default function RootLayout({

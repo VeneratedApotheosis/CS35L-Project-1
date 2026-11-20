@@ -87,6 +87,7 @@ one under Issues in the PR. Everything else follows the steps above.
 | [CONTRIBUTOR.md](CONTRIBUTOR.md) | Lets say you want to write some code, this is how to contribute. The step-by-step workflow from issue to merged PR, rules, reference |
 | [UNDOING.md](UNDOING.md) | How to undo things in git: unstage, amend, revert, reflog |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Merge conflicts, a committed secret, Windows/PowerShell notes, fixing process mistakes |
+| [DEPLOY.md](DEPLOY.md) | The Render test deploy of the backend |
 | `project/github_ticketing_system.md` | How we use GitHub: hierarchy, labels, milestones, the project board, repo rules, Actions |
 | `project/plan.md` | Project design, feature list, timeline |
 

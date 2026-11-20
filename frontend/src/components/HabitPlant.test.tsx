@@ -33,7 +33,7 @@ it("uses identical stage and seed in Garden and Details with a visible health la
   render(<>
     <PlantCard name={habit.name} plantType={habit.plant_type} seed={habitSeed(habit.id)}
       stage={habit.stats.stage} health={habit.stats.health} count={4} target={3}
-      periodLabel="Current period" detailsHref={`/habits/${habit.id}`} />
+      periodLabel="Current period" detailsHref={`/habit?id=${habit.id}`} />
     <HabitPlant habit={habit} />
   </>)
   const plants = screen.getAllByTestId("plant")

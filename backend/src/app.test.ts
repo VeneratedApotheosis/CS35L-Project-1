@@ -17,6 +17,19 @@ describe("app", () => {
     expect(res.body).toEqual({ status: "ok" });
   });
 
+  it("allows the configured frontend origin and no other", async () => {
+    const allowed = await request(app)
+      .get("/health")
+      .set("Origin", "http://localhost:5173");
+    expect(allowed.headers["access-control-allow-origin"]).toBe(
+      "http://localhost:5173",
+    );
+    const other = await request(app)
+      .get("/health")
+      .set("Origin", "https://evil.example.com");
+    expect(other.headers["access-control-allow-origin"]).toBeUndefined();
+  });
+
   it("returns 401 without a token", async () => {
     const res = await request(app).get("/me");
     expect(res.status).toBe(401);
