@@ -220,7 +220,9 @@ This is tested: every leaf a stage shares with the last stage must be that leaf 
 
 ### 3.4 Coverage and overlap
 
-Coverage is the share of sample points in the canopy (the dome above `canopyFloor`, 20% of its height) that lie inside some leaf. The solver aims for 0.6 at the full-size stage using the smallest leaves that get there. Earlier stages show fewer leaves at the same proportions, so they cover less: for the pothos, over seeds 1 to 60, it averages about 0.28, 0.39, 0.53 and 0.59 for stages 1 to 4. It also measures **overlap**: the average number of leaves stacked at a covered point, kept at or below `maxOverlap` (1.6). Tests enforce coverage of at least 0.15 and overlap of at most 1.75.
+Coverage is the share of sample points in the canopy (the dome above `canopyFloor`, 20% of its height) that lie inside some leaf. The solver aims for 0.6 at the full-size stage using the smallest leaves that get there. Earlier stages show fewer leaves at the same proportions, so they cover less: for the pothos, over seeds 1 to 60, it averages about 0.28, 0.39, 0.53 and 0.59 for stages 1 to 4. It also measures **overlap**: the average number of leaves stacked at a covered point, kept at or below `maxOverlap` (1.6). Pothos tests enforce coverage of at least 0.15 and overlap of at most 1.75.
+
+Monstera coverage checks follow leaf count (#283): at least 0.10 for two-leaf sprouts, 0.15 for fuller stages, and 0.40 for the mature canopy. The leaf-count check also applies when longer growth ladders repeat two-leaf stages. Seed 52's sprout covers about 0.128 while its mature canopy covers about 0.632; the former all-stage 0.15 assertion rejected that sparse sprout. Regression tests cover seeds 1–60 plus sparse cases 982 and 575 across 1-, 3-, 4-, 6- and 9-stage ladders. These test changes preserve the plant's geometry, seed identity and rendering.
 
 ### 3.5 Stems
 
