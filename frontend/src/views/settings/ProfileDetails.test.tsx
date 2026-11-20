@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { ThemeProvider } from "@/styles/ThemeProvider"
 import type { Profile } from "@/lib/profile"
 import { sharedHabitKeys } from "@/lib/sharedHabits"
 import Settings from "../Settings"
@@ -17,7 +18,7 @@ const fetchMock = vi.fn()
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
 let saved: Profile
 let client: QueryClient
-const wrap = () => <QueryClientProvider client={client}><Settings /></QueryClientProvider>
+const wrap = () => <ThemeProvider><QueryClientProvider client={client}><Settings /></QueryClientProvider></ThemeProvider>
 const input = () => screen.getByRole("textbox", { name: "Display name" }) as HTMLInputElement
 const edit = (name: string) => fireEvent.change(input(), { target: { value: name } })
 const save = () => fireEvent.click(screen.getByRole("button", { name: "Save display name" }))
@@ -29,6 +30,8 @@ const open = async () => {
 }
 
 beforeEach(() => {
+  localStorage.clear()
+  vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: false }))
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   auth.user = { id: "user-a", email: "ella@example.test" }
   auth.getSession.mockImplementation(async () => ({ data: { session: { access_token: `token-${auth.user.id}` } } }))

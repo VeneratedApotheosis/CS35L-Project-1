@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { cleanup, fireEvent, render as testingRender, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import type { ReactElement } from "react"
+import { ThemeProvider } from "@/styles/ThemeProvider"
 import { QueryProvider } from "@/lib/QueryProvider"
 import { ProfileSetup } from "@/auth/ProfileSetup"
 import Settings from "./Settings"
@@ -18,6 +20,7 @@ vi.mock("@/auth/useAuth", () => ({ useAuth: () => auth }))
 vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: auth.getSession } } }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn() }) }))
 
+const render = (ui: ReactElement) => testingRender(ui, { wrapper: ThemeProvider })
 const fetchMock = vi.fn()
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json" },
@@ -30,6 +33,8 @@ HTMLDialogElement.prototype.showModal = function showModal() { this.setAttribute
 HTMLDialogElement.prototype.close = function close() { this.removeAttribute("open") }
 
 beforeEach(() => {
+  localStorage.clear()
+  vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: false }))
   auth.user = { id: "user-a" }
   savedTimezone = "America/Los_Angeles"
   rejectSave = false
@@ -55,6 +60,18 @@ afterEach(() => {
 })
 const patchCalls = () => fetchMock.mock.calls.filter(([, init]) => init.method === "PATCH")
 const input = () => screen.getByRole("combobox", { name: "Timezone" }) as HTMLInputElement
+
+describe("appearance settings", () => {
+  it("shows a theme control on Settings without saving a profile change", async () => {
+    render(<QueryProvider><Settings /></QueryProvider>)
+    await screen.findByRole("combobox", { name: "Timezone" })
+    const group = screen.getByRole("group", { name: "Color theme" })
+    fireEvent.click(within(group).getByRole("button", { name: "Dark" }))
+    expect(document.documentElement.dataset.theme).toBe("dark")
+    expect(within(group).getByRole("button", { name: "Dark" }).getAttribute("aria-pressed")).toBe("true")
+    expect(patchCalls()).toHaveLength(0)
+  })
+})
 
 describe("timezone settings", () => {
   it("initializes an empty profile from the browser once before showing signed-in content", async () => {
