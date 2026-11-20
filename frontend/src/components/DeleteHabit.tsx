@@ -14,10 +14,29 @@ import { Modal } from "./Modal"
  * it and creating a new one is how a user changes it. Its logs go with it.
  */
 export function DeleteHabit({ id, name }: { id: string; name: string }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <section aria-label="Delete habit" className="stack-sm">
+      <p className="text-body text-secondary">
+        A habit can&apos;t be edited. To change it, delete it and create a new one.
+      </p>
+      <Button variant="danger" className="self-start" onClick={() => setOpen(true)}>Delete habit</Button>
+      <DeleteHabitDialog id={id} name={name} open={open} onClose={() => setOpen(false)} />
+    </section>
+  )
+}
+
+/** The confirmation on its own, for places that have their own Delete habit button. */
+export function DeleteHabitDialog({ id, name, open, onClose }: {
+  id: string
+  name: string
+  open: boolean
+  onClose: () => void
+}) {
   const { user, signOut } = useAuth()
   const client = useQueryClient()
   const router = useRouter()
-  const [open, setOpen] = useState(false)
 
   const remove = useMutation({
     mutationFn: async () => {
@@ -35,45 +54,40 @@ export function DeleteHabit({ id, name }: { id: string; name: string }) {
         client.removeQueries({ queryKey: habitKeys.detail(user.id, id) })
         void client.invalidateQueries({ queryKey: habitKeys.all(user.id) })
       }
+      onClose()
       router.replace("/")
     },
   })
 
   function close() {
     if (remove.isPending) return
-    setOpen(false)
+    onClose()
     remove.reset()
   }
 
   const unauthorized = remove.error instanceof ApiError && remove.error.status === 401
 
   return (
-    <section aria-label="Delete habit" className="stack-sm">
-      <p className="text-body text-secondary">
-        A habit can&apos;t be edited. To change it, delete it and create a new one.
-      </p>
-      <Button variant="danger" className="self-start" onClick={() => setOpen(true)}>Delete habit</Button>
-      <Modal open={open} onClose={close} title="Delete this habit?"
-        description={`“${name}” and all of its activity will be deleted. This can't be undone.`}>
-        <div className="stack-md">
-          {remove.isError && (
-            <div role="alert" className="stack-sm">
-              <p className="form-error">
-                {unauthorized
-                  ? "Your session has expired. Sign in again to continue."
-                  : "Couldn't delete this habit. Check your connection and try again."}
-              </p>
-              {unauthorized && <Button className="self-start" onClick={() => void signOut()}>Sign in again</Button>}
-            </div>
-          )}
-          <div className="flex flex-wrap justify-end gap-3">
-            <Button variant="secondary" onClick={close} disabled={remove.isPending}>Cancel</Button>
-            <Button variant="danger" onClick={() => remove.mutate()} disabled={remove.isPending || unauthorized}>
-              {remove.isPending ? "Deleting…" : "Delete habit"}
-            </Button>
+    <Modal open={open} onClose={close} title="Delete this habit?"
+      description={`“${name}” and all of its activity will be deleted. This can't be undone.`}>
+      <div className="stack-md">
+        {remove.isError && (
+          <div role="alert" className="stack-sm">
+            <p className="form-error">
+              {unauthorized
+                ? "Your session has expired. Sign in again to continue."
+                : "Couldn't delete this habit. Check your connection and try again."}
+            </p>
+            {unauthorized && <Button className="self-start" onClick={() => void signOut()}>Sign in again</Button>}
           </div>
+        )}
+        <div className="flex flex-wrap justify-end gap-3">
+          <Button variant="secondary" onClick={close} disabled={remove.isPending}>Cancel</Button>
+          <Button variant="danger" onClick={() => remove.mutate()} disabled={remove.isPending || unauthorized}>
+            {remove.isPending ? "Deleting…" : "Delete habit"}
+          </Button>
         </div>
-      </Modal>
-    </section>
+      </div>
+    </Modal>
   )
 }

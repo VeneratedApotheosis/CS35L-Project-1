@@ -13,6 +13,7 @@ frontend/src/views/
     wall/
       layouts.ts            THE EIGHT PLANTS and the two layouts: the file you edit
       ShelfWall.tsx         draws the shelves and plants, and the grow-in
+frontend/src/components/shelf/   the parts the Garden shares: geometry.ts (BOARD, plantFrame) and ShelfBoard.tsx
       wall.test.ts          the checks on the plant list and both layouts
 frontend/src/styles/components/login.css   the screen's grid and the wall's colors
 ```

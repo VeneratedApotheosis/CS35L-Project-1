@@ -7,13 +7,11 @@ import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
-import { PlantCard } from "@/components/PlantCard"
-import { habitSeed } from "@/pottedPlant/habitSeed"
+import { GardenShelves } from "./garden/GardenShelves"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
-import { durationPhrase, formatDate, periodPhrase } from "@/lib/goal"
+import { formatDate } from "@/lib/goal"
 import { habitKeys, listHabits } from "@/lib/habits"
-import { habitHref } from "@/lib/paths"
 import { useProfile } from "@/lib/useProfile"
 
 /** Shared saved-habit list for the Garden and the basic dashboard. */
@@ -48,6 +46,19 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
       setNotice({ message: "Activity logged for today.", undo: () => { void undoLog(habitId, result.log.id) } })
     } catch (error) {
       setNotice({ message: error instanceof ApiError && error.status === 401 ? "Your session expired. Sign in again to log activity." : "Couldn't log activity. Check your connection and try again.", error: true })
+    } finally { writing.current = false; setBusy(false) }
+  }
+
+  /** Logs another day. The caller shows a failure, so this throws; success gets the same Undo toast. */
+  async function logOn(habitId: string, date: string) {
+    if (writing.current || !user) throw new Error("busy")
+    writing.current = true
+    setBusy(true)
+    try {
+      const result = await addActivity(habitId, date)
+      void client.invalidateQueries({ queryKey: habitKeys.all(user.id) })
+      setNoticeId((id) => id + 1)
+      setNotice({ message: `Activity logged for ${formatDate(date)}.`, undo: () => { void undoLog(habitId, result.log.id) } })
     } finally { writing.current = false; setBusy(false) }
   }
 
@@ -116,40 +127,10 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
         </section>
       )}
 
-      {!pending && rows.length > 0 && (
-        <section aria-label="Saved habits" className="stack-md">
-          <ul className={title === "My Garden" ? "garden-list plant-card-grid" : "garden-list"}>
-            {rows.map((habit) => (
-              <li key={habit.id}>
-                {title === "My Garden" ? (
-                  <div className="stack-sm">
-                    <PlantCard name={habit.name} plantType={habit.plant_type}
-                      seed={habitSeed(habit.id)} stage={habit.stats.stage} health={habit.stats.health}
-                      count={habit.stats.current_period.count} target={habit.stats.current_period.target}
-                      periodStart={habit.stats.current_period.start} periodEnd={habit.stats.current_period.end}
-                      periodLabel={habit.stats.state === "not_started" ? "First period" : habit.stats.state === "expired" ? "Final period" : "Current period"}
-                      loggingDisabled={busy}
-                      onLogActivity={today && habit.stats.state !== "expired" ? () => { void logToday(habit.id) } : undefined}
-                      detailsHref={habitHref(habit.id)} />
-                    {habit.stats.state === "not_started" && <p className="text-body-sm">Not started yet · Starts {formatDate(habit.start_date)}</p>}
-                    {habit.stats.state === "expired" && <p className="text-body-sm">Finished</p>}
-                  </div>
-                ) : <Card className="stack-sm">
-                  <h2 className="text-h3 garden-name">
-                    <Link className="garden-link" href={habitHref(habit.id)}>{habit.name}</Link>
-                  </h2>
-                  <p className="text-body text-secondary">
-                    {habit.target_count} {habit.target_count === 1 ? "time" : "times"}{" "}
-                    {periodPhrase(habit.interval_count, habit.interval_unit)}
-                    {habit.num_periods !== null && ` ${durationPhrase(habit.interval_count, habit.interval_unit, habit.num_periods)}`}.
-                  </p>
-                  {today && habit.start_date > today && (
-                    <p className="text-body-sm">Not started yet · Starts {formatDate(habit.start_date)}</p>
-                  )}
-                </Card>}
-              </li>
-            ))}
-          </ul>
+      {!pending && rows.length > 0 && user && (
+        <section aria-label="Your habits" className="stack-md">
+          <GardenShelves habits={rows} userId={user.id} today={today} loggingDisabled={busy}
+            onLogToday={(id) => { void logToday(id) }} onLogOn={logOn} />
           {habits.hasNextPage && (
             <Button variant="secondary" className="self-start" onClick={() => void habits.fetchNextPage()}
               disabled={habits.isFetching}>

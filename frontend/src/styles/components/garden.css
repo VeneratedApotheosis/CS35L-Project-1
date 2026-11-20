@@ -31,3 +31,323 @@
 
 .garden-placeholder--name { width: 40%; }
 .garden-placeholder--goal { width: 65%; }
+
+/* The Garden's shelves, standing on the page itself. The boards use the .wall__* colours from login.css. */
+.garden-shelves {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.garden-finished {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.garden-wall {
+  position: relative;
+  overflow-x: clip;
+}
+
+.garden-wall__canvas {
+  position: relative;
+  max-width: none;
+  margin-inline: auto;
+}
+
+.garden-wall__svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  max-width: none;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/*
+ * Rounded corners follow Apple's rule: a corner inside another is concentric with it, so its
+ * radius is the outer radius minus the space between them. Each card sets its radius and padding,
+ * and the corners of what sits inside are worked out from those two. Where the browser can, the
+ * corners are the continuous "squircle" curve instead of a plain arc.
+ */
+.garden-card__surface,
+.garden-card {
+  --card-radius: 2.75rem;
+  --card-pad: 1.25rem;
+  --inner-radius: calc(var(--card-radius) - var(--card-pad));
+}
+@supports (corner-shape: squircle) {
+  .garden-card__surface,
+  .garden-card__streak {
+    corner-shape: squircle;
+  }
+}
+
+/* One habit's plant. Only its button and its panel take the pointer. */
+.garden-plant {
+  position: absolute;
+  pointer-events: none;
+}
+.garden-plant[data-hot="true"],
+.garden-plant[data-holding="true"],
+.garden-plant[data-menu="true"] {
+  z-index: 5;
+}
+
+.garden-plant__art {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.18s ease-out;
+}
+.garden-plant__art > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.garden-plant[data-hot="true"] .garden-plant__art {
+  transform: translateY(-3px);
+}
+
+.garden-plant__hit {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.garden-plant__hit:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* The ring behind the plant: faint on hover, and filling round while the pointer is held. */
+@property --garden-hold {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+.garden-plant__ring {
+  position: absolute;
+  left: 19%;
+  top: 22%;
+  width: 62%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0;
+  background: conic-gradient(var(--color-primary) var(--garden-hold), transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+  transition: opacity 0.15s;
+}
+.garden-plant[data-hot="true"] .garden-plant__ring {
+  --garden-hold: 100%;
+  opacity: 0.2;
+}
+.garden-plant[data-holding="true"] .garden-plant__ring {
+  opacity: 1;
+  animation: garden-hold 1s linear forwards;
+}
+@keyframes garden-hold {
+  from { --garden-hold: 0%; }
+  to { --garden-hold: 100%; }
+}
+
+/*
+ * The card that opens behind a hovered plant: a soft, see-through square with the plant standing in
+ * front of it. The surface is under the plant and the writing on top of it, so the plant is woven in.
+ */
+.garden-card__surface {
+  position: absolute;
+  z-index: 3;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: var(--card-radius);
+  background: color-mix(in srgb, var(--color-surface-elevated) 72%, transparent);
+  box-shadow: var(--shadow-card);
+  pointer-events: none;
+  animation: garden-card-in 0.16s ease-out;
+}
+.garden-card {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+  animation: garden-card-in 0.16s ease-out;
+}
+@keyframes garden-card-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.garden-card__content {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--card-pad);
+}
+.garden-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.garden-card__title { min-width: 0; }
+.garden-card__name {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.garden-card__sub { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+/* The pill in the corner is as far from the card's edge as the padding, so its corner is the card's minus that. */
+.garden-card__streak {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--inner-radius);
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+.garden-card__progress { display: grid; gap: var(--space-1); }
+/* The bar's own title and count, larger, as in the card's design. */
+.garden-card .habit-progress__caption { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); }
+.garden-card .habit-progress__count { color: var(--color-link); font-size: var(--font-size-xl); }
+.garden-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * The peek panel that opens beside a clicked plant's hover card, centred on the card's height. The
+ * hover card stays open, so the panel starts half the card's width (and a gap) from the plant's middle.
+ */
+.garden-pop {
+  position: absolute;
+  top: calc(var(--card-top, 0px) + var(--card-height, 0px) / 2);
+  transform: translateY(-50%);
+  z-index: 1;
+  width: 22rem;
+}
+.garden-plant[data-side="right"] .garden-pop { left: calc(50% + var(--card-half, 172px) + var(--space-3)); }
+.garden-plant[data-side="left"] .garden-pop { right: calc(50% + var(--card-half, 172px) + var(--space-3)); }
+
+/*
+ * Its corners are concentric: the buttons are 2.75rem tall, so their corners are 1.375rem, and the
+ * panel's radius is that plus the padding between them.
+ */
+.garden-peek {
+  --card-pad: 1.25rem;
+  --inner-radius: 1.375rem;
+  --card-radius: calc(var(--card-pad) + var(--inner-radius));
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--card-pad);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: var(--card-radius);
+  background: var(--color-surface-elevated);
+  box-shadow: var(--shadow-popover);
+  pointer-events: auto;
+}
+.garden-peek__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.garden-peek__title { min-width: 0; }
+.garden-peek__name {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.garden-peek__sub { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.garden-peek__rule { width: 100%; margin: 0; border: 0; border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent); }
+
+.garden-peek__progress { display: grid; gap: var(--space-2); }
+/* The bar's title is quiet, and its count is the loud one, in green. */
+.garden-peek .habit-progress__caption { color: var(--color-text-secondary); font-size: var(--font-size-base); }
+.garden-peek .habit-progress__count { color: var(--color-link); font-size: var(--font-size-xl); }
+.garden-peek__note { margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+
+.garden-peek__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+.garden-peek__facts dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.garden-peek__facts dt svg { color: var(--color-link); }
+.garden-peek__facts dd { margin: var(--space-2) 0 0; font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
+
+.garden-peek__actions { display: grid; gap: var(--space-2); }
+.garden-peek__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+/* The big buttons are pills, and a plain outline for the second ones. */
+.garden-peek .button--md { min-height: 2.75rem; border-radius: var(--inner-radius); }
+.garden-peek .button--secondary { border: 1px solid var(--color-border-strong); background: transparent; }
+.garden-peek .button--secondary:hover:not(:disabled) { background: var(--color-surface-hover); }
+.garden-peek__delete { justify-self: end; color: var(--color-danger); }
+@supports (corner-shape: squircle) {
+  .garden-peek, .garden-peek .button--md { corner-shape: squircle; }
+}
+
+/* The empty pot at the end that adds a habit. */
+.garden-add {
+  position: absolute;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.garden-add > svg { display: block; width: 100%; height: auto; }
+.garden-add__plus {
+  position: absolute;
+  left: 50%;
+  top: 66%;
+  display: grid;
+  transform: translate(-50%, -50%);
+  color: var(--color-text-secondary);
+}
+.garden-add__hit {
+  position: absolute;
+  border-radius: var(--radius-lg);
+}
+.garden-add__hit:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
+.garden-add__hit:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+/* On a phone there is no room beside a plant: the panel is a card at the bottom of the screen. */
+@media (max-width: 40rem) {
+  .garden-pop {
+    position: fixed;
+    top: auto;
+    transform: none;
+    right: var(--space-4) !important;
+    bottom: var(--space-4);
+    left: var(--space-4) !important;
+    z-index: var(--z-modal);
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .garden-plant__art, .garden-plant__ring { transition: none; }
+  .garden-plant[data-hot="true"] .garden-plant__art { transform: none; }
+  .garden-plant[data-holding="true"] .garden-plant__ring { animation: none; --garden-hold: 100%; }
+  .garden-card__surface, .garden-card { animation: none; }
+}

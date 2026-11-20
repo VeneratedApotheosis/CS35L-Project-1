@@ -1,6 +1,5 @@
 .habit-progress {
   container-type: inline-size;
-  --progress-stroke: 1px;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -22,24 +21,30 @@
   font-weight: var(--font-weight-bold);
 }
 
+/*
+ * The bar is rounded pills: one for each activity in a small goal, with gaps between them, and one
+ * smooth bar for a large goal. The filled part is the link colour, the rest a soft tint of the text.
+ */
 .habit-progress__track {
-  height: var(--space-4);
+  --progress-height: 0.75rem;
+  --progress-rest: color-mix(in srgb, var(--color-text) 12%, transparent);
+  height: var(--progress-height);
   overflow: hidden;
-  border: var(--progress-stroke) solid var(--color-border-strong);
   border-radius: var(--radius-pill);
-  background: var(--color-surface-secondary);
+  background: var(--progress-rest);
 }
 
 .habit-progress__track--segmented {
   display: grid;
-  /* Keep the dividers and outer border the same thickness. */
-  column-gap: var(--progress-stroke);
-  background: var(--color-text);
+  column-gap: var(--space-2);
+  background: transparent;
+  overflow: visible;
 }
 
 .habit-progress__step {
   min-width: 0;
-  background: var(--color-surface-secondary);
+  border-radius: var(--radius-pill);
+  background: var(--progress-rest);
 }
 
 .habit-progress__step--complete,
@@ -50,6 +55,14 @@
 .habit-progress__fill {
   display: block;
   height: 100%;
+  border-radius: inherit;
+}
+
+/* Without the tint (forced colours), give each pill an outline so the steps still show. */
+@media (forced-colors: active) {
+  .habit-progress__track { border: 1px solid CanvasText; }
+  .habit-progress__step { border: 1px solid CanvasText; }
+  .habit-progress__step--complete, .habit-progress__fill { background: Highlight; }
 }
 
 .progress-ring {
@@ -69,13 +82,6 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
 }
 .habit-progress-metrics dd { display: flex; flex-direction: column; }
-
-/* Use the bar's available width rather than the viewport size. */
-@container (min-width: 40rem) {
-  .habit-progress__track {
-    --progress-stroke: 2px;
-  }
-}
 
 /* Reuse the bar and ring in a compact summary with matching metric cells. */
 .progress-panel { container-type: inline-size; }
