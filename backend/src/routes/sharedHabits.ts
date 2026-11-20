@@ -17,6 +17,10 @@ import {
   listSharedHabits,
   type CreateSharedInput,
 } from "../services/sharedHabits.js";
+import {
+  removeSharedMember,
+  transferSharedHabit,
+} from "../services/sharedHabitMembers.js";
 import { addLogBody, logParams } from "./logs.js";
 import { createHabitBody, habitParams } from "./habits.js";
 
@@ -114,5 +118,46 @@ sharedHabitsRouter.delete(
     const { user, supabase, valid } = res.locals;
     const params = valid.params as z.infer<typeof logParams>;
     res.json(await deleteSharedLog(supabase, user.id, params.id, params.logId));
+  },
+);
+
+const memberParams = z.strictObject({
+  id: z.string().uuid(),
+  userId: z.string().uuid(),
+});
+const transferBody = z.strictObject({ user_id: z.string().uuid() });
+
+sharedHabitsRouter.delete(
+  "/shared-habits/:id/members/me",
+  requireAuth,
+  validate({ params: habitParams }),
+  async (_req, res) => {
+    const { user, supabase, valid } = res.locals;
+    const { id } = valid.params as z.infer<typeof habitParams>;
+    await removeSharedMember(supabase, user.id, id, user.id, true);
+    res.status(204).end();
+  },
+);
+sharedHabitsRouter.delete(
+  "/shared-habits/:id/members/:userId",
+  requireAuth,
+  validate({ params: memberParams }),
+  async (_req, res) => {
+    const { user, supabase, valid } = res.locals;
+    const { id, userId } = valid.params as z.infer<typeof memberParams>;
+    await removeSharedMember(supabase, user.id, id, userId, false);
+    res.status(204).end();
+  },
+);
+sharedHabitsRouter.post(
+  "/shared-habits/:id/transfer",
+  requireAuth,
+  validate({ params: habitParams, body: transferBody }),
+  async (_req, res) => {
+    const { supabase, valid } = res.locals;
+    const { id } = valid.params as z.infer<typeof habitParams>;
+    const { user_id } = valid.body as z.infer<typeof transferBody>;
+    await transferSharedHabit(supabase, id, user_id);
+    res.status(204).end();
   },
 );

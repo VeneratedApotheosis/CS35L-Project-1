@@ -35,7 +35,8 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | Shared habits: create, list and detail | Built (#268), using group calculations (#267) |
 | Shared habits: preview and join | Built (#269), see section 6.6 |
 | Shared habits: logging | Built (#270), see section 6.6 |
-| Shared habits: leave and management | Planned, see sections 6.6 and 8.11 |
+| Shared habits: leave, remove and transfer | Built (#271), see section 6.6 |
+| Shared habits: other management | Planned, see sections 6.6 and 8.11 |
 | Tests (vitest) | Built, see section 10 |
 | Deployment | Open (section 11) |
 
@@ -125,7 +126,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | `DELETE /me` calls `delete_my_account` | Built (#257) |
-| Shared habit routes | Create/list/detail, preview/join and logging built; see section 6.6 | Built (#268, #269, #270); remaining routes planned |
+| Shared habit routes | Create/list/detail, preview/join, logging and membership management built; see section 6.6 | Built (#268–#271); remaining routes planned |
 
 Routes have no version prefix. There is no route to edit a habit, because habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
 
@@ -229,7 +230,7 @@ metadata in batches, then loads logs only for the requested page.
 
 ### 6.6 Shared habits (planned)
 
-Create, list and detail (#268), invite preview and joining (#269), and logging (#270) are built; management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
+Create, list and detail (#268), invite preview and joining (#269), logging (#270), and leave, removal and transfer (#271) are built; other management routes remain planned. All routes need a token and return the error shape in section 7. The tables and functions behind them are in [the database design](../database/design.md#8-shared-habits-planned), and the group rules are in [8.11](#811-shared-habits-planned).
 
 | Route | Purpose |
 | --- | --- |
@@ -312,6 +313,11 @@ Tests simulate cap-race RPC outcomes; actual locking requires a live database ch
 **Joining.** The join screen first calls the preview route, which returns nothing for a wrong, closed or expired code and never says which. Joining succeeds only while the joiner's own local date is on or before `join_by` and the habit is not full. Joining twice does nothing. Nobody joins after the start date.
 
 **Leaving and removal.** A member leaves with their past logs kept. Group numbers cover current members only. The owner can remove a member, which counts as that member leaving. The owner transfers ownership first if they want to leave. Deleting the habit removes every member and log.
+
+The leave and removal DELETE routes return 204. A non-member or missing habit returns 404; a missing removal target returns 404. A non-owner cannot use the removal route (403), and the owner cannot remove themselves or leave before transferring (400). `POST /shared-habits/:id/transfer` accepts `{ "user_id": "<member UUID>" }` and returns 204; a non-owner member gets 403 and a non-member target gets 400. Transfer to the current owner is a no-op. The database checks membership and ownership inside the deletion and transfer RPCs after taking the habit lock.
+
+**Membership concurrency:** Once migration `20261119_01_serialize_shared_membership.sql` is applied, leave/removal and ownership transfer both lock the shared habit row before checking authorization and membership. Direct authenticated table deletion is revoked. Account deletion also locks the caller's existing shared habits in id order before choosing successors and cascading. The live script exercises both launch orders, but scheduling delays alone do not prove that requests waited concurrently. Controlled two-session checks on a disposable local database confirmed lock waits for both orderings of leave and removal versus transfer, as well as both orderings of account deletion versus transfer.
+
 
 **Logging.** The same rules as section 8.1, with two differences: nobody can log before the start date, and a member only ever adds or deletes their own logs. The optional POST body and date validation match personal logging. The caller's saved membership timezone determines today, the current period, and expiry; group stats use the earliest member date. POST returns `{ log, stats, own_stats }` (201); DELETE returns `{ stats, own_stats }` (200). `stats` is the group block and `own_stats` is the caller's short stats. Missing habits, memberships, and other members' logs return 404.
 

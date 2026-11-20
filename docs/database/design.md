@@ -252,7 +252,7 @@ RLS is on for all three tables, and `anon` gets nothing. "Member" below means `i
 | Table | Read | Insert | Update | Delete |
 | --- | --- | --- | --- | --- |
 | `shared_habits` | Members, and the owner | As yourself (`owner_id` is you) | The owner, on allowed columns only | The owner |
-| `shared_habit_members` | Members of the same habit | No one. Only the join function and the owner trigger | No one | Yourself if you are not the owner (leaving), or the owner removing someone else |
+| `shared_habit_members` | Members of the same habit | No one. Only the join function and the owner trigger | No one | No direct deletion; the authorized deletion RPC handles leave and removal |
 | `shared_habit_logs` | Your own logs | As yourself, and only if you are a member | No one | Your own logs |
 
 Column grants:
@@ -275,6 +275,7 @@ Whether a column may change right now (while the owner is alone, once someone ha
 | `shared_habit_members_info(shared_habit_id)` | Members | Returns `user_id`, `display_name`, `avatar_url`, `joined_at`, `timezone` and `is_owner` for the current members |
 | `shared_habit_member_logs(shared_habit_id)` | Members | Returns `(user_id, occurred_on, count)` per day, only for current members. It counts per day, not one row per log, to keep the result small. It can still exceed the API's row limit (1000 by default), so the backend pages through it |
 | `transfer_shared_habit_ownership(shared_habit_id, new_owner)` | The owner | The new owner must be a member. Sets `owner_id` |
+| `delete_shared_habit_member(shared_habit_id, user_id, leave)` | A member leaving or the owner removing | Locks the habit, checks authorization and membership, and deletes the member; direct table deletion is revoked |
 | Trigger `add_shared_habit_owner` | Runs after an insert on `shared_habits` | Inserts the owner's member row with their timezone copy. `security definer`, because the members table has no insert policy |
 | Trigger `check_member_cap` | Runs before an insert on the members table | A backstop. Locks the habit row and refuses an insert past `max_members` |
 | Trigger `check_max_members` | Runs before `max_members` is updated on `shared_habits` | Refuses a `max_members` below the current member count |
@@ -292,7 +293,7 @@ The functions raise errors with stable messages so the backend can map them:
 | `shared_habit_started` | 400 | An update of the goal or the dates after the start |
 | `shared_habit_cap_below_members` | 400 | `max_members` set below the member count |
 
-The owner cannot leave: the delete policy on members blocks it. They transfer the habit or delete it.
+The owner cannot leave: the membership deletion RPC rejects it. Migration `20261119_01_serialize_shared_membership.sql` revokes direct authenticated deletion and adds `delete_shared_habit_member(habit_id, user_id, leave)`. It and the transfer RPC lock the habit row first, then recheck authorization and membership inside the same transaction. Account deletion locks the caller's existing shared habits in id order before choosing successors and cascading; a habit deletion still cascades normally. Apply the migration before using the updated backend. Controlled tests against a disposable local database confirmed the lock waits for both leave/removal orderings and both account-deletion/transfer orderings, as well as direct deletion denial and habit cascade deletion.
 
 ### 8.5 Delete account
 
