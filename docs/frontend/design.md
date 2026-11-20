@@ -148,22 +148,26 @@ Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant
 - Press and hold on a plant logs an activity today. Because this gesture can't be discovered, the options menu also has a visible Log activity button, and the keyboard can use it.
 - An empty garden shows one large empty pot and a single action to create the first habit.
 
-**Habit Details.** Plant on top, then progress, then history.
+**Habit Details.** A header and five soft cards: the plant, how this period is going (with the logging buttons), the activity calendar, and, beside it, the overall run with the activity log under it. Numbers carry the hierarchy and the labels are small.
 
 ```
-+--------------------------------+
-| <- Garden                      |
-|        (plant, large)          |
-|        Gym  - 3 times a week   |
-| [ Log activity ]               |
-|--------------------------------|
-| This week  2/3  ==--           |
-| Overall    40%  (ring)         |
-| Consistency  75%   Streak 3    |
-|--------------------------------|
-| History (calendar + periods)   |
-+--------------------------------+
++--------------------------------------------------+
+| <- Garden                                        |
+| Gym                                     [Delete] |
++-------------+------------------------------------+
+|             | This week                          |
+|  (plant)    | 2/3 ====--   Period 2 of 4 ...     |
+|             | Overall | Consistency | Streak     |
+| Spider Lv 2 | [ Log today ]   [ Log date ]       |
++-------------+------------------------------------+
+| Activity    | Overall                            |
+| (calendar,  | Goal | Period | Days left          |
+|  leaf marks)+------------------------------------+
+|             | Activity log (latest days)         |
++-------------+------------------------------------+
 ```
+
+The cards share one corner rule: a card's radius is its padding plus the radius of what sits in it. The plant card has no padding, so the plant runs to its edge. On a phone the cards stack in the order plant, this week, activity, overall.
 
 **Create Habit.** A single column form with inline validation, a goal sentence preview ("Go to the gym 3 times every week for 4 weeks") and a plant preview next to the plant picker.
 

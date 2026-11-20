@@ -221,10 +221,26 @@
   padding-inline: clamp(var(--space-3), 2vw, var(--space-8));
 }
 
+/* Habit details sit in a wider measure with less padding all round, so the cards fit one laptop screen. */
+.app-shell__content--habit {
+  max-width: 90rem;
+  padding: clamp(var(--space-3), 1.5vw, var(--space-5));
+  padding-inline: clamp(var(--space-2), 1vw, var(--space-4));
+}
+
 @media (max-width: 43.999rem) {
   .app-shell__content--garden {
     padding-top: calc(clamp(var(--space-12), 8vw, var(--space-16)) + env(safe-area-inset-top, 0px));
     padding-bottom: var(--space-16);
     padding-inline: clamp(var(--space-8), 6vw, var(--space-12));
+  }
+}
+
+/* On a phone the page keeps the notch clear above it and has room below. */
+@media (max-width: 43.999rem) {
+  .app-shell__content--habit {
+    padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
+    padding-bottom: var(--space-12);
+    padding-inline: var(--space-3);
   }
 }

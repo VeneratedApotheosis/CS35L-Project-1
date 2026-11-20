@@ -92,39 +92,41 @@ A summary of activity across all active habits.
 
 ### 4 Habit Details
 
-**Info:** name, description, plant type, goal (e.g., 3 times every week), start and end dates, remaining duration.
+A header and five soft cards, in a grid that fits one laptop screen (one column on a phone). The page uses a wider measure and less side padding than other screens. On a phone the cards stack (plant, this week, activity, overall, activity log), the calendar's squares and gaps get smaller, and the page keeps clear of the notch above and the bottom bar below. The three figures in a card stack only when the card itself is narrow. Everything comes from `GET /habits/:id`.
 
-**Progress:**
+**Header:** a "← Garden" pill, the habit's name as the title, its description if it has one (two lines at most) and **Delete**.
 
-| Metric | Shows | Rule |
-| --- | --- | --- |
-| Current period | Count toward target (e.g., 2/3), progress bar with tick marks | [8.2](../backend/design.md#82-current-period-progress) |
-| Overall progress | % of total target, capped at 100% (circular indicator) | [8.3](../backend/design.md#83-overall-progress) |
-| Consistency | % of completed periods where the target was met | [8.4](../backend/design.md#84-consistency) |
-| Current streak | Consecutive successful periods, counting the current one once its target is met | [8.6](../backend/design.md#86-streaks) |
+**Plant card:** the plant alone at its real stage ([8.7](../backend/design.md#87-plant-growth)) and health ([8.8](../backend/design.md#88-plant-health)), with a pill under it: plant type, level and the health word.
 
-**Activity history:** calendar of logged dates, plus a per-period breakdown with each completed period's count and whether its goal was met. Logs in the current period show a delete button.
+**"This week" card** (named for the period: Today, This week, This month, or "This period" for a goal every few days, weeks or months). Everything about how the habit is going:
 
-**Plant:** growth stage ([8.7](../backend/design.md#87-plant-growth)) combined with health ([8.8](../backend/design.md#88-plant-health)).
+| Shows | Rule |
+| --- | --- |
+| Progress bar with the count (e.g., 2/3) and how far the goal is | [8.2](../backend/design.md#82-current-period-progress) |
+| Overall progress, as a ring | [8.3](../backend/design.md#83-overall-progress) |
+| Consistency | [8.4](../backend/design.md#84-consistency) |
+| Current streak | [8.6](../backend/design.md#86-streaks) |
+
+The three figures are in one row, and stack only when the card itself is narrow. Under them are **Log today** and **Log date**.
+
+**Activity card:** a month calendar of round day cells. A day with a log is filled green, with "×n" for more than one. Days of the current period that have logs are buttons: one opens a dialog listing that day's logs, each with **Remove**. Earlier periods are locked. The arrows move between months. Behind the days, a soft band joins each period (one piece in each calendar row): a light green once its goal was met, grey if it was missed, a darker green for the current period, and nearly none for periods yet to come. Days outside the habit's run (before it starts, and from its end) have no fill, only an outline. The card is as tall as the column beside it.
+
+**Overall card** (under the calendar, on the right): three figures in one row.
+
+- **Goal:** "3×", every week, from Nov 7.
+- **Period:** "2 of 3" (just "2" for a habit with no end) and how many periods are done.
+- **Days left:** the days left in the current period as the big number, with the period's dates ("Nov 14 – Nov 20") and when the whole habit ends ("Habit ends Nov 20", or "No end date") under it. Before the start it counts the days until it starts, and after the end it says "Done".
+
+**Activity log card** (under Overall): the days that have activity, newest first, with the count for each ("Today", "Nov 8, 2026"). The latest four show, and "Show all" lists the rest. A day of the current period has a minus button that takes one activity off that day (the latest one), with the same toast as removing from the calendar. Earlier periods are locked and have no button.
 
 **Actions:**
 
-Implemented in #203 and #204: the date picker defaults to today in the profile
-timezone and uses the backend's current-period bounds. Saving updates progress
-and plant stats immediately from the response, then refreshes full details,
-Garden and Dashboard. Logging errors preserve the selected date for retry.
-Expired habits disable logging. A five-second toast offers Undo through the
-delete endpoint; the current-period activity list also has individual delete
-buttons. Earlier periods have no delete action. The activity calendar and
-per-period history remain #209's separate scope. For a not-yet-started personal
-habit, the existing backend rule permits only today toward the first period;
-the date picker mirrors that exception.
-
-- **Log activity.** A date picker defaults to today and allows any date in the current period up to today.
-- **Undo** toast for about 5 seconds after logging.
-- **Delete a log** from the current period.
+- **Log today.** One press logs today in the profile's time zone. Disabled once the habit has finished, while a save is running, and until today's date is known.
+- **Log date.** Opens the same dialog as the Garden's "Choose date": any day from the period's start (or today, before the start) up to today.
+- **Undo** toast for about 5 seconds after logging, as in the Garden. Saving refetches the habit, so the whole page shows the saved state. Nothing in the cards changes size while a save runs.
+- **Remove a log** from the current period, from the calendar's dialog or with the minus button in the activity log. Earlier periods have no remove action.
 - **No editing.** A habit cannot be changed after it is created, so the name, description, plant, goal and duration are all fixed. To change one, delete it and create a new one.
-- **Delete habit** (with confirmation). At the bottom of the page, the button opens a dialog that names the habit and says it can't be undone. Confirming calls `DELETE /habits/:id`, removes the habit and its logs, and goes back to the Garden. If the habit is already gone it counts as deleted. If deleting fails, the dialog stays open with an error. The code is `components/DeleteHabit.tsx`.
+- **Delete habit** (with confirmation). The outlined **Delete** button in the header opens a dialog that names the habit and says it can't be undone. Confirming calls `DELETE /habits/:id`, removes the habit and its logs, and goes back to the Garden. If the habit is already gone it counts as deleted. If deleting fails, the dialog stays open with an error. The code is `components/DeleteHabit.tsx`.
 
 ### 5 Create Habit
 

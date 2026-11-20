@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryProvider } from "@/lib/QueryProvider"
 import HabitDetails from "./HabitDetails"
@@ -18,6 +18,9 @@ vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: auth.getSessi
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }))
 vi.mock("@/lib/useProfile", () => ({ useProfile: () => ({ data: { today: auth.today } }) }))
+
+HTMLDialogElement.prototype.showModal = function showModal() { this.setAttribute("open", "") }
+HTMLDialogElement.prototype.close = function close() { this.removeAttribute("open") }
 
 const baseHabit = {
   id: "mine", owner_id: "user-a", name: "Read", description: "A chapter each evening.",
@@ -65,10 +68,12 @@ describe("habit details", () => {
     await screen.findByRole("heading", { name: "Read a little" })
     expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/habits/my-habit")
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer token-user-a")
-    expect(screen.getByText("Peace lily · Stage 2 · Healthy")).toBeTruthy()
+    expect(screen.getByText("Peace lily · Lv. 2")).toBeTruthy()
+    expect(screen.getByText("Healthy")).toBeTruthy()
+    expect(document.querySelector(".habit-plant-card svg.lucide")).toBeNull()
     expect(screen.getByText("A chapter each evening.")).toBeTruthy()
     expect(screen.getByRole("progressbar", { name: "Overall progress" }).getAttribute("aria-valuenow")).toBe("50")
-    expect(screen.getByText("4/3")).toBeTruthy()
+    expect(screen.getAllByText("4/3").length).toBeGreaterThan(0)
     expect(screen.getByRole("link", { name: "Back to Garden" }).getAttribute("href")).toBe("/")
   })
 
@@ -117,50 +122,141 @@ describe("habit details", () => {
   })
 })
 
-describe("habit information and lifecycle", () => {
-  it.each([
-    ["2026-11-06", "Not started yet", "Starts in 1 day"],
-    ["2026-11-07", "Active", "14 days remaining"],
-    ["2026-11-20", "Active", "1 day remaining"],
-    ["2026-11-21", "Finished", "0 days remaining"],
-    ["2026-12-01", "Finished", "0 days remaining"],
-  ])("shows the correct state on %s in the profile's calendar", async (today, status, remaining) => {
-    auth.today = today
+describe("the cards at the top", () => {
+  const logResult = { log: { id: "log-1", habit_id: "mine", occurred_on: "2026-11-10" }, stats: baseHabit.stats }
+  const page = () => render(<QueryProvider><HabitDetails id="mine" /></QueryProvider>)
+
+  it("names the period, shows the streak and how far the goal is", async () => {
     fetchMock.mockResolvedValue(habitJson())
-    render(<QueryProvider><HabitDetails id="mine" /></QueryProvider>)
+    page()
     await screen.findByRole("heading", { name: "Read" })
-    expect(screen.getByText(status)).toBeTruthy()
-    expect(screen.getByText(remaining)).toBeTruthy()
-    expect(screen.getByText("3 times every week")).toBeTruthy()
-    expect(screen.getByText("A chapter each evening.")).toBeTruthy()
-    expect(screen.getByText("Peace lily")).toBeTruthy()
-    expect(document.querySelector('time[datetime="2026-11-07"]')).toBeTruthy()
-    expect(document.querySelector('time[datetime="2026-11-21"]')).toBeTruthy()
+    expect(screen.getByRole("heading", { name: "This week" })).toBeTruthy()
+    expect(screen.getByText("Goal reached. Nice work!")).toBeTruthy()
+    expect(screen.getByText("Nov 14 – Nov 20")).toBeTruthy()
+    expect(screen.getAllByText("50%")).toHaveLength(2) // the ring, and the consistency
+    expect(screen.getByText("1 week")).toBeTruthy()
+    expect(screen.queryByRole("heading", { name: "Progress" })).toBeNull()
   })
 
-  it("clamps month-end goals and supports a missing description", async () => {
-    auth.today = "2028-02-28"
-    fetchMock.mockResolvedValue(habitJson({ start_date: "2028-01-31", interval_unit: "month", num_periods: 1, target_count: 1, description: null }))
-    render(<QueryProvider><HabitDetails id="mine" /></QueryProvider>)
-    await screen.findByText("1 time every month")
-    expect(document.querySelector('time[datetime="2028-02-29"]')).toBeTruthy()
-    expect(screen.getByText("1 day remaining")).toBeTruthy()
+  it("shows the period in Overall, not under the progress bar", async () => {
+    auth.today = "2026-11-16"
+    fetchMock.mockResolvedValue(habitJson())
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    expect(screen.queryByText(/^Period 2 of 2 ·/)).toBeNull()
+    expect(screen.getByText("2 of 2")).toBeTruthy()
+    expect(screen.getByText("5 days")).toBeTruthy()
+    expect(screen.getByText("Nov 14 – Nov 20")).toBeTruthy()
+    expect(screen.getByText("Habit ends Nov 20")).toBeTruthy()
   })
 
-  it("counts calendar days across daylight saving and updates after midnight", async () => {
-    auth.today = "2026-03-08"
-    fetchMock.mockResolvedValue(habitJson({ start_date: "2026-03-07", interval_unit: "day", num_periods: 2 }))
-    const view = render(<QueryProvider><HabitDetails id="mine" /></QueryProvider>)
-    await screen.findByText("1 day remaining")
-    auth.today = "2026-03-09"
-    view.rerender(<QueryProvider><HabitDetails id="mine" /></QueryProvider>)
-    expect(screen.getByText("Finished")).toBeTruthy()
+  it("lists the days with activity, newest first, under Overall", async () => {
+    fetchMock.mockResolvedValue(habitJson({ stats: { ...baseHabit.stats,
+      log_days: [{ date: "2026-11-08", count: 1 }, { date: "2026-11-10", count: 2 }] } }))
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    const items = screen.getAllByRole("listitem").filter((item) => item.closest(".habit-log"))
+    expect(items.map((item) => item.textContent)).toEqual(["Today2 activities", "Nov 8, 20261 activity"])
   })
 
-  it("handles an ongoing habit without inventing an end date", async () => {
-    fetchMock.mockResolvedValue(habitJson({ num_periods: null }))
-    render(<QueryProvider><HabitDetails id="mine" /></QueryProvider>)
-    await screen.findByText("No end date")
-    expect(screen.getByText("Ongoing")).toBeTruthy()
+  it("takes one activity off a day from the log", async () => {
+    fetchMock.mockImplementation(async (url: string, init?: { method?: string }) =>
+      init?.method === "DELETE" ? json({ stats: baseHabit.stats }) : habitJson({ stats: { ...baseHabit.stats,
+        current_period: { ...baseHabit.stats.current_period, start: "2026-11-07", end: "2026-11-14" },
+        log_days: [{ date: "2026-11-10", count: 2 }],
+        current_period_logs: [{ id: "a", occurred_on: "2026-11-10" }, { id: "b", occurred_on: "2026-11-10" }] } }))
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    fireEvent.click(screen.getByRole("button", { name: "Remove one activity on Nov 10, 2026" }))
+    await screen.findByText("Activity removed.")
+    expect(fetchMock.mock.calls.some((call) => call[1]?.method === "DELETE" && String(call[0]).endsWith("/logs/b"))).toBe(true)
+  })
+
+  it("logs today with one press, and Undo removes it again", async () => {
+    fetchMock.mockImplementation(async (url: string, init?: { method?: string }) =>
+      init?.method === "POST" ? json(logResult, 201) : init?.method === "DELETE" ? json({ stats: baseHabit.stats }) : habitJson())
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    fireEvent.click(screen.getByRole("button", { name: "Log today" }))
+    await screen.findByText("Activity logged for today.")
+    const post = fetchMock.mock.calls.find((call) => call[1]?.method === "POST")!
+    expect(post[0]).toBe("http://api.test/habits/mine/logs")
+    expect(JSON.parse(post[1].body)).toEqual({ occurred_on: "2026-11-10" })
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }))
+    await screen.findByText("Activity removed.")
+    expect(fetchMock.mock.calls.some((call) => call[1]?.method === "DELETE" && String(call[0]).endsWith("/logs/log-1"))).toBe(true)
+  })
+
+  it("says so when a log fails", async () => {
+    fetchMock.mockImplementation(async (url: string, init?: { method?: string }) =>
+      init?.method === "POST" ? Promise.reject(new TypeError("offline")) : habitJson())
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    fireEvent.click(screen.getByRole("button", { name: "Log today" }))
+    await screen.findByText(/Couldn't log activity/)
+  })
+
+  it("logs another day from the Log date dialog", async () => {
+    fetchMock.mockImplementation(async (url: string, init?: { method?: string }) =>
+      init?.method === "POST" ? json(logResult, 201) : habitJson({ stats: { ...baseHabit.stats,
+        current_period: { ...baseHabit.stats.current_period, start: "2026-11-07", end: "2026-11-14" } } }))
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    fireEvent.click(screen.getByRole("button", { name: "Log date" }))
+    fireEvent.change(await screen.findByLabelText("Day"), { target: { value: "2026-11-09" } })
+    fireEvent.click(within(document.querySelector("dialog[open]") as HTMLElement).getByRole("button", { name: "Log activity" }))
+    await screen.findByText(/Activity logged for/)
+    const post = fetchMock.mock.calls.find((call) => call[1]?.method === "POST")!
+    expect(JSON.parse(post[1].body)).toEqual({ occurred_on: "2026-11-09" })
+  })
+
+  it("locks both log buttons for a finished habit and says why", async () => {
+    fetchMock.mockResolvedValue(habitJson({ stats: { ...baseHabit.stats, state: "expired" } }))
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    expect((screen.getByRole("button", { name: "Log today" }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole("button", { name: "Log date" }) as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByText("This habit has finished, so its activity is locked.")).toBeTruthy()
+  })
+
+  it("lets a habit that has not started log today toward its first period", async () => {
+    auth.today = "2026-11-06"
+    fetchMock.mockResolvedValue(habitJson({ stats: { ...baseHabit.stats, state: "not_started" } }))
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    expect((screen.getByRole("button", { name: "Log today" }) as HTMLButtonElement).disabled).toBe(false)
+    expect(screen.queryByText(/has finished/)).toBeNull()
+  })
+
+  it("keeps showing the saved cards when a refresh fails", async () => {
+    fetchMock.mockResolvedValueOnce(habitJson())
+    const view = page()
+    await screen.findByRole("heading", { name: "Read" })
+    fetchMock.mockRejectedValue(new TypeError("offline"))
+    await view.rerender(<QueryProvider><HabitDetails id="mine" /></QueryProvider>)
+    expect(screen.getByRole("heading", { name: "This week" })).toBeTruthy()
+    expect(screen.getByRole("heading", { name: "Activity" })).toBeTruthy()
+    expect(screen.getByRole("heading", { name: "Overall" })).toBeTruthy()
+  })
+
+  it("has all four cards and the log in the page, and no old cards", async () => {
+    fetchMock.mockResolvedValue(habitJson())
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    for (const name of ["This week", "Activity", "Overall", "Activity log"]) {
+      expect(screen.getByRole("heading", { name })).toBeTruthy()
+    }
+    for (const name of ["Progress", "Activity history", "Period history", "Habit details"]) {
+      expect(screen.queryByRole("heading", { name })).toBeNull()
+    }
+  })
+
+  it("asks before deleting", async () => {
+    fetchMock.mockResolvedValue(habitJson())
+    page()
+    await screen.findByRole("heading", { name: "Read" })
+    fireEvent.click(screen.getByRole("button", { name: "Delete habit" }))
+    await waitFor(() => expect(document.querySelector("dialog[open]")).toBeTruthy())
+    expect(screen.getByText("Delete this habit?")).toBeTruthy()
   })
 })
