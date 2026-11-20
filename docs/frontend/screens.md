@@ -156,7 +156,7 @@ The current `/settings` page implements the timezone field (saved through
 `PATCH /me`) and an Account section with Delete account. The other settings below are planned. Signed-in pages initialize
 an empty profile timezone from the browser (UTC if detection is unavailable)
 before allowing habit actions. An existing saved timezone is never replaced
-automatically. Profile setup failures show a retry action.
+automatically. Profile setup failures offer **Try again** and **Sign in again** (#187). An explicit retry keeps the recovery screen visible with a disabled **Trying again…** button. **Sign in again** calls `signOut()` so the user can start a fresh session. A 401 still shows **Sign in to continue** with only **Sign in again**.
 
 - Username, email, and profile picture (from Google). Display name is editable, and saved through the backend.
 - **Timezone:** defaults to the browser's on first sign-in, and can be changed here.
