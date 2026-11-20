@@ -49,9 +49,12 @@ const openDialog = () => document.querySelector<HTMLElement>("dialog[open]")!
 const plantNamed = (name: string) => screen.findByRole("button", { name: new RegExp(`^${name},`) })
 
 function respondWithHabits(response: () => Response | Promise<Response>) {
-  fetchMock.mockImplementation((url: string) => url.endsWith("/me")
-    ? Promise.resolve(json({ id: auth.user?.id, timezone: "America/Los_Angeles" }))
-    : Promise.resolve(response()))
+  fetchMock.mockImplementation((url: string) => {
+    if (url.includes("/shared-habits?")) return Promise.resolve(json(page([])))
+    return url.endsWith("/me")
+      ? Promise.resolve(json({ id: auth.user?.id, timezone: "America/Los_Angeles" }))
+      : Promise.resolve(response())
+  })
 }
 
 beforeEach(() => {
@@ -198,6 +201,7 @@ it("logs today's profile date from the panel and undoes only that log", async ()
   vi.useFakeTimers({ toFake: ["Date"] })
   vi.setSystemTime(new Date("2026-11-07T02:00:00Z"))
   fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url.includes("/shared-habits?")) return Promise.resolve(json(page([])))
     if (url.endsWith("/me")) return Promise.resolve(json({ id: "user-a", timezone: "America/Los_Angeles" }))
     if (init?.method === "POST") return Promise.resolve(json({ log: { id: "new-log", habit_id: "habit-1", occurred_on: "2026-11-06" }, stats: habit().stats }))
     if (init?.method === "DELETE") return Promise.resolve(json({ stats: habit().stats }))
@@ -218,6 +222,7 @@ it("logs today's profile date from the panel and undoes only that log", async ()
 
 it("shows a failed log without offering Undo", async () => {
   fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url.includes("/shared-habits?")) return Promise.resolve(json(page([])))
     if (url.endsWith("/me")) return Promise.resolve(json({ id: "user-a", timezone: "America/Los_Angeles" }))
     if (init?.method === "POST") return Promise.resolve(json({ message: "Unavailable" }, 500))
     return Promise.resolve(json(page([habit()])))
@@ -234,6 +239,7 @@ it("logs another day from the panel and offers Undo for that log", async () => {
   vi.useFakeTimers({ toFake: ["Date"] })
   vi.setSystemTime(new Date("2026-11-12T20:00:00Z"))
   fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url.includes("/shared-habits?")) return Promise.resolve(json(page([])))
     if (url.endsWith("/me")) return Promise.resolve(json({ id: "user-a", timezone: "America/Los_Angeles" }))
     if (init?.method === "POST") return Promise.resolve(json({ log: { id: "new-log", habit_id: "habit-1", occurred_on: "2026-11-11" }, stats: habit().stats }))
     return Promise.resolve(json(page([habit()])))

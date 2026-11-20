@@ -55,7 +55,7 @@ export function HabitActivity(props: ActivityProps) {
           } : member),
         }
       })
-      void client.invalidateQueries({ queryKey: key })
+      if (user) void client.invalidateQueries({ queryKey: sharedHabitKeys.all(user.id) })
       return
     }
     client.setQueryData<HabitDetail>(key, (old) => old ? {

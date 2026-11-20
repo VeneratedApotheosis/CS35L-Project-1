@@ -250,7 +250,7 @@ Create, list and detail (#268), invite preview and joining (#269), logging (#270
 
 **Implemented response contract (#268).** Create returns the saved habit with
 HTTP 201. List accepts `limit` and `offset` and returns
-`{ habits, total, limit, offset }`; each habit includes group `stats`.
+`{ habits, total, limit, offset }`; each habit includes group `stats`. Since #279 the list is ordered by `created_at`, then `id`, ascending, so older cards stay first as pages load. It also returns `member_count`, caller-only short `own_stats`, and membership-local `own_today`, computed from the same member/log snapshot. Garden cards need no per-habit detail requests. No member names or exact log dates are added to the list.
 Detail returns the habit, group `stats`, `members`, `own_stats`, and `own_today` (#277). `own_today` is the server date in the caller's saved membership timezone, so the logging form never substitutes the group date or a later profile timezone change.
 Group stats include `today`, `state`, `overall_progress`, `stage`,
 `health_rate`, `health`, `end_date`, and `current_period`. The current-period

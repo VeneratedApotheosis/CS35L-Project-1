@@ -166,7 +166,7 @@ automatically. Profile setup failures show a retry action.
 
 ### 8 Shared habits (planned)
 
-Creation and invite copying (#274), joining (#275), shared habit details (#276), and logging (#277) are implemented. Management and Garden cards remain planned. The rules are in [the backend design](../backend/design.md#66-shared-habits-planned) and the tables are in [the database design](../database/design.md#8-shared-habits-planned).
+Creation and invite copying (#274), joining (#275), shared habit details (#276), logging (#277), and Garden cards (#279) are implemented. Management remains planned. The rules are in [the backend design](../backend/design.md#66-shared-habits-planned) and the tables are in [the database design](../database/design.md#8-shared-habits-planned).
 
 **Create (#274).** Create Habit (screen 5) has a choice between "Just me" and "With friends". With friends adds **Join by**, between today and the start date (default: the day before the start, or today when starting today), and **Max members**, from 2 to 50 including the owner. Shared creation uses the saved profile timezone for today's date. The confirm step says the goal and start date lock once a friend joins, and that after the start nothing can be edited. After saving, the owner sees the invite link with a copy button and a manual-copy fallback. Personal creation still redirects to the dashboard.
 
@@ -182,7 +182,7 @@ Creation and invite copying (#274), joining (#275), shared habit details (#276),
 - **Owner actions:** edit before the start (within the rules in the backend design), remove a member, transfer ownership, get a new link or close joining, and delete the habit with a confirmation.
 - **Member actions:** leave, with a confirmation that says your past logs stay but you are no longer counted. The owner transfers ownership before leaving.
 
-**Garden.** A shared habit is one card with the group plant, a "shared" marker with the member count, and your own current period bar. How shared and personal habits are ordered is not decided.
+**Garden (#279).** Personal shelves (including their completed section) come first; a separate **Shared habits** card grid follows. Shared cards are oldest first, with the ID as a tie-breaker. Each shows the group's plant stage/health, a "Shared" marker with member count, and the caller's own integer period count (not the fractional group average). The name and plant link to `/shared-habit?id=...`; logging and management stay on Details. Future and finished habits show their status. Both lists paginate independently. A shared-list loading/error state does not hide personal shelves, and a personal-list failure does not hide shared cards. The all-empty message appears only after both lists are empty; shared-only accounts never get a false empty Garden. Queries are scoped per account, shared summaries refresh every 60 seconds, and shared creation/join/logging invalidate the shared query prefix. List responses contain the card summaries without detail requests.
 
 **Badges.** Each member earns their own badge from their own results. Group badges are not decided yet.
 
