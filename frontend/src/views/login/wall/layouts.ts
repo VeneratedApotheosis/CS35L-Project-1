@@ -1,4 +1,7 @@
+import { BOARD, type Shelf } from "@/components/shelf/geometry"
 import type { PlantTypeId } from "@/pottedPlant/plants/plantTypes"
+
+export { BOARD, type Shelf }
 
 /**
  * The plants on the login wall, in the order they are shown. Every plant is fully
@@ -29,13 +32,6 @@ export const WALL_PLANTS: readonly WallPlant[] = [
   { id: "philodendron", type: "philodendron", seed: 21, mirror: true, scale: 1.02 },
 ]
 
-/** One shelf board. y is the front top edge, in layout units; from and to are its ends. */
-export interface Shelf {
-  y: number
-  from: number
-  to: number
-}
-
 /** Where each plant of WALL_PLANTS goes: the middle of its pot, and the width of its picture. */
 export interface Slot {
   shelf: number
@@ -51,9 +47,6 @@ export interface WallLayout {
   /** One slot per plant shown: the first plants of WALL_PLANTS, in the same order. */
   slots: readonly Slot[]
 }
-
-/** The depth of the board's top face. A pot rests on the middle of it. */
-export const BOARD = { top: 10, front: 20, rest: 4 } as const
 
 /*
  * The pots never scale with the screen. Every size here is in pixels (one layout unit is
@@ -72,7 +65,7 @@ export const STAGGER = 24
 /** The height of one shelf with the plants standing on it and the brackets below, in pixels. */
 export const ROW_PITCH = 300
 /** Where the board sits in its band: the plants and room for the tallest leaf above, then the brackets below. */
-const BOARD_IN_ROW = 226
+export const BOARD_IN_ROW = 226
 /** The most pots across and the most shelves. */
 export const MAX_COLS = 4
 export const MAX_ROWS = 4

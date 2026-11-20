@@ -11,8 +11,10 @@ import { Rose } from "@/pottedPlant/plants/rose"
 import { SnakePlant } from "@/pottedPlant/plants/snakePlant"
 import { EmergeProvider } from "@/pottedPlant/plants/staged/EmergeContext"
 import { ShrinkProvider } from "@/pottedPlant/plants/staged/ShrinkContext"
+import { ShelfBoard } from "@/components/shelf/ShelfBoard"
+import { PLANT_VIEW, POT_SINK, plantFrame } from "@/components/shelf/geometry"
 import { PottedPlant } from "@/pottedPlant/PottedPlant"
-import { POT_SHAPE, potLookFromSeed, type PotLook } from "@/pottedPlant/pots"
+import { potLookFromSeed, type PotLook } from "@/pottedPlant/pots"
 import {
   BOARD,
   ROW_PITCH,
@@ -20,18 +22,11 @@ import {
   WALL_PLANTS,
   wallFit,
   wallLayout,
-  type Shelf,
   type Slot,
   type WallFit,
   type WallLayout,
   type WallPlant,
 } from "./layouts"
-
-/** The plant canvas every species draws in (see pottedPlant/genome.ts VIEWBOX): "0 30 200 205". */
-const PLANT_VIEW = { y: 30, width: 200, height: 205 } as const
-
-/** The canvas height of the pot's lowest point: the plant picture is placed so this lands on the shelf. */
-const POT_BASE = POT_SHAPE.body.bounds.y + POT_SHAPE.body.bounds.height
 
 /** The stage the plants start at, and the one they grow into. */
 const FIRST_STAGE = 3
@@ -39,13 +34,6 @@ const LAST_STAGE = 4
 /** The grow-in: how long before the first plant moves, and the gap between plants, in milliseconds. */
 const GROW_START = 350
 const GROW_GAP = 160
-
-/**
- * How far, in layout units, each pot sits lower than the board point its shadow is
- * drawn at. It brings the pot's base to the middle of the board's height (the top
- * face and the front face together).
- */
-const POT_SINK = BOARD.rest + (BOARD.front - BOARD.top) / 2
 
 /**
  * Every pot on the wall is terracotta (palette 0); the seed still varies its band.
@@ -81,16 +69,7 @@ function Species({ type, seed, stage, pot }: { type: WallPlant["type"]; seed: nu
   }
 }
 
-/** Where a plant's picture goes so that the bottom of its pot lands on (x, y). */
-export function plantFrame(x: number, y: number, size: number) {
-  const unit = size / PLANT_VIEW.width
-  return {
-    x: x - size / 2,
-    y: y - (POT_BASE - PLANT_VIEW.y) * unit,
-    width: size,
-    height: PLANT_VIEW.height * unit,
-  }
-}
+export { plantFrame }
 
 /** How long a full-grown plant takes to un-grow back to a sprout when the pointer touches it, in milliseconds. */
 export const SHRINK_MS = 100
@@ -327,37 +306,6 @@ const WallPlantView = memo(function WallPlantView({ plant, slot, y, order }: { p
     </g>
   )
 })
-
-/** One board: a shadow on the wall, two brackets, the front face with a little grain, and the lighter top face. */
-function ShelfBoard({ shelf }: { shelf: Shelf }) {
-  const { y, from, to } = shelf
-  const length = to - from
-  const bracket = (x: number) => (
-    <path
-      key={x}
-      className="wall__bracket"
-      d={"M" + (x - 8) + " " + (y + BOARD.front) + "h16v46a8 8 0 0 1-8 8a8 8 0 0 1-8-8Z"}
-    />
-  )
-  return (
-    <g data-shelf="">
-      <rect className="wall__shadow" x={from + 8} y={y + BOARD.front - 2} width={length} height={26} rx={13} />
-      {bracket(from + length * 0.14)}
-      {bracket(to - length * 0.14)}
-      <rect className="wall__board-top" x={from + 6} y={y - BOARD.top} width={length - 12} height={BOARD.top + 4} rx={4} />
-      <rect className="wall__board" x={from} y={y} width={length} height={BOARD.front} rx={6} />
-      <path
-        className="wall__grain"
-        d={
-          "M" + (from + length * 0.08) + " " + (y + 7) + "h" + length * 0.3 +
-          "M" + (from + length * 0.52) + " " + (y + 7) + "h" + length * 0.22 +
-          "M" + (from + length * 0.22) + " " + (y + 14) + "h" + length * 0.4 +
-          "M" + (from + length * 0.7) + " " + (y + 14) + "h" + length * 0.18
-        }
-      />
-    </g>
-  )
-}
 
 function WallSvg({ layout }: { layout: WallLayout }) {
   return (

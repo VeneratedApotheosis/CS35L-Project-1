@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type PointerEvent, type MouseEvent } from "react"
 
 /** Keep ordinary clicks intact; consume the click generated after a completed hold. */
-export function useHoldToLog(action?: () => void) {
+export function useHoldToLog(action?: () => void, duration = 1000) {
   const [holding, setHolding] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const origin = useRef<{ x: number; y: number } | null>(null)
@@ -36,7 +36,7 @@ export function useHoldToLog(action?: () => void) {
           consumed.current = true
           cancel()
           action()
-        }, 1000)
+        }, duration)
       },
       onPointerMove(event: PointerEvent<HTMLElement>) {
         if (origin.current && Math.hypot(event.clientX - origin.current.x, event.clientY - origin.current.y) > 10) cancel()

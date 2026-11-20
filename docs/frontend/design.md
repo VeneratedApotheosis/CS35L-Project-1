@@ -125,7 +125,7 @@ Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant
 
 **Alignment.** Page content is left aligned in a centered column with a maximum width. Only empty states are center aligned, because they hold a single message. The login screen is the exception to the column: its words are left aligned in the left third, beside a picture (see [login-wall.md](login-wall.md)).
 
-**Garden.** An auto-fill grid of plant cards. Each card is a pot, the plant, the habit name and a progress bar.
+**Garden.** Plants on shelves, like the login wall but 1.5 times as big and with no card behind them: a pot and its plant per habit with nothing else showing, a see-through card with the name, streak and progress pills on hover, a peek panel beside the plant on click, and hold to log. The progress bar is rounded pills everywhere (one per activity for a goal of ten or fewer, one smooth bar for more). Finished habits are on shelves beneath. The behavior is in [screens.md](screens.md#2-garden-home). The sketch below is the old card grid.
 
 ```
 +--------------------------------------------------+

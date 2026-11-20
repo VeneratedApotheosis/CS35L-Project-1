@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryProvider } from "@/lib/QueryProvider"
 import type { HabitWithStats } from "@/lib/habits"
@@ -21,6 +21,9 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: auth.replace, p
 vi.mock("@/lib/supabase", () => ({
   supabase: { auth: { getSession: auth.getSession } },
 }))
+// jsdom has no modal dialogs, so open and close them by hand.
+HTMLDialogElement.prototype.showModal = function showModal() { this.setAttribute("open", "") }
+HTMLDialogElement.prototype.close = function close() { this.removeAttribute("open") }
 // The form's graphics are unrelated to fetching and saving habits.
 vi.mock("@/pottedPlant/plants/plantTypes", () => {
   const plant = { id: "pothos", label: "Pothos", blurb: "", Preview: ({ seed, stage }: { seed: number; stage: number }) => <svg data-testid="plant-preview" data-seed={seed} data-stage={stage} /> }
@@ -41,6 +44,9 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
   status, headers: { "Content-Type": "application/json" },
 })
 const page = (habits: HabitWithStats[], total = habits.length, offset = 0) => ({ habits, total, limit: 50, offset })
+
+const openDialog = () => document.querySelector<HTMLElement>("dialog[open]")!
+const plantNamed = (name: string) => screen.findByRole("button", { name: new RegExp(`^${name},`) })
 
 function respondWithHabits(response: () => Response | Promise<Response>) {
   fetchMock.mockImplementation((url: string) => url.endsWith("/me")
@@ -76,23 +82,20 @@ describe("Garden", () => {
     expect(screen.getByRole("link", { name: "Create your first habit" }).getAttribute("href")).toBe("/create")
   })
 
-  it("shows names and goals, labelling only future habits in the profile timezone", async () => {
-    // At this instant UTC has reached Nov 7, but Los Angeles is still Nov 6.
-    vi.useFakeTimers({ toFake: ["Date"] })
-    vi.setSystemTime(new Date("2026-11-07T02:00:00Z"))
+  it("shows every habit as a plant on a shelf, each with its own seed and stage, and a pot that adds a habit", async () => {
     respondWithHabits(() => json(page([
-      habit({ start_date: "2026-11-06" }),
-      habit({ stats: { ...habit().stats, state: "not_started" }, id: "future", name: "Walk", start_date: "2026-11-07", target_count: 1, interval_count: 2, num_periods: null }),
+      habit(),
+      habit({ id: "habit-2", name: "Walk", created_at: "2026-11-07T12:00:00Z", stats: { ...habit().stats, state: "not_started", stage: 1 } }),
     ])))
     render(<QueryProvider><Garden /></QueryProvider>)
-    await screen.findByRole("heading", { name: "Read" })
-    expect(screen.getAllByText("Slightly wilted")).toHaveLength(2)
-    expect(screen.getAllByTestId("plant-preview")[0].getAttribute("data-stage")).toBe("3")
-    expect(screen.getAllByTestId("plant-preview")[0].getAttribute("data-seed")).not.toBe(screen.getAllByTestId("plant-preview")[1].getAttribute("data-seed"))
-    expect(screen.getAllByRole("button", { name: "Log activity" })).toHaveLength(2)
-    expect(screen.getByRole("link", { name: "Read" }).getAttribute("href")).toBe("/habit?id=habit-1")
-    expect(screen.getByRole("progressbar", { name: "Read: Current period" }).getAttribute("aria-valuenow")).toBe("3")
-    expect(screen.getAllByText(/Not started yet/)).toHaveLength(1)
+    await plantNamed("Read")
+    expect(screen.getByRole("button", { name: "Read, 4 of 3 this period, slightly wilted" })).toBeTruthy()
+    // The name is not on the shelf: it comes with the card on hover.
+    expect(screen.queryByText("Walk")).toBeNull()
+    const previews = screen.getAllByTestId("plant-preview")
+    expect(previews.map((preview) => preview.getAttribute("data-stage"))).toEqual(["3", "1"])
+    expect(previews[0].getAttribute("data-seed")).not.toBe(previews[1].getAttribute("data-seed"))
+    expect(screen.getByRole("link", { name: "Add a habit" }).getAttribute("href")).toBe("/create")
     expect(fetchMock.mock.calls.find(([url]) => url.includes("/habits"))?.[1].headers.Authorization).toBe("Bearer token-user-a")
   })
 
@@ -106,29 +109,29 @@ describe("Garden", () => {
     expect(screen.queryByText("No habits yet")).toBeNull()
     failed = false
     fireEvent.click(screen.getByRole("button", { name: "Try again" }))
-    await screen.findByRole("heading", { name: "Read" })
+    await plantNamed("Read")
     expect(screen.queryByRole("alert")).toBeNull()
   })
 
   it("keeps existing habits visible when loading the next page fails", async () => {
     respondWithHabits(() => json(page([habit()], 2)))
     const view = render(<QueryProvider><Garden /></QueryProvider>)
-    await screen.findByRole("heading", { name: "Read" })
+    await plantNamed("Read")
     respondWithHabits(() => Promise.reject(new TypeError("offline")))
     fireEvent.click(screen.getByRole("button", { name: "Load more habits" }))
     await screen.findByRole("alert")
-    expect(screen.getByRole("heading", { name: "Read" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: /^Read,/ })).toBeTruthy()
     view.unmount()
   })
 
   it("loads more habits from the next offset", async () => {
     respondWithHabits(() => json(page([habit()], 2)))
     render(<QueryProvider><Garden /></QueryProvider>)
-    await screen.findByRole("heading", { name: "Read" })
+    await plantNamed("Read")
     respondWithHabits(() => json(page([habit({ id: "older", name: "Walk" })], 2, 1)))
     fireEvent.click(screen.getByRole("button", { name: "Load more habits" }))
-    await screen.findByRole("heading", { name: "Walk" })
-    expect(screen.getByRole("heading", { name: "Read" })).toBeTruthy()
+    await plantNamed("Walk")
+    expect(screen.getByRole("button", { name: /^Read,/ })).toBeTruthy()
     expect(fetchMock.mock.calls.some(([url]) => url.endsWith("offset=1"))).toBe(true)
     expect(screen.queryByRole("button", { name: "Load more habits" })).toBeNull()
   })
@@ -136,11 +139,11 @@ describe("Garden", () => {
   it("discards the old account's habits on account change and does not fetch signed out", async () => {
     respondWithHabits(() => json(page([habit()])))
     const view = render(<QueryProvider><Garden /></QueryProvider>)
-    await screen.findByRole("heading", { name: "Read" })
+    await plantNamed("Read")
     auth.user = { id: "user-b", email: "b@example.test" }
     respondWithHabits(() => json(page([])))
     view.rerender(<QueryProvider><Garden /></QueryProvider>)
-    expect(screen.queryByRole("heading", { name: "Read" })).toBeNull()
+    expect(screen.queryByRole("button", { name: /^Read,/ })).toBeNull()
     await screen.findByText("No habits yet")
     fetchMock.mockClear()
     auth.user = null
@@ -191,7 +194,7 @@ function jsonResponseError() {
   return json({ error: { code: "internal_error", message: "Could not create habit" } }, 500)
 }
 
-it("logs today's profile date from the keyboard menu and undoes only that log", async () => {
+it("logs today's profile date from the panel and undoes only that log", async () => {
   vi.useFakeTimers({ toFake: ["Date"] })
   vi.setSystemTime(new Date("2026-11-07T02:00:00Z"))
   fetchMock.mockImplementation((url: string, init?: RequestInit) => {
@@ -201,9 +204,9 @@ it("logs today's profile date from the keyboard menu and undoes only that log", 
     return Promise.resolve(json(page([habit()])))
   })
   render(<QueryProvider><Garden /></QueryProvider>)
-  await screen.findByRole("link", { name: "Read" })
-  fireEvent.click(screen.getByLabelText("Options for Read"))
-  fireEvent.click(screen.getByRole("button", { name: "Log activity" }))
+  await plantNamed("Read")
+  fireEvent.click(await plantNamed("Read"), { detail: 1 })
+  fireEvent.click(within(screen.getByRole("dialog", { name: "Read" })).getByRole("button", { name: "Log today" }))
   await screen.findByText("Activity logged for today.")
   const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST")
   expect(post?.[0]).toContain("/habits/habit-1/logs")
@@ -220,9 +223,29 @@ it("shows a failed log without offering Undo", async () => {
     return Promise.resolve(json(page([habit()])))
   })
   render(<QueryProvider><Garden /></QueryProvider>)
-  await screen.findByRole("link", { name: "Read" })
-  fireEvent.click(screen.getByLabelText("Options for Read"))
-  fireEvent.click(screen.getByRole("button", { name: "Log activity" }))
+  await plantNamed("Read")
+  fireEvent.click(await plantNamed("Read"), { detail: 1 })
+  fireEvent.click(within(screen.getByRole("dialog", { name: "Read" })).getByRole("button", { name: "Log today" }))
   expect((await screen.findByRole("alert")).textContent).toContain("Couldn't log activity")
   expect(screen.queryByRole("button", { name: "Undo" })).toBeNull()
+})
+
+it("logs another day from the panel and offers Undo for that log", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] })
+  vi.setSystemTime(new Date("2026-11-12T20:00:00Z"))
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url.endsWith("/me")) return Promise.resolve(json({ id: "user-a", timezone: "America/Los_Angeles" }))
+    if (init?.method === "POST") return Promise.resolve(json({ log: { id: "new-log", habit_id: "habit-1", occurred_on: "2026-11-11" }, stats: habit().stats }))
+    return Promise.resolve(json(page([habit()])))
+  })
+  render(<QueryProvider><Garden /></QueryProvider>)
+  fireEvent.click(await plantNamed("Read"), { detail: 1 })
+  fireEvent.click(within(screen.getByRole("dialog", { name: "Read" })).getByRole("button", { name: "Choose date" }))
+  const dialog = openDialog()
+  fireEvent.change(within(dialog).getByLabelText("Day"), { target: { value: "2026-11-11" } })
+  fireEvent.submit(within(dialog).getByLabelText("Day").closest("form")!)
+  await screen.findByText(/Activity logged for .*11/)
+  const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST")
+  expect(JSON.parse(post?.[1].body)).toEqual({ occurred_on: "2026-11-11" })
+  expect(screen.getByRole("button", { name: "Undo" })).toBeTruthy()
 })
