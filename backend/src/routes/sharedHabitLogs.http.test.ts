@@ -70,6 +70,7 @@ describe("shared habit logging", () => {
   it.each([
     { action: "add", callerCount: 1, groupCount: 2, groupProgress: 0.5 },
     { action: "delete", callerCount: 0, groupCount: 1.5, groupProgress: 0.375 },
+    { action: "add", callerCount: 2, groupCount: 2.5, groupProgress: 0.625 },
   ])(
     "returns updated group and caller stats after $action",
     async ({ action, callerCount, groupCount, groupProgress }) => {
@@ -108,7 +109,9 @@ describe("shared habit logging", () => {
       expect(res.body.own_stats).toMatchObject({
         overall_progress: callerCount / 4,
         current_period: { count: callerCount, target: 2 },
+        streak: callerCount >= 2 ? 1 : 0,
       });
+      expect(res.body.own_today).toBe("2026-11-19");
       if (action === "add") {
         expect(res.body.log).toEqual(log);
         expect(db.callsFor("shared_habit_logs", "insert")[0]?.payload).toEqual({
@@ -135,6 +138,27 @@ describe("shared habit logging", () => {
       expect(db.callsFor("shared_habit_member_logs", "select")).toHaveLength(1);
     },
   );
+  it("returns the caller's membership date separately from the group cutoff", async () => {
+    db.setResult("shared_habit_members_info", "select", {
+      data: [
+        { ...member, timezone: "Asia/Tokyo" },
+        {
+          user_id: "33333333-3333-4333-8333-333333333333",
+          timezone: "America/Los_Angeles",
+          is_owner: false,
+        },
+      ],
+      error: null,
+    });
+    const res = await post();
+    expect(res.status).toBe(201);
+    expect(res.body.own_today).toBe("2026-11-20");
+    expect(res.body.stats.today).toBe("2026-11-19");
+    expect(
+      db.callsFor("shared_habit_logs", "insert")[0]?.payload,
+    ).toMatchObject({ occurred_on: "2026-11-20" });
+    expect(db.callsFor("profiles", "select")).toHaveLength(0);
+  });
   it.each(["2026-11-17", "2026-11-20", "2026-02-30"])(
     "rejects invalid or outside dates %s",
     async (occurred_on) => {

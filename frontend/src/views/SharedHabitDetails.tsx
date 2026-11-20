@@ -8,6 +8,7 @@ import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { HabitPlant } from "@/components/HabitPlant"
 import { HabitProgress } from "@/components/HabitProgress"
+import { HabitActivity } from "@/components/HabitActivity"
 import { ProgressRing } from "@/components/ProgressRing"
 import { ApiError } from "@/lib/api"
 import { formatDate, goalSentence } from "@/lib/goal"
@@ -102,6 +103,7 @@ function SharedHabitContent({ habit, userId }: { habit: SharedHabitDetail; userI
       </Card>
     </section>
     <HabitProgress stats={habit.own_stats} heading="Your progress" headingId="shared-own-progress" />
+    <HabitActivity shared habit={habit} />
     <section className="stack-md" aria-labelledby="shared-members-heading">
       <h2 id="shared-members-heading" className="text-h2">{stats.state === "not_started" ? "Who has joined" : "Members"}</h2>
       <div className="shared-members-scroll">

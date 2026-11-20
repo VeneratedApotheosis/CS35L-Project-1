@@ -246,6 +246,7 @@ describe("shared habit endpoints", () => {
     const res = await get();
     expect(res.status).toBe(200);
     expect(res.body.own_stats.current_period.number).toBe(1);
+    expect(res.body.own_today).toBe("2026-11-17");
     expect(res.body.own_stats.current_period_logs).toEqual([
       { id: "my-log", occurred_on: "2026-11-17" },
     ]);
