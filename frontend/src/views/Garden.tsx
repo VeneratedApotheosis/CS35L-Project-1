@@ -169,10 +169,6 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
 
       {notice && <Toast key={noticeId} message={notice.message} variant={notice.error ? "error" : "success"}
         onDismiss={() => setNotice(null)} action={!busy && notice.undo ? { label: "Undo", onClick: notice.undo } : undefined} />}
-      <footer className="stack-sm">
-        <p className="text-body-sm text-secondary">Signed in as {user?.email}</p>
-        <Button variant="ghost" className="self-start" onClick={() => void signOut()}>Sign out</Button>
-      </footer>
     </main>
   )
 }

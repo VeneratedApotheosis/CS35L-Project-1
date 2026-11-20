@@ -14,10 +14,13 @@ export const CONFIRM_WORD = "DELETE"
 
 /** The Account section of Settings. Other account actions, such as sign out, go here too. */
 export function AccountSection() {
-  const { signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const client = useQueryClient()
   const [open, setOpen] = useState(false)
   const [typed, setTyped] = useState("")
+
+  // Signing out ends the session. The signed-in layout then sends the user to the login page.
+  const leave = useMutation({ mutationFn: signOut })
 
   const remove = useMutation({
     mutationFn: async () => {
@@ -50,6 +53,15 @@ export function AccountSection() {
   return (
     <section aria-labelledby="account-heading" className="stack-md">
       <h2 id="account-heading" className="text-h2">Account</h2>
+      <Card>
+        <div className="stack-md">
+          {user?.email && <p className="text-body text-secondary">Signed in as {user.email}</p>}
+          <Button variant="secondary" className="self-start" onClick={() => leave.mutate()} disabled={leave.isPending}>
+            {leave.isPending ? "Signing out…" : "Sign out"}
+          </Button>
+          {leave.isError && <p role="alert" className="form-error">Couldn&apos;t sign out. Try again.</p>}
+        </div>
+      </Card>
       <Card>
         <div className="stack-md">
           <p className="text-body text-secondary">
