@@ -66,9 +66,52 @@ export interface SharedHabitDetail extends SharedHabit {
   stats: SharedGroupStats
   members: SharedMemberSummary[]
   own_stats: HabitDetail["stats"]
+  /** Server date in the caller's saved membership timezone, not their profile. */
+  own_today: string
+}
+
+export interface SharedGardenHabit extends SharedHabit {
+  stats: SharedGroupStats
+  member_count: number
+  own_stats: HabitStats
+  own_today: string
+}
+
+export interface SharedHabitPage {
+  habits: SharedGardenHabit[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export function listSharedHabits(offset = 0): Promise<SharedHabitPage> {
+  return api.get(`/shared-habits?limit=50&offset=${offset}`)
+}
+
+export interface SharedLogStats {
+  stats: SharedGroupStats
+  own_stats: HabitStats & { streak: number }
+  own_today: string
+}
+
+export interface SharedActivityLog {
+  id: string
+  shared_habit_id: string
+  user_id: string
+  occurred_on: string
+}
+
+export function addSharedActivity(id: string, occurredOn: string): Promise<SharedLogStats & { log: SharedActivityLog }> {
+  return api.post(`/shared-habits/${encodeURIComponent(id)}/logs`, { occurred_on: occurredOn })
+}
+
+export function deleteSharedActivity(id: string, logId: string): Promise<SharedLogStats> {
+  return api.delete(`/shared-habits/${encodeURIComponent(id)}/logs/${encodeURIComponent(logId)}`)
 }
 
 export const sharedHabitKeys = {
+  all: (userId: string) => ["shared-habits", userId] as const,
+  list: (userId: string) => ["shared-habits", userId, "list"] as const,
   detail: (userId: string, id: string) => ["shared-habits", userId, "detail", id] as const,
 }
 

@@ -97,11 +97,21 @@ describe("generated monstera", () => {
     }
   })
 
-  it("fills the canopy it encloses", () => {
-    for (const seed of SEEDS) {
-      for (const st of createMonstera(seed).stages) {
-        expect(st.coverage).toBeGreaterThanOrEqual(0.15)
+  it.each([1, 3, 4, 6, CONFIG.stages.max])("fills the canopy appropriately across a %i-stage ladder", (stageCount) => {
+    // The solver chooses leaf size for the full five-leaf plant. A two-leaf
+    // sprout occupies less of the same envelope; it need not meet the denser
+    // stages' floor. Use leaf count, since longer ladders repeat sprout stages.
+    // 52 reproduces #283; 982 and 575 cover sparse sprouts and mature canopies
+    // found while checking seeds 1–1000.
+    for (const seed of [...SEEDS, 982, 575]) {
+      const { stages } = createMonstera(seed, { stages: stageCount })
+      for (const st of stages) {
+        const minimum = st.leaves.length === CONFIG.stages.minLeaves ? 0.1 : 0.15
+        expect(st.coverage, `seed ${seed}, stage ${st.stage}, ${st.leaves.length} leaves`).toBeGreaterThanOrEqual(minimum)
       }
+      // Keep a stronger density guard for mature plants instead of relaxing
+      // the old 15% rule for every growth stage.
+      expect(stages.at(-1)!.coverage, `seed ${seed}, mature canopy`).toBeGreaterThanOrEqual(0.4)
     }
   })
 

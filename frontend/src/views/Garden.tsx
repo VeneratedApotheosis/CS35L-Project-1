@@ -8,11 +8,13 @@ import Link from "next/link"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
 import { GardenShelves } from "./garden/GardenShelves"
+import { SharedHabitCard } from "./garden/SharedHabitCard"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { formatDate } from "@/lib/goal"
 import { habitKeys, listHabits } from "@/lib/habits"
 import { useProfile } from "@/lib/useProfile"
+import { listSharedHabits, sharedHabitKeys } from "@/lib/sharedHabits"
 
 /** Shared saved-habit list for the Garden and the basic dashboard. */
 export default function Garden({ title = "My Garden" }: { title?: string }) {
@@ -29,6 +31,13 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
     retry: false,
   })
   const profile = useProfile()
+  const sharedHabits = useInfiniteQuery({
+    queryKey: sharedHabitKeys.list(user?.id ?? "signed-out"),
+    queryFn: ({ pageParam }) => listSharedHabits(pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (page) => page.offset + page.limit < page.total ? page.offset + page.limit : undefined,
+    enabled: Boolean(user), retry: false, refetchInterval: 60_000,
+  })
   const client = useQueryClient()
   const writing = useRef(false)
   const [noticeId, setNoticeId] = useState(0)
@@ -80,6 +89,12 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
   const unauthorized = error instanceof ApiError && error.status === 401
   const pending = habits.isPending || profile.isPending
   const rows = habits.data?.pages.flatMap((page) => page.habits) ?? []
+  const sharedRows = (sharedHabits.data?.pages.flatMap((page) => page.habits) ?? [])
+    .toSorted((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id))
+  const sharedError = sharedHabits.error
+  const sharedUnauthorized = sharedError instanceof ApiError && sharedError.status === 401
+  const sharedUnavailable = sharedUnauthorized || (sharedError instanceof ApiError && sharedError.status === 403)
+  const allEmpty = !error && !pending && !sharedError && !sharedHabits.isPending && !sharedHabits.hasNextPage && rows.length === 0 && sharedRows.length === 0
   const today = profile.data?.today ?? ""
 
   function retry() {
@@ -140,7 +155,28 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
         </section>
       )}
 
-      {!error && !pending && rows.length === 0 && (
+      {user && !allEmpty && <section className="stack-md" aria-labelledby="garden-shared-heading">
+        <h2 id="garden-shared-heading" className="text-h2">Shared habits</h2>
+        {sharedError && <Card className="stack-md">
+          <div role="alert" className="stack-sm">
+            <h3 className="text-h3">{sharedUnauthorized ? "Sign in to see shared habits" : "Couldn't load shared habits"}</h3>
+            <p>{sharedUnauthorized ? "Your session has expired. Sign in again to continue." : "Check your connection and try again. Your saved habits are still there."}</p>
+          </div>
+          {sharedUnauthorized ? <Button className="self-start" onClick={() => void signOut()}>Sign in again</Button>
+            : <Button className="self-start" disabled={sharedHabits.isFetching} onClick={() => void sharedHabits.refetch()}>Try shared habits again</Button>}
+        </Card>}
+        {sharedHabits.isPending && !sharedError && <p aria-live="polite" className="text-body-sm text-secondary">Loading shared habits…</p>}
+        {!sharedUnavailable && sharedRows.length > 0 && <div className="shared-garden-grid">
+          {sharedRows.map((habit) => <SharedHabitCard key={habit.id} habit={habit} />)}
+        </div>}
+        {!sharedHabits.isPending && !sharedError && !sharedHabits.hasNextPage && sharedRows.length === 0 && <p className="text-body text-secondary">No shared habits yet. Choose “With friends” when creating a habit to grow together.</p>}
+        {sharedHabits.hasNextPage && !sharedUnavailable && <Button className="self-start" variant="secondary"
+          disabled={sharedHabits.isFetching} onClick={() => void sharedHabits.fetchNextPage()}>
+          {sharedHabits.isFetchingNextPage ? "Loading more shared habits…" : "Load more shared habits"}
+        </Button>}
+      </section>}
+
+      {allEmpty && (
         <Card className="stack-md">
           <h2 className="text-h2">No habits yet</h2>
           <p className="text-body text-secondary">Create your first habit to start your garden.</p>

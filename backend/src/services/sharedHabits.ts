@@ -174,12 +174,17 @@ export async function listSharedHabits(
   const { data, error, count } = await client
     .from("shared_habits")
     .select(COLUMNS, { count: "exact" })
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
     .range(page.offset, page.offset + page.limit - 1);
   if (error) databaseFailure(error);
   const now = new Date();
-  const habits: (SharedHabit & { stats: ReturnType<typeof groupStats> })[] = [];
+  const habits: (SharedHabit & {
+    stats: ReturnType<typeof groupStats>;
+    member_count: number;
+    own_stats: ReturnType<typeof shortStats>;
+    own_today: string;
+  })[] = [];
   const rows = (data ?? []) as SharedHabit[];
   // [PLACEHOLDER] Still two RPCs per habit plus paging. Bound concurrency to
   // four habits instead of serial calls or up to 100 simultaneous RPC chains.
@@ -188,7 +193,17 @@ export async function listSharedHabits(
       rows.slice(offset, offset + 4).map(async (habit) => {
         try {
           const members = await memberData(client, habit, userId);
-          return { ...habit, stats: groupStats(habit, members, now) };
+          const caller = members.members.find(
+            (member) => member.user_id === userId,
+          )!;
+          const ownToday = todayInZone(caller.timezone, now);
+          return {
+            ...habit,
+            stats: groupStats(habit, members, now),
+            member_count: members.members.length,
+            own_stats: shortStats(habit, members.dates.get(userId)!, ownToday),
+            own_today: ownToday,
+          };
         } catch (error) {
           // Membership can disappear after the initial RLS-filtered list query.
           // Do not expose that habit or discard the other accessible results.
@@ -256,6 +271,7 @@ export async function getSharedHabit(
       };
     }),
     own_stats: fullStats(habit, ownLogs, todayInZone(caller.timezone, now)),
+    own_today: todayInZone(caller.timezone, now),
   };
 }
 
@@ -285,13 +301,15 @@ async function loggingStats(
   const now = new Date();
   const data = await memberData(client, habit, userId);
   const caller = data.members.find((member) => member.user_id === userId)!;
+  const ownToday = todayInZone(caller.timezone, now);
+  const ownDates = data.dates.get(userId)!;
   return {
     stats: groupStats(habit, data, now),
-    own_stats: shortStats(
-      habit,
-      data.dates.get(userId)!,
-      todayInZone(caller.timezone, now),
-    ),
+    own_today: ownToday,
+    own_stats: {
+      ...shortStats(habit, ownDates, ownToday),
+      streak: currentStreak(habit, ownDates, ownToday),
+    },
   };
 }
 

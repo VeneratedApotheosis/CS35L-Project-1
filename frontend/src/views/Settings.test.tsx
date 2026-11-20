@@ -36,7 +36,8 @@ beforeEach(() => {
   auth.getSession.mockImplementation(async () => ({
     data: { session: auth.user ? { access_token: `token-${auth.user.id}` } : null },
   }))
-  fetchMock.mockImplementation(async (_url: string, init: RequestInit) => {
+  fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+    if (url.includes("/shared-habits?")) return json({ habits: [], total: 0, limit: 50, offset: 0 })
     if (init.method === "PATCH") {
       if (rejectSave) throw new TypeError("offline")
       savedTimezone = JSON.parse(init.body as string).timezone

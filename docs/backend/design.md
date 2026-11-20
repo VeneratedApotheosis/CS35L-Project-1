@@ -250,8 +250,8 @@ Create, list and detail (#268), invite preview and joining (#269), logging (#270
 
 **Implemented response contract (#268).** Create returns the saved habit with
 HTTP 201. List accepts `limit` and `offset` and returns
-`{ habits, total, limit, offset }`; each habit includes group `stats`.
-Detail returns the habit, group `stats`, `members`, and `own_stats`.
+`{ habits, total, limit, offset }`; each habit includes group `stats`. Since #279 the list is ordered by `created_at`, then `id`, ascending, so older cards stay first as pages load. It also returns `member_count`, caller-only short `own_stats`, and membership-local `own_today`, computed from the same member/log snapshot. Garden cards need no per-habit detail requests. No member names or exact log dates are added to the list.
+Detail returns the habit, group `stats`, `members`, `own_stats`, and `own_today` (#277). `own_today` is the server date in the caller's saved membership timezone, so the logging form never substitutes the group date or a later profile timezone change.
 Group stats include `today`, `state`, `overall_progress`, `stage`,
 `health_rate`, `health`, `end_date`, and `current_period`. The current-period
 count is the average member count against the per-member target; it may be fractional.
@@ -323,7 +323,7 @@ The leave and removal DELETE routes return 204. A non-member or missing habit re
 **Membership concurrency:** Once migration `20261119_01_serialize_shared_membership.sql` is applied, leave/removal and ownership transfer both lock the shared habit row before checking authorization and membership. Direct authenticated table deletion is revoked. Account deletion also locks the caller's existing shared habits in id order before choosing successors and cascading. The live script exercises both launch orders, but scheduling delays alone do not prove that requests waited concurrently. Controlled two-session checks on a disposable local database confirmed lock waits for both orderings of leave and removal versus transfer, as well as both orderings of account deletion versus transfer.
 
 
-**Logging.** The same rules as section 8.1, with two differences: nobody can log before the start date, and a member only ever adds or deletes their own logs. The optional POST body and date validation match personal logging. The caller's saved membership timezone determines today, the current period, and expiry; group stats use the earliest member date. POST returns `{ log, stats, own_stats }` (201); DELETE returns `{ stats, own_stats }` (200). `stats` is the group block and `own_stats` is the caller's short stats. Missing habits, memberships, and other members' logs return 404.
+**Logging.** The same rules as section 8.1, with two differences: nobody can log before the start date, and a member only ever adds or deletes their own logs. The optional POST body and date validation match personal logging. The caller's saved membership timezone determines today, the current period, and expiry; group stats use the earliest member date. POST returns `{ log, stats, own_stats, own_today }` (201); DELETE returns `{ stats, own_stats, own_today }` (200). `stats` is the group block and `own_stats` is the caller's short stats plus their current `streak` (#277), so the member row can update immediately. These extra response fields are additive. Missing habits, memberships, and other members' logs return 404.
 
 The database policies enforce ownership and membership for inserts, but do not enforce date windows on direct database calls. The checks and write are separate requests, so a concurrent membership change or period boundary can affect a request, and a successful write followed by a failed stats read can return 500 despite the write. Transactional enforcement would require a database follow-up. Live database verification of RLS and concurrency is still needed.
 
