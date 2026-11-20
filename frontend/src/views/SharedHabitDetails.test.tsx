@@ -21,7 +21,7 @@ vi.mock("@/pottedPlant/plants/plantTypes", () => {
 const period = { number: 2, total: 4, start: "2026-11-15", end: "2026-11-22", count: 1.5, target: 3 }
 function fixture(): SharedHabitDetail {
   return {
-    id: "shared-a", owner_id: "member-a", name: "Read together", description: "A chapter with friends.",
+    id: "shared-a", owner_id: "member-a", name: "Read together", description: "A chapter with friends.", own_today: "2026-11-19",
     plant_type: "pothos", target_count: 3, interval_count: 1, interval_unit: "week", num_periods: 4,
     start_date: "2026-11-08", created_at: "2026-11-01T00:00:00Z", join_by: "2026-11-08", max_members: 5,
     join_code: "a".repeat(32),
@@ -72,7 +72,7 @@ describe("shared habit details (#276)", () => {
     const own = screen.getByRole("region", { name: "Your progress" })
     expect(within(own).getByRole("progressbar", { name: "Current period" }).getAttribute("aria-valuenow")).toBe("2")
     expect(within(own).getByRole("progressbar", { name: "Overall progress" }).getAttribute("aria-valuenow")).toBe("50")
-    expect(screen.queryByRole("button", { name: "Log activity" })).toBeNull()
+    expect((screen.getByRole("button", { name: "Log activity" }) as HTMLButtonElement).disabled).toBe(false)
   })
 
   it("shows every member's returned name, progress, count, streak and health without their log dates", async () => {
@@ -104,7 +104,7 @@ describe("shared habit details (#276)", () => {
     expect(screen.getByText("Pothos · Stage 1 · Healthy")).toBeTruthy()
     expect(screen.getByRole("progressbar", { name: "Group overall progress" }).getAttribute("aria-valuenow")).toBe("0")
     expect(screen.getByText("Available after your first completed period.")).toBeTruthy()
-    expect(screen.queryByRole("button", { name: "Log activity" })).toBeNull()
+    expect((screen.getByRole("button", { name: "Log activity" }) as HTMLButtonElement).disabled).toBe(true)
   })
 
   it("uses backend stage and health even when they differ from personal progress", async () => {

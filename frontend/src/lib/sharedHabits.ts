@@ -66,6 +66,29 @@ export interface SharedHabitDetail extends SharedHabit {
   stats: SharedGroupStats
   members: SharedMemberSummary[]
   own_stats: HabitDetail["stats"]
+  /** Server date in the caller's saved membership timezone, not their profile. */
+  own_today: string
+}
+
+export interface SharedLogStats {
+  stats: SharedGroupStats
+  own_stats: HabitStats & { streak: number }
+  own_today: string
+}
+
+export interface SharedActivityLog {
+  id: string
+  shared_habit_id: string
+  user_id: string
+  occurred_on: string
+}
+
+export function addSharedActivity(id: string, occurredOn: string): Promise<SharedLogStats & { log: SharedActivityLog }> {
+  return api.post(`/shared-habits/${encodeURIComponent(id)}/logs`, { occurred_on: occurredOn })
+}
+
+export function deleteSharedActivity(id: string, logId: string): Promise<SharedLogStats> {
+  return api.delete(`/shared-habits/${encodeURIComponent(id)}/logs/${encodeURIComponent(logId)}`)
 }
 
 export const sharedHabitKeys = {

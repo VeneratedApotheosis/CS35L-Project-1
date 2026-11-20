@@ -256,6 +256,7 @@ export async function getSharedHabit(
       };
     }),
     own_stats: fullStats(habit, ownLogs, todayInZone(caller.timezone, now)),
+    own_today: todayInZone(caller.timezone, now),
   };
 }
 
@@ -285,13 +286,15 @@ async function loggingStats(
   const now = new Date();
   const data = await memberData(client, habit, userId);
   const caller = data.members.find((member) => member.user_id === userId)!;
+  const ownToday = todayInZone(caller.timezone, now);
+  const ownDates = data.dates.get(userId)!;
   return {
     stats: groupStats(habit, data, now),
-    own_stats: shortStats(
-      habit,
-      data.dates.get(userId)!,
-      todayInZone(caller.timezone, now),
-    ),
+    own_today: ownToday,
+    own_stats: {
+      ...shortStats(habit, ownDates, ownToday),
+      streak: currentStreak(habit, ownDates, ownToday),
+    },
   };
 }
 
