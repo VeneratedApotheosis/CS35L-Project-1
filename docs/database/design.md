@@ -292,7 +292,7 @@ The functions raise errors with stable messages so the backend can map them:
 | `shared_habit_started` | 400 | An update of the goal or the dates after the start |
 | `shared_habit_cap_below_members` | 400 | `max_members` set below the member count |
 
-The owner cannot leave: the delete policy on members blocks it. They transfer the habit or delete it.
+The owner cannot leave: the delete policy on members blocks it. They transfer the habit or delete it. However, concurrent membership deletion and transfer to that member are not serialized against each other. A race can leave the new owner without a membership row; this needs a database-level locking fix.
 
 ### 8.5 Delete account
 

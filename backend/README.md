@@ -87,3 +87,13 @@ stats, non-member and other-member restrictions, and a direct RLS read; it
 then deletes the temporary habit using A's token. If cleanup fails, it prints
 the habit ID for manual removal. A crash or interruption may also leave it
 behind. This check does not simulate a past period or concurrent requests.
+
+
+### Live shared-habit membership check
+
+With the same environment and three test accounts described above, start the
+backend and run `node scripts/shared-habit-members-live.mjs` from `backend/`.
+All three accounts need the same current local date. The script creates and
+removes a temporary habit, checks leave, removal, transfer, retained logs, and
+group averages. If cleanup fails, remove the printed habit ID as its owner.
+It verifies sequential behavior, not concurrent transfer and deletion.
