@@ -14,7 +14,9 @@ export function NavBar({ currentPath, preview = false }: {
   /** Keep the bar inside its style-guide frame, including on small screens. */
   preview?: boolean
 }) {
-  const creating = currentPath === "/create" || currentPath.startsWith("/create/")
+  // Static exports may include a trailing slash; it does not change the page.
+  const path = currentPath.replace(/\/+$/, "") || "/"
+  const creating = path === "/create" || path.startsWith("/create/")
 
   return (
     <div className={preview ? "navbar navbar--preview" : "navbar"}>
@@ -29,7 +31,7 @@ export function NavBar({ currentPath, preview = false }: {
               <li key={href} className="navbar__item">
                 {available ? (
                   <Link className="navbar__link" href={href} aria-label={label}
-                    aria-current={currentPath === href ? "page" : undefined}>
+                    aria-current={path === href ? "page" : undefined}>
                     <Icon icon={icon} size="sm" />
                     {href === "/" ? (
                       <>
