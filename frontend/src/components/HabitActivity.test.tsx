@@ -2,7 +2,12 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryProvider } from "@/lib/QueryProvider"
-import HabitDetails from "@/views/HabitDetails"
+import { useQuery } from "@tanstack/react-query"
+import { useAuth } from "@/auth/useAuth"
+import { getHabit, habitKeys } from "@/lib/habits"
+import { HabitActivity } from "./HabitActivity"
+import { HabitPlant } from "./HabitPlant"
+import { HabitProgress } from "./HabitProgress"
 
 const auth = vi.hoisted(() => {
   vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test")
@@ -17,6 +22,24 @@ const fetchMock = vi.fn()
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json" },
 })
+/** The habit's data, its progress and its activity, as one page: the shape the shared page has. */
+function HabitDetails({ id }: { id: string }) {
+  const { user } = useAuth()
+  const habit = useQuery({
+    queryKey: habitKeys.detail(user?.id ?? "signed-out", id),
+    queryFn: () => getHabit(id), enabled: Boolean(user), retry: false, refetchInterval: 60_000,
+  })
+  if (!habit.data) return null
+  return (
+    <main>
+      <h1>{habit.data.name}</h1>
+      {habit.isError && <p role="alert">Couldn&apos;t refresh the latest details. Your last saved activity is still shown.</p>}
+      <HabitPlant habit={habit.data} />
+      <HabitProgress stats={habit.data.stats} />
+      <HabitActivity key={habit.data.id} habit={habit.data} today={auth.today} />
+    </main>
+  )
+}
 let logs: { id: string; occurred_on: string }[]
 let expired: boolean
 let notStarted: boolean

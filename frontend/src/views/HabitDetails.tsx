@@ -1,20 +1,24 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
-import { HabitPlant } from "@/components/HabitPlant"
-import { HabitProgress } from "@/components/HabitProgress"
-import { HabitHistory } from "@/components/HabitHistory"
-import { HabitActivity } from "@/components/HabitActivity"
-import { DeleteHabit } from "@/components/DeleteHabit"
+import { DeleteHabitDialog } from "@/components/DeleteHabit"
 import { Card } from "@/components/Card"
+import { Toast } from "@/components/Toast"
 import { ApiError } from "@/lib/api"
-import { getHabit, habitKeys, type Habit } from "@/lib/habits"
-import { computeEndDate, formatDate, periodPhrase } from "@/lib/goal"
+import { getHabit, habitKeys } from "@/lib/habits"
 import { useProfile } from "@/lib/useProfile"
-import { plantTypeById } from "@/pottedPlant/plants/plantTypes"
+import { LogDayDialog } from "./garden/LogDayDialog"
+import { HabitHeader } from "./habit/HabitHeader"
+import { ActivityCalendar } from "./habit/ActivityCalendar"
+import { ActivityLog } from "./habit/ActivityLog"
+import { HabitPlantCard } from "./habit/HabitPlantCard"
+import { OverallCard } from "./habit/OverallCard"
+import { ThisPeriodCard } from "./habit/ThisPeriodCard"
+import { useHabitLogging } from "./habit/useHabitLogging"
 
 /** Only display data returned by the protected API, cached per account. */
 export default function HabitDetails({ id }: { id: string }) {
@@ -27,110 +31,68 @@ export default function HabitDetails({ id }: { id: string }) {
     retry: false,
     refetchInterval: 60_000,
   })
+  const logging = useHabitLogging(id, profile.data?.today)
+  const [logDateOpen, setLogDateOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const status = habit.error instanceof ApiError ? habit.error.status : undefined
   const unavailable = status === 404 || status === 400
   const fatalError = habit.isError && (!habit.data || unavailable || status === 401)
+  const today = profile.data?.today
 
   return (
     <main className="stack-lg habit-details-page">
-      <Link href="/" className="button button--ghost button--md self-start">Back to Garden</Link>
       {fatalError ? (
-        <Card className="stack-md">
-          <div role="alert" className="stack-sm">
-            <h1 className="text-h2">
-              {unavailable ? "Habit not found" : status === 401 ? "Sign in to see this habit" : "Couldn't load this habit"}
-            </h1>
-            <p className="text-body text-secondary">
-              {unavailable ? "This habit isn't available. Return to your Garden to see your habits."
-                : status === 401 ? "Your session has expired. Sign in again to continue."
-                  : "Check your connection and try again."}
-            </p>
-          </div>
-          {!unavailable && (status === 401 ? (
-            <Button className="self-start" onClick={() => void signOut()}>Sign in again</Button>
-          ) : (
-            <Button variant="secondary" className="self-start" onClick={() => void habit.refetch()} disabled={habit.isFetching}>
-              {habit.isFetching ? "Trying again…" : "Try again"}
-            </Button>
-          ))}
-        </Card>
+        <>
+          <Link href="/" className="button button--ghost button--md self-start">Back to Garden</Link>
+          <Card className="stack-md">
+            <div role="alert" className="stack-sm">
+              <h1 className="text-h2">
+                {unavailable ? "Habit not found" : status === 401 ? "Sign in to see this habit" : "Couldn't load this habit"}
+              </h1>
+              <p className="text-body text-secondary">
+                {unavailable ? "This habit isn't available. Return to your Garden to see your habits."
+                  : status === 401 ? "Your session has expired. Sign in again to continue."
+                    : "Check your connection and try again."}
+              </p>
+            </div>
+            {!unavailable && (status === 401 ? (
+              <Button className="self-start" onClick={() => void signOut()}>Sign in again</Button>
+            ) : (
+              <Button variant="secondary" className="self-start" onClick={() => void habit.refetch()} disabled={habit.isFetching}>
+                {habit.isFetching ? "Trying again…" : "Try again"}
+              </Button>
+            ))}
+          </Card>
+        </>
       ) : habit.isPending ? (
-        <p role="status" className="text-body text-secondary">Loading habit…</p>
+        <>
+          <Link href="/" className="button button--ghost button--md self-start">Back to Garden</Link>
+          <p role="status" className="text-body text-secondary">Loading habit…</p>
+        </>
       ) : habit.data ? (
         <>
+          <HabitHeader habit={habit.data} onDelete={() => setDeleteOpen(true)} />
           {habit.isError && <p role="alert" className="text-body-sm">Couldn&apos;t refresh the latest details. Your last saved activity is still shown.</p>}
-          <header className="stack-sm">
-            <h1 id="habit-name" className="text-h1 garden-name">{habit.data.name}</h1>
-            <p className="text-body text-secondary">
-              {habit.data.target_count} {habit.data.target_count === 1 ? "time" : "times"} {periodPhrase(habit.data.interval_count, habit.data.interval_unit)}
-            </p>
-          </header>
-          <div className="habit-overview">
-            <Card className="habit-overview-plant"><HabitPlant habit={habit.data} /></Card>
-            <HabitInfo habit={habit.data} today={profile.data?.today} />
+          <div className="habit-grid">
+            <HabitPlantCard habit={habit.data} />
+            <ThisPeriodCard habit={habit.data} today={today} busy={logging.busy}
+              onLogToday={() => { void logging.logToday() }} onLogDate={() => setLogDateOpen(true)} />
+            <ActivityCalendar key={habit.data.id} habit={habit.data} today={today} busy={logging.busy}
+              onRemove={logging.removeLog} />
+            <div className="habit-side">
+              <OverallCard habit={habit.data} today={today} />
+              <ActivityLog habit={habit.data} today={today} busy={logging.busy} onRemove={logging.removeLog} />
+            </div>
           </div>
-          <div className="habit-details-columns">
-          <div className="habit-tools">
-            <HabitProgress stats={habit.data.stats} />
-            <HabitActivity key={habit.data.id} habit={habit.data} today={profile.data?.today} />
-          </div>
-          <HabitHistory key={`history-${habit.data.id}`} habit={habit.data} today={profile.data?.today} />
-          </div>
-          <DeleteHabit id={habit.data.id} name={habit.data.name} />
+          <LogDayDialog habit={logDateOpen ? habit.data : null} today={today ?? ""} onSave={logging.logOn}
+            onClose={() => setLogDateOpen(false)} />
+          <DeleteHabitDialog id={habit.data.id} name={habit.data.name} open={deleteOpen} onClose={() => setDeleteOpen(false)} />
         </>
       ) : null}
+      {logging.notice && <Toast key={logging.noticeId} message={logging.notice.message}
+        variant={logging.notice.error ? "error" : "success"} onDismiss={logging.dismiss}
+        action={!logging.busy && logging.notice.undo ? { label: "Undo", onClick: logging.notice.undo } : undefined} />}
     </main>
-  )
-}
-
-/** Calendar dates only: UTC subtraction avoids 23/25-hour daylight-saving days. */
-function daysBetween(start: string, end: string): number {
-  return Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000)
-}
-
-function HabitInfo({ habit, today }: { habit: Habit; today?: string }) {
-  // Reuse the create form's calendar arithmetic until the stats API supplies dates.
-  const end = habit.num_periods === null ? null : computeEndDate(
-    habit.start_date, habit.interval_unit, habit.interval_count, habit.num_periods,
-  )
-  const upcoming = today !== undefined && today < habit.start_date
-  const finished = today !== undefined && end !== null && today >= end
-  const days = today ? daysBetween(today, upcoming ? habit.start_date : end ?? today) : 0
-  const duration = `${days} ${days === 1 ? "day" : "days"}`
-
-  return (
-    <section className="stack-lg habit-info" aria-labelledby="habit-name">
-      <Card className="stack-md">
-        <h2 className="text-h2">Habit details</h2>
-        <dl className="habit-info-grid text-body">
-          <div className="stack-sm">
-            <dt className="text-secondary">Plant type</dt>
-            <dd>{plantTypeById(habit.plant_type)?.label ?? habit.plant_type}</dd>
-          </div>
-          <div className="stack-sm">
-            <dt className="text-secondary">Status</dt>
-            <dd>{!today ? "Loading status…" : upcoming ? "Not started yet" : finished ? "Finished" : "Active"}</dd>
-          </div>
-          <div className="stack-sm habit-schedule">
-            <dt className="text-secondary">Schedule</dt>
-            <dd className="stack-sm">
-              <div className="habit-date-range">
-                <span><span className="sr-only">Start date: </span><time dateTime={habit.start_date}>{formatDate(habit.start_date)}</time></span>
-                <span aria-hidden="true">–</span>
-                <span><span className="sr-only">End date: </span>{end ? <time dateTime={end}>{formatDate(end)}</time> : "No end date"}</span>
-              </div>
-              <p className="text-secondary">{!today ? "Loading time remaining…" : upcoming ? `Starts in ${duration}` : finished ? "0 days remaining" : end ? `${duration} remaining` : "Ongoing"}</p>
-            </dd>
-          </div>
-        </dl>
-      {habit.description && (
-        <section className="stack-sm" aria-labelledby="habit-description-heading">
-          <h2 id="habit-description-heading" className="text-h2">Description</h2>
-          <p className="text-body text-secondary habit-description">{habit.description}</p>
-        </section>
-      )}
-      </Card>
-    </section>
   )
 }

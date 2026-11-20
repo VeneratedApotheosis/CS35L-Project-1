@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
@@ -10,24 +9,9 @@ import { Button } from "./Button"
 import { Modal } from "./Modal"
 
 /**
- * Delete a habit, after one confirmation. A habit cannot be edited, so deleting
- * it and creating a new one is how a user changes it. Its logs go with it.
+ * Delete a habit, after one confirmation. A habit cannot be edited, so deleting it and creating a new
+ * one is how a user changes it. Its logs go with it. The place that opens it has its own Delete button.
  */
-export function DeleteHabit({ id, name }: { id: string; name: string }) {
-  const [open, setOpen] = useState(false)
-
-  return (
-    <section aria-label="Delete habit" className="stack-sm">
-      <p className="text-body text-secondary">
-        A habit can&apos;t be edited. To change it, delete it and create a new one.
-      </p>
-      <Button variant="danger" className="self-start" onClick={() => setOpen(true)}>Delete habit</Button>
-      <DeleteHabitDialog id={id} name={name} open={open} onClose={() => setOpen(false)} />
-    </section>
-  )
-}
-
-/** The confirmation on its own, for places that have their own Delete habit button. */
 export function DeleteHabitDialog({ id, name, open, onClose }: {
   id: string
   name: string

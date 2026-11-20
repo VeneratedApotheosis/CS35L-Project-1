@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryProvider } from "@/lib/QueryProvider"
-import { DeleteHabit } from "./DeleteHabit"
+import { DeleteHabitDialog } from "./DeleteHabit"
 
 const mocks = vi.hoisted(() => {
   vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test")
@@ -35,9 +35,9 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+const onClose = vi.fn()
 const open = () => {
-  render(<QueryProvider><DeleteHabit id="h 1" name="Read" /></QueryProvider>)
-  fireEvent.click(screen.getByRole("button", { name: "Delete habit" }))
+  render(<QueryProvider><DeleteHabitDialog id="h 1" name="Read" open onClose={onClose} /></QueryProvider>)
 }
 const dialog = () => screen.getByRole("dialog", { hidden: true })
 const confirm = () => within(dialog()).getByRole("button", { name: /Delete habit|Deleting/, hidden: true }) as HTMLButtonElement
@@ -93,7 +93,7 @@ describe("delete habit", () => {
   it("cancels without deleting", () => {
     open()
     fireEvent.click(within(dialog()).getByRole("button", { name: "Cancel", hidden: true }))
-    expect(dialog().hasAttribute("open")).toBe(false)
+    expect(onClose).toHaveBeenCalledTimes(1)
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })

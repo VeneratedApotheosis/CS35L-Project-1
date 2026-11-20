@@ -1,0 +1,235 @@
+/*
+ * The Habit details page: a header, then soft cards in a grid (the plant, how this period is going, the activity
+ * calendar, and the overall run with the activity log), so the first screen is the plant, the progress and the way to
+ * log. Numbers carry the hierarchy.
+ *
+ * Corners are concentric: a card's radius is its padding plus the radius of what sits in the padding
+ * (the buttons are 2.75rem tall, so their corners are 1.375rem). Where the browser can, they are the
+ * continuous "squircle" curve instead of a plain arc.
+ */
+.habit-card {
+  --card-pad: 1.5rem;
+  --inner-radius: 1.375rem;
+  --card-radius: calc(var(--card-pad) + var(--inner-radius));
+  margin: 0;
+  padding: var(--card-pad);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: var(--card-radius);
+  background: var(--color-surface-elevated);
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+@supports (corner-shape: squircle) {
+  .habit-card, .habit-plant-card__pill, .habit-card .button--md, .habit-day, .habit-calendar__grid td[data-band]::before { corner-shape: squircle; }
+}
+
+/* The header. */
+.habit-head { display: grid; gap: var(--space-4); }
+.habit-head__back {
+  display: inline-flex;
+  align-items: center;
+  align-self: start;
+  justify-self: start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+}
+.habit-head__back:hover { background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-secondary)); }
+.habit-head__row { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+.habit-head__title { min-width: 0; flex: 1 1 18rem; }
+.habit-head__name {
+  margin: 0;
+  font-size: clamp(var(--font-size-xl), 4vw, var(--font-size-3xl));
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.habit-head__desc {
+  margin: var(--space-2) 0 0;
+  max-width: 60ch;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.habit-head__delete { flex-shrink: 0; color: var(--color-danger-text); }
+
+/* The cards. The plant is narrower than the period beside it. */
+.habit-grid { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+@media (min-width: 52rem) {
+  .habit-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 8fr); }
+}
+
+/* No padding at all: the plant is larger than its box and runs into the card's edge, past the empty margin of its drawing. The label overlaps the foot of the pot, so it reads as sitting on it. */
+.habit-plant-card { --card-pad: 0; --card-radius: 2.75rem; display: flex; overflow: hidden; flex-direction: column; align-items: center; justify-content: space-between; gap: 0; }
+.habit-plant-card__art { display: grid; place-items: center; width: 100%; flex: 1; min-height: 0; }
+.habit-plant-card__art > svg { display: block; width: min(83%, 22.4rem); height: auto; max-height: 21rem; margin-top: -8%; transform: translateY(var(--space-3)); }
+.habit-plant-card__pill {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--inner-radius);
+  background: var(--color-surface-secondary);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  position: relative;
+  margin: calc(-1 * var(--space-8)) var(--space-3) var(--space-6);
+}
+.habit-plant-card__health { color: var(--color-link); }
+.habit-plant-card[data-health="slightly_wilted"] .habit-plant-card__health { color: var(--color-text-secondary); }
+.habit-plant-card[data-health="wilted"] .habit-plant-card__health { color: var(--color-text-muted); }
+
+/* How the habit is going. */
+.habit-period { --card-pad: 2rem; container-type: inline-size; display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-3); }
+.habit-period__title { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); line-height: 1.1; }
+.habit-period__bar { display: grid; gap: var(--space-1); min-width: 0; }
+.habit-period .habit-progress__track { --progress-height: 0.75rem; }
+.habit-period .habit-progress__caption { font-size: var(--font-size-base); font-weight: var(--font-weight-bold); }
+.habit-period .habit-progress__count { color: var(--color-link); font-size: var(--font-size-xl); }
+.habit-period__sub { margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+
+/* Overall progress, consistency and the streak: three columns in one row, each a label over its figure. */
+.habit-period__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 0;
+  margin: 0;
+}
+.habit-period__metrics > div { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; padding-inline: var(--space-3); }
+.habit-period__metrics > div:first-child { padding-inline-start: 0; }
+.habit-period__metrics > div:last-child { padding-inline-end: 0; }
+.habit-period__metrics > div + div { border-inline-start: 1px solid var(--color-border); }
+.habit-period__metrics dt { color: var(--color-text-secondary); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
+.habit-period__metrics dd { display: grid; gap: 0.125rem; margin: 0; }
+.habit-period__value { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.habit-period__overall .progress-ring { width: 4rem; }
+.habit-period__overall .progress-ring__value { font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
+.habit-period__actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: var(--space-2); }
+.habit-period__actions .button { min-height: 2.5rem; font-size: var(--font-size-md); }
+
+/* Activity: the calendar, a rounded square for each day. It is as tall as the column beside it (Overall and the log), and its weeks share the height. */
+.habit-calendar { --card-pad: 1.5rem; container-type: inline-size; display: grid; gap: var(--space-3); grid-template-rows: auto minmax(0, 1fr); }
+.habit-calendar__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.habit-calendar__title { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); }
+.habit-calendar__nav { display: flex; align-items: center; gap: var(--space-1); }
+.habit-calendar__month { margin: 0; font-size: var(--font-size-base); font-weight: var(--font-weight-bold); }
+/*
+ * Concentric: a day is --day-gap from its band's edge on every side, so the band's corner radius is the day's
+ * plus that gap. The days are rounded squares, and the band a rounded rectangle with the same look. Between
+ * two neighbours there is --day-gap + --day-extra on each side. The band is drawn behind the cell and pulled in
+ * by --day-extra at its ends, so the extra space spreads the days apart without widening the band's margin.
+ */
+.habit-calendar__grid { --day-gap: 0.375rem; --day-extra: 0.175rem; --day-radius: 0.875rem; --band-radius: calc(var(--day-radius) + var(--day-gap)); width: 100%; max-width: 36rem; margin-inline: auto; height: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0 max(0rem, calc(2 * var(--day-extra))); }
+.habit-calendar__grid th { color: var(--color-text-secondary); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
+.habit-calendar__grid td { position: relative; padding: var(--day-gap) calc(var(--day-gap) + var(--day-extra)); vertical-align: middle; }
+
+/* The bands behind the days. One piece in each row, with round ends where the period starts and ends. */
+.habit-calendar__grid td[data-band]::before { content: ""; position: absolute; inset: 0; background: var(--band); }
+.habit-calendar__grid td[data-band="start"]::before, .habit-calendar__grid td[data-band="single"]::before { inset-inline-start: var(--day-extra); }
+.habit-calendar__grid td[data-band="end"]::before, .habit-calendar__grid td[data-band="single"]::before { inset-inline-end: var(--day-extra); }
+.habit-calendar__grid td[data-period="met"] { --band: color-mix(in srgb, var(--color-primary) 22%, transparent); }
+.habit-calendar__grid td[data-period="current"] { --band: color-mix(in srgb, var(--color-primary) 50%, transparent); }
+.habit-calendar__grid td[data-period="missed"] { --band: color-mix(in srgb, var(--color-text) 10%, transparent); }
+.habit-calendar__grid td[data-period="upcoming"] { --band: color-mix(in srgb, var(--color-text) 4%, transparent); }
+.habit-calendar__grid td[data-band="start"]::before, .habit-calendar__grid td[data-band="single"]::before {
+  border-start-start-radius: var(--band-radius);
+  border-end-start-radius: var(--band-radius);
+}
+.habit-calendar__grid td[data-band="end"]::before, .habit-calendar__grid td[data-band="single"]::before {
+  border-start-end-radius: var(--band-radius);
+  border-end-end-radius: var(--band-radius);
+}
+.habit-day {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--day-radius);
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+.habit-day[data-past="false"][data-logged="false"] { color: var(--color-text); }
+td[data-band] .habit-day[data-logged="false"] { background: color-mix(in srgb, var(--color-surface-elevated) 70%, transparent); }
+.habit-day[data-logged="true"] { background: var(--color-primary); color: var(--color-primary-text); }
+/* Days before the habit starts and from its end have no fill, only an outline. */
+.habit-day[data-outside="true"] { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text) 20%, transparent); color: var(--color-text-muted); }
+.habit-day[data-today="true"] { outline: 2px solid var(--color-link); outline-offset: 1px; }
+button.habit-day { cursor: pointer; }
+button.habit-day:hover { filter: brightness(0.94); }
+button.habit-day:focus-visible { outline: 2px solid var(--color-link); outline-offset: 2px; }
+.habit-day__count {
+  position: absolute;
+  inset-inline-end: -0.125rem;
+  inset-block-end: -0.125rem;
+  padding-inline: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+.habit-calendar__logs { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.habit-calendar__logs li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+@container (max-width: 26rem) {
+  .habit-calendar__grid { --day-gap: 0.1875rem; --day-extra: 0.0625rem; --day-radius: 0.5rem; }
+  .habit-day { font-size: var(--font-size-base); }
+}
+
+/* The right column of the second row: Overall, with the activity log under it. Overall is the goal, the period and the days left, in one row like the figures above. */
+.habit-side { display: grid; gap: var(--space-5); align-content: start; min-width: 0; }
+.habit-overall { --card-pad: 1.5rem; container-type: inline-size; display: grid; gap: var(--space-3); align-content: start; }
+.habit-overall__title { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); }
+.habit-overall__figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
+.habit-overall__figures > div { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; padding-inline: var(--space-3); }
+.habit-overall__figures > div:first-child { padding-inline-start: 0; }
+.habit-overall__figures > div:last-child { padding-inline-end: 0; }
+.habit-overall__figures > div + div { border-inline-start: 1px solid var(--color-border); }
+.habit-overall__figures dt { color: var(--color-text-secondary); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
+.habit-overall__figures dd { display: grid; gap: 0.125rem; margin: 0; }
+.habit-overall__value { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.habit-overall__note { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.habit-log { --card-pad: 1.5rem; display: grid; gap: var(--space-3); align-content: start; }
+.habit-log__title { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); }
+.habit-log__list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.habit-log__list li { display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-size-md); }
+.habit-log__list li > svg { flex-shrink: 0; color: var(--color-link); }
+.habit-log__count { margin-inline-start: auto; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.habit-log__empty { margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+/* Only a card too narrow for three columns stacks them, whatever the screen is. */
+@container (max-width: 26rem) {
+  .habit-overall__figures { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .habit-overall__figures > div, .habit-overall__figures > div:first-child, .habit-overall__figures > div:last-child { padding-inline: 0; }
+  .habit-overall__figures > div + div { padding-top: var(--space-3); border-inline-start: 0; border-top: 1px solid var(--color-border); }
+}
+
+@container (max-width: 26rem) {
+  .habit-period__metrics { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .habit-period__metrics > div, .habit-period__metrics > div:first-child, .habit-period__metrics > div:last-child { padding-inline: 0; }
+  .habit-period__metrics > div + div { padding-top: var(--space-3); border-inline-start: 0; border-top: 1px solid var(--color-border); }
+}
+
+@media (max-width: 43.999rem) {
+  .habit-period, .habit-calendar, .habit-overall, .habit-log { --card-pad: 1.25rem; }
+  .habit-plant-card__art > svg { width: min(90%, 20rem); }
+  .habit-head__delete { align-self: flex-start; }
+}

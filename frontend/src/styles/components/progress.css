@@ -72,8 +72,9 @@
   aspect-ratio: 1;
 }
 .progress-ring svg { display: block; width: 100%; height: 100%; }
-.progress-ring__track, .progress-ring__fill { fill: none; stroke-width: 8; }
-.progress-ring__track { stroke: var(--color-surface-secondary); }
+/* The same pills as the bar: a soft tint for what is left, the link colour for what is done, round ends. */
+.progress-ring__track, .progress-ring__fill { fill: none; stroke-width: 11; }
+.progress-ring__track { stroke: color-mix(in srgb, var(--color-text) 12%, transparent); }
 .progress-ring__fill { stroke: var(--color-link); }
 .progress-ring__value { position: absolute; inset: 0; display: grid; place-items: center; }
 .habit-progress-summary, .habit-progress-metrics {

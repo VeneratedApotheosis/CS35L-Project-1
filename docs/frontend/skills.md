@@ -69,3 +69,15 @@ Use active voice as default. A CTA says exactly what happens when it is used: "S
 Treat failure and emptiness as moments for direction, not mood. Explain what went wrong and how to fix it, in the interface's voice rather than a person's. Errors don't apologize, and they are never vague about what happened. An empty screen is an invitation to act.
 
 Keep the tone conversational: plain verbs, sentence case, no filler, with tone matched to the brand and the audience. Let each written element do exactly one job.
+
+## Concentric corners
+
+Rounded shapes that sit inside rounded shapes follow Apple's concentric rule, so the gap between the two outlines is the same all the way round. Without it, the gap swells at the corners and the inner shape looks pushed in.
+
+- **The rule.** The inner shape's radius is the outer shape's radius minus the space between them (the padding): `inner = outer - padding`. Equivalently, `outer = inner + padding`. The corners share a centre.
+- **Build up from the smallest.** Start from the control that sits at the centre (a button, a pill, a day circle). Its radius is half its height. Add the padding around it to get its container's radius, then the padding around that to get the next container's. Write it as variables, not numbers: `--inner-radius`, `--card-pad`, `--card-radius: calc(var(--card-pad) + var(--inner-radius))`.
+- **Equal on every side.** The rule only holds if the padding is the same on the sides that meet at the corner. A pill-shaped band around a row of circles is concentric only when each end circle is as far from the band's end as from its top and bottom. Size the circles to their cells and let the cells' padding be that gap, instead of centring a smaller circle in a wide cell.
+- **Fully round shapes.** A pill's radius is half its height, so a pill around a circle is concentric when the padding is equal on all sides.
+- **Nested and edge cases.** When the padding is zero, the inner shape is the outer shape (the plant that runs to its card's edge uses the card's radius). When the padding is larger than the outer radius, the inner radius is zero, so the inner corners are square. Do not let it go negative.
+- **Squircles.** Where the browser supports it, use the continuous curve on both shapes: `@supports (corner-shape: squircle) { .card, .card .button { corner-shape: squircle; } }`. The same rule applies, because the curve is still defined by the radius.
+- **Not one radius for everything.** Setting one border radius on every element, whatever its size or depth, is what breaks this. Each level gets its own radius from the one inside it.
