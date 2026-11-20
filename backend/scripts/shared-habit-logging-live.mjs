@@ -2,6 +2,10 @@ import "dotenv/config";
 import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
 import { DateTime } from "luxon";
+import {
+  requireLocalFixture,
+  setLocalFixtureDates,
+} from "./shared-habit-local-fixture.mjs";
 
 const required = (name) => {
   const value = process.env[name];
@@ -14,6 +18,7 @@ const baseUrl = (process.env.TEST_API_URL ?? "http://localhost:3000").replace(
   /\/$/,
   "",
 );
+requireLocalFixture(supabaseUrl, baseUrl);
 
 async function signIn(label) {
   const client = createClient(supabaseUrl, key, {
@@ -74,8 +79,8 @@ async function main() {
       interval_count: 1,
       interval_unit: "week",
       num_periods: 2,
-      start_date: dates[0],
-      join_by: dates[0],
+      start_date: DateTime.fromISO(dates[0]).plus({ days: 2 }).toISODate(),
+      join_by: DateTime.fromISO(dates[0]).plus({ days: 1 }).toISODate(),
       max_members: 3,
     });
     habitId = habit.id;
@@ -84,6 +89,7 @@ async function main() {
       "Creation must return an id and invite code",
     );
     await api(b, "POST", `/shared-habits/join/${habit.join_code}`, 200);
+    setLocalFixtureDates(habitId, dates[0], dates[0]);
     const path = `/shared-habits/${habitId}/logs`;
 
     const first = await api(a, "POST", path, 201, {});

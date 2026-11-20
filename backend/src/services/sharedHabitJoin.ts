@@ -41,7 +41,8 @@ export async function previewSharedHabit(
   }
   const row = (data as Preview[] | null)?.[0];
   if (!row) throw unavailable();
-  // The database preview only matches the code; enforce its local-date deadline here.
+  // The RPC also checks the deadline and member start boundary. Recheck the
+  // caller-local deadline here using the profile read for this request.
   const profile = await getProfile(client, userId);
   const today = todayInZone(profile.timezone);
   if (today > row.join_by || today > row.start_date) throw unavailable();

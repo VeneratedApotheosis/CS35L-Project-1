@@ -62,8 +62,8 @@ development tooling. These remain unresolved; the suggested forced
 fix would install an incompatible ESLint version.
 ### Live shared-habit logging check
 
-The Vitest suite uses a fake database. To exercise issue #270 against a
-disposable Supabase project, start the backend with that project's migrations
+The Vitest suite uses a fake database. To exercise issue #270 against an
+isolated local Supabase project, start the backend with that project's migrations
 applied and configure `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in
 `backend/.env`. Add these existing, distinct test accounts to the same ignored
 file (fill in their values locally; never commit passwords):
@@ -80,11 +80,15 @@ TEST_API_URL=http://localhost:3000
 ```
 
 From `backend/`, run `node scripts/shared-habit-logging-live.mjs`.
-The backend and script must point to the same disposable Supabase project. A
-and B must have the same current local date in their saved profile timezones.
-The script creates a temporary shared habit, joins B, checks logging, returned
-stats, non-member and other-member restrictions, and a direct RLS read; it
-then deletes the temporary habit using A's token. If cleanup fails, it prints
+The backend and script must point to the same isolated local Supabase project.
+A and B must have the same current local date in their saved profile timezones.
+The script joins a future-start habit, then uses a local Docker/Postgres fixture
+helper to move its dates for logging. This privileged test-only adjustment does
+not change production validation. The helper defaults to the isolated container
+`supabase_db_codex-271-local-supabase`; set `TEST_DB_CONTAINER` for another local
+project. Both scripts reject non-local Supabase or backend URLs. The script checks
+logging, returned stats, non-member and other-member restrictions, and a direct
+RLS read; it then deletes the temporary habit using A's token. If cleanup fails, it prints
 the habit ID for manual removal. A crash or interruption may also leave it
 behind. This check does not simulate a past period or concurrent requests.
 
@@ -95,7 +99,8 @@ With the same environment and three test accounts described above, start the
 backend and run `node scripts/shared-habit-members-live.mjs` from `backend/`.
 All three accounts need the same current local date. The script creates and
 removes a temporary habit, checks leave, removal, transfer, retained logs, and
-group averages. If cleanup fails, remove the printed habit ID as its owner.
+group averages. It moves the local fixture's dates after joining to test logging,
+and briefly resets them to permit a rejoin before restoring the started date. If cleanup fails, remove the printed habit ID as its owner.
 Apply migration `20261119_01_serialize_shared_membership.sql` to the disposable project first. It exercises both launch orders using direct RPCs, and checks direct table deletion is denied. Delays bias the ordering but do not guarantee overlapping transactions; use a controlled multi-session test to verify lock waiting.
 
 ### Local shared-habit management database checks

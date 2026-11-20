@@ -2,6 +2,10 @@ import "dotenv/config";
 import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
 import { DateTime } from "luxon";
+import {
+  requireLocalFixture,
+  setLocalFixtureDates,
+} from "./shared-habit-local-fixture.mjs";
 
 const required = (name) => {
   const value = process.env[name];
@@ -14,6 +18,7 @@ const baseUrl = (process.env.TEST_API_URL ?? "http://localhost:3000").replace(
   /\/$/,
   "",
 );
+requireLocalFixture(supabaseUrl, baseUrl);
 
 async function signIn(label) {
   const client = createClient(supabaseUrl, key, {
@@ -71,8 +76,8 @@ async function main() {
       interval_count: 1,
       interval_unit: "week",
       num_periods: 2,
-      start_date: dates[0],
-      join_by: dates[0],
+      start_date: DateTime.fromISO(dates[0]).plus({ days: 2 }).toISODate(),
+      join_by: DateTime.fromISO(dates[0]).plus({ days: 1 }).toISODate(),
       max_members: 3,
     });
     habitId = habit.id;
@@ -142,6 +147,7 @@ async function main() {
         }
       }
     }
+    setLocalFixtureDates(habitId, dates[0], dates[0]);
     const log = await api(b, "POST", `${base}/logs`, 201, {});
     await api(b, "POST", `${base}/logs`, 201, {});
     const before = await api(a, "GET", base, 200);
@@ -167,7 +173,15 @@ async function main() {
     assert.equal(afterLeave.members.length, 1);
     assert.equal(afterLeave.stats.overall_progress, 0);
     await api(a, "POST", `${base}/transfer`, 400, { user_id: b.id });
+    // Rejoining is impossible after the real start boundary. Reset only this
+    // disposable fixture to test retained logs when a member rejoins.
+    setLocalFixtureDates(
+      habitId,
+      DateTime.fromISO(dates[0]).plus({ days: 2 }).toISODate(),
+      DateTime.fromISO(dates[0]).plus({ days: 1 }).toISODate(),
+    );
     await api(b, "POST", `/shared-habits/join/${habit.join_code}`, 200);
+    setLocalFixtureDates(habitId, dates[0], dates[0]);
     const rejoined = await api(a, "GET", base, 200);
     assert.equal(rejoined.stats.overall_progress, 0.25);
     await api(a, "POST", `${base}/transfer`, 204, { user_id: b.id });
