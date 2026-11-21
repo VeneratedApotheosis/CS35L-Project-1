@@ -102,14 +102,19 @@ describe("create shared habit (#274)", () => {
     expect(fetchMock.mock.calls.filter(([url]) => url.includes("/shared-habits/join/"))).toHaveLength(0)
   })
 
-  it("hides a link when the server says it is unavailable or full", async () => {
+  it.each([
+    [404, "not_found"],
+    [400, "shared_habit_join_ended"],
+    [409, "shared_habit_full"],
+  ])("hides the link for unavailable invite response %s (%s)", async (status, code) => {
     fetchMock.mockImplementation(async (url: string) => url.includes("/shared-habits/join/")
-      ? json({ error: { code: "not_found", message: "Unavailable" } }, 404) : json(saved))
+      ? json({ error: { code, message: "Unavailable" } }, status) : json(saved))
     setup()
     review()
     create()
     expect(await screen.findByText("This invitation is no longer available.")).toBeTruthy()
     expect(screen.queryByLabelText("Invite link")).toBeNull()
+    expect(screen.queryByRole("button", { name: "Retry invite check" })).toBeNull()
   })
 
   it("does not offer a link when the habit is full", async () => {
@@ -134,6 +139,30 @@ describe("create shared habit (#274)", () => {
     available = true
     fireEvent.click(screen.getByRole("button", { name: "Retry invite check" }))
     expect(await screen.findByLabelText("Invite link")).toBeTruthy()
+  })
+
+  it.each([400, 409])("offers retry for unrelated %s errors", async (status) => {
+    fetchMock.mockImplementation(async (url: string) => url.includes("/shared-habits/join/")
+      ? json({ error: { code: "unexpected", message: "Try again" } }, status) : json(saved))
+    setup()
+    review()
+    create()
+    expect(await screen.findByRole("alert")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Retry invite check" })).toBeTruthy()
+    expect(screen.queryByLabelText("Invite link")).toBeNull()
+  })
+
+  it("offers retry for a network failure", async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.includes("/shared-habits/join/")) throw new TypeError("Network error")
+      return json(saved)
+    })
+    setup()
+    review()
+    create()
+    expect(await screen.findByRole("alert")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Retry invite check" })).toBeTruthy()
+    expect(screen.queryByLabelText("Invite link")).toBeNull()
   })
 
   it("hides a previously available invite when the owner's local start date arrives", async () => {

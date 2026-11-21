@@ -100,6 +100,11 @@ export default function CreateHabit() {
     refetchIntervalInBackground: true,
     staleTime: 0,
   })
+  const inviteError = invitePreview.error
+  const inviteUnavailable = inviteError instanceof ApiError &&
+    (inviteError.status === 404 ||
+      (inviteError.status === 400 && inviteError.code === "shared_habit_join_ended") ||
+      (inviteError.status === 409 && inviteError.code === "shared_habit_full"))
   const inviteAvailable = !inviteEndedLocally && !invitePreview.isFetching &&
     !invitePreview.isError && !!invitePreview.data && invitePreview.data.places_left > 0
 
@@ -616,7 +621,7 @@ export default function CreateHabit() {
               </div>
             ) : !inviteUrl ? (
               <p role="status">Your habit was saved, but no invite link was returned.</p>
-            ) : inviteEndedLocally || (invitePreview.error instanceof ApiError && invitePreview.error.status === 404) || (invitePreview.data && invitePreview.data.places_left <= 0) ? (
+            ) : inviteEndedLocally || inviteUnavailable || (invitePreview.data && invitePreview.data.places_left <= 0) ? (
               <p role="status">This invitation is no longer available.</p>
             ) : invitePreview.isError ? (
               <div role="alert"><p>Could not check the invite. Try again.</p><Button onClick={() => void invitePreview.refetch()}>Retry invite check</Button></div>
