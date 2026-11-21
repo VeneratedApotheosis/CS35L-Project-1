@@ -21,6 +21,11 @@ import {
   removeSharedMember,
   transferSharedHabit,
 } from "../services/sharedHabitMembers.js";
+import {
+  editSharedHabit,
+  manageSharedCode,
+  deleteSharedHabit,
+} from "../services/sharedHabitManagement.js";
 import { addLogBody, logParams } from "./logs.js";
 import { createHabitBody, habitParams } from "./habits.js";
 
@@ -28,6 +33,24 @@ export const createSharedHabitBody = createHabitBody.extend({
   join_by: createHabitBody.shape.start_date.unwrap(),
   max_members: z.number().int().min(2).max(50),
 });
+// PATCH preserves an explicit null so an owner can clear the description.
+export const editSharedHabitBody = z
+  .strictObject({
+    name: createHabitBody.shape.name.optional(),
+    description: z.string().max(500).nullable().optional(),
+    plant_type: createHabitBody.shape.plant_type.optional(),
+    target_count: createHabitBody.shape.target_count.optional(),
+    interval_count: createHabitBody.shape.interval_count.optional(),
+    interval_unit: createHabitBody.shape.interval_unit.optional(),
+    num_periods: createHabitBody.shape.num_periods.optional(),
+    start_date: createHabitBody.shape.start_date,
+    join_by: createHabitBody.shape.start_date,
+    max_members: z.number().int().min(2).max(50).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "provide at least one field",
+  });
+
 export const sharedHabitsRouter = Router();
 sharedHabitsRouter.post(
   "/shared-habits",
@@ -158,6 +181,69 @@ sharedHabitsRouter.post(
     const { id } = valid.params as z.infer<typeof habitParams>;
     const { user_id } = valid.body as z.infer<typeof transferBody>;
     await transferSharedHabit(supabase, id, user_id);
+    res.status(204).end();
+  },
+);
+
+sharedHabitsRouter.patch(
+  "/shared-habits/:id",
+  requireAuth,
+  validate({ params: habitParams, body: editSharedHabitBody }),
+  async (_req, res) => {
+    const { user, supabase, valid } = res.locals;
+    const { id } = valid.params as z.infer<typeof habitParams>;
+    res.json(
+      await editSharedHabit(
+        supabase,
+        user.id,
+        id,
+        valid.body as z.infer<typeof editSharedHabitBody>,
+      ),
+    );
+  },
+);
+sharedHabitsRouter.delete(
+  "/shared-habits/:id",
+  requireAuth,
+  validate({ params: habitParams }),
+  async (_req, res) => {
+    const { user, supabase, valid } = res.locals;
+    await deleteSharedHabit(
+      supabase,
+      user.id,
+      (valid.params as z.infer<typeof habitParams>).id,
+    );
+    res.status(204).end();
+  },
+);
+sharedHabitsRouter.post(
+  "/shared-habits/:id/code",
+  requireAuth,
+  validate({ params: habitParams }),
+  async (_req, res) => {
+    const { user, supabase, valid } = res.locals;
+    res.json(
+      await manageSharedCode(
+        supabase,
+        user.id,
+        (valid.params as z.infer<typeof habitParams>).id,
+        true,
+      ),
+    );
+  },
+);
+sharedHabitsRouter.delete(
+  "/shared-habits/:id/code",
+  requireAuth,
+  validate({ params: habitParams }),
+  async (_req, res) => {
+    const { user, supabase, valid } = res.locals;
+    await manageSharedCode(
+      supabase,
+      user.id,
+      (valid.params as z.infer<typeof habitParams>).id,
+      false,
+    );
     res.status(204).end();
   },
 );
