@@ -128,3 +128,12 @@ export function defaultJoinBy(start: string, today: string): string {
     ? today
     : previous.toISOString().slice(0, 10)
 }
+
+/** The next calendar date, independent of the browser's timezone. */
+export function defaultSharedStart(today: string): string {
+  if (!today) return ""
+  const date = new Date(`${today}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return ""
+  date.setUTCDate(date.getUTCDate() + 1)
+  return date.toISOString().slice(0, 10)
+}

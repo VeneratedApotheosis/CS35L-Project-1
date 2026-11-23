@@ -3,15 +3,16 @@
 import { useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
 import { ArrowLeft, Dices } from "lucide-react"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { useProfile } from "@/lib/useProfile"
+import { dateInTimezone } from "@/lib/profile"
 import { sharedHabitHref, sharedInviteUrl } from "@/lib/paths"
-import { createSharedHabit, defaultJoinBy, sharedHabitKeys, SHARED_MEMBER_LIMITS, type SharedHabit } from "@/lib/sharedHabits"
+import { createSharedHabit, defaultJoinBy, defaultSharedStart, previewSharedInvite, sharedHabitKeys, SHARED_MEMBER_LIMITS, type SharedHabit } from "@/lib/sharedHabits"
 import {
   buildCreateHabitPayload,
   createHabit,
@@ -67,7 +68,7 @@ export default function CreateHabit() {
   const [intervalCount, setIntervalCount] = useState("1")
   const [intervalUnit, setIntervalUnit] = useState<IntervalUnit>("week")
   const [numPeriods, setNumPeriods] = useState("")
-  // null means the user left the start date at its default (today).
+  // null means use the default for the selected habit type.
   const [startDate, setStartDate] = useState<string | null>(null)
   const [plantType, setPlantType] = useState<PlantTypeId>(DEFAULT_PLANT_TYPE)
   const [seed, setSeed] = useState(randomSeed)
@@ -83,12 +84,34 @@ export default function CreateHabit() {
   // and client markup match.
   const browserToday = useSyncExternalStore(subscribeNever, todayISO, () => "")
   const today = withFriends ? profile.data?.today ?? "" : browserToday
-  const effectiveJoinBy = joinBy ?? defaultJoinBy(startDate ?? today, today)
+  const effectiveStart = startDate ?? (withFriends ? defaultSharedStart(today) : today)
+  const effectiveJoinBy = joinBy ?? defaultJoinBy(effectiveStart, today)
+  // Recheck the saved invite against the server before offering a link. A
+  // previously valid preview can become stale while this screen is open.
+  const ownerToday = profile.data ? dateInTimezone(profile.data.timezone ?? null) : ""
+  const inviteEndedLocally = !!createdShared && !!ownerToday &&
+    (createdShared.start_date <= ownerToday || createdShared.join_by < ownerToday)
+  const invitePreview = useQuery({
+    queryKey: ["created-shared-invite", user?.id, createdShared?.id, createdShared?.join_code],
+    queryFn: () => previewSharedInvite(createdShared!.join_code!),
+    enabled: step === "invite" && !!createdShared?.join_code && !!ownerToday && !inviteEndedLocally,
+    retry: false,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: true,
+    staleTime: 0,
+  })
+  const inviteError = invitePreview.error
+  const inviteUnavailable = inviteError instanceof ApiError &&
+    (inviteError.status === 404 ||
+      (inviteError.status === 400 && inviteError.code === "shared_habit_join_ended") ||
+      (inviteError.status === 409 && inviteError.code === "shared_habit_full"))
+  const inviteAvailable = !inviteEndedLocally && !invitePreview.isFetching &&
+    !invitePreview.isError && !!invitePreview.data && invitePreview.data.places_left > 0
 
   // Only a date other than today is sent. Otherwise the backend picks today in
   // the profile timezone, which can differ from the browser's date.
   const chosenStartDate =
-    startDate && startDate !== today ? startDate : undefined
+    effectiveStart && effectiveStart !== today ? effectiveStart : undefined
 
   // Parsed numbers, used for the live preview. NaN when the field is not a
   // whole number.
@@ -173,7 +196,7 @@ export default function CreateHabit() {
       if (!today) next.startDate = "Wait for your profile to load, then try again."
       if (!effectiveJoinBy) {
         next.joinBy = "Join by date is required."
-      } else if (effectiveJoinBy < today || effectiveJoinBy > (startDate ?? today)) {
+      } else if (effectiveJoinBy < today || effectiveJoinBy > effectiveStart) {
         next.joinBy = "Join by must be between today and the start date."
       }
       if (!inRange(parseWholeNumber(maxMembers), SHARED_MEMBER_LIMITS)) {
@@ -214,7 +237,7 @@ export default function CreateHabit() {
         intervalCount: nums.intervalCount,
         intervalUnit,
         numPeriods: nums.numPeriods,
-        startDate: withFriends ? startDate ?? today : chosenStartDate,
+        startDate: withFriends ? effectiveStart : chosenStartDate,
       })
       if (withFriends) {
         const saved = await createSharedHabit({
@@ -463,13 +486,16 @@ export default function CreateHabit() {
                 className="input"
                 type="date"
                 min={today || undefined}
-                value={startDate ?? today}
+                value={effectiveStart}
                 onChange={(e) => setStartDate(e.target.value)}
                 aria-invalid={Boolean(errors.startDate)}
                 aria-describedby={
-                  errors.startDate ? "habit-start-error" : undefined
+                  [errors.startDate ? "habit-start-error" : "", withFriends && effectiveStart === today && today ? "habit-start-warning" : ""].filter(Boolean).join(" ") || undefined
                 }
               />
+              {withFriends && today && effectiveStart === today && (
+                <p className="field__hint" id="habit-start-warning" role="status">Starting today means others cannot join this shared habit.</p>
+              )}
               {errors.startDate && (
                 <p className="field__error" id="habit-start-error">
                   {errors.startDate}
@@ -483,10 +509,11 @@ export default function CreateHabit() {
               <div className="field">
                 <label className="field__label" htmlFor="habit-join-by">Join by</label>
                 <input id="habit-join-by" className="input" type="date"
-                  min={today || undefined} max={startDate ?? (today || undefined)}
+                  min={today || undefined} max={effectiveStart || undefined}
                   value={effectiveJoinBy} onChange={(e) => setJoinBy(e.target.value)}
                   aria-invalid={Boolean(errors.joinBy)}
-                  aria-describedby={errors.joinBy ? "habit-join-by-error" : undefined} />
+                  aria-describedby={`habit-join-by-hint${errors.joinBy ? " habit-join-by-error" : ""}`} />
+                <p className="field__hint" id="habit-join-by-hint">Friends can join through this date, but joining closes sooner when the first member reaches the start date in their saved timezone.</p>
                 {errors.joinBy && <p className="field__error" id="habit-join-by-error">{errors.joinBy}</p>}
               </div>
               <div className="field">
@@ -583,8 +610,8 @@ export default function CreateHabit() {
           <Card>
             <h2 className="text-heading">Your shared habit is ready</h2>
             <p>{createdShared.name} has been saved. You are its first member.</p>
-            <p>Invite up to {createdShared.max_members - 1} {createdShared.max_members === 2 ? "friend" : "friends"} to join by {formatDate(createdShared.join_by)}.</p>
-            {inviteUrl ? (
+            <p>Joining closes after {formatDate(createdShared.join_by)}, or earlier when the first member reaches the start date in their saved timezone.</p>
+            {inviteUrl && inviteAvailable ? (
               <div className="field" style={{ marginTop: "var(--space-4)" }}>
                 <label className="field__label" htmlFor="habit-invite">Invite link</label>
                 <input id="habit-invite" className="input" type="text" readOnly
@@ -592,8 +619,14 @@ export default function CreateHabit() {
                 <Button onClick={() => void copyInvite()}>Copy invite link</Button>
                 {copyStatus && <p role="status">{copyStatus}</p>}
               </div>
-            ) : (
+            ) : !inviteUrl ? (
               <p role="status">Your habit was saved, but no invite link was returned.</p>
+            ) : inviteEndedLocally || inviteUnavailable || (invitePreview.data && invitePreview.data.places_left <= 0) ? (
+              <p role="status">This invitation is no longer available.</p>
+            ) : invitePreview.isError ? (
+              <div role="alert"><p>Could not check the invite. Try again.</p><Button onClick={() => void invitePreview.refetch()}>Retry invite check</Button></div>
+            ) : (
+              <p role="status">Checking invite availability…</p>
             )}
           </Card>
           <Link className="button button--primary button--md self-start" href={sharedHabitHref(createdShared.id)}>View shared habit</Link>
@@ -625,6 +658,7 @@ export default function CreateHabit() {
             </dl>
           </Card>
 
+          {withFriends && today && effectiveStart === today && <p className="confirm-note" role="status">Starting today means others cannot join this shared habit.</p>}
           <p className="confirm-note">
             {withFriends
               ? "The goal and start date lock once a friend joins. After the habit starts, nothing can be edited."

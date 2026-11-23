@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => {
 })
 vi.mock("next/navigation", () => ({ useRouter: () => mocks }))
 vi.mock("@/auth/useAuth", () => ({ useAuth: () => ({ user: { id: "user-a" } }) }))
-vi.mock("@/lib/useProfile", () => ({ useProfile: () => ({ data: { today: mocks.today } }) }))
+vi.mock("@/lib/useProfile", () => ({ useProfile: () => ({ data: { today: mocks.today, timezone: "Pacific/Kiritimati" } }) }))
 vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: mocks.getSession } } }))
 vi.mock("@/pottedPlant/plants/plantTypes", () => {
   const plant = { id: "pothos", label: "Pothos", blurb: "A leafy plant", Preview: () => null }
@@ -20,7 +20,7 @@ vi.mock("@/pottedPlant/plants/plantTypes", () => {
 const fetchMock = vi.fn()
 const json = (body: unknown, status = 201) => new Response(JSON.stringify(body), { status })
 const saved = {
-  id: "shared-a", name: "Read", join_by: "2026-11-20", max_members: 2,
+  id: "shared-a", name: "Read", start_date: "2026-11-21", join_by: "2026-11-20", max_members: 2,
   join_code: "aabbccdd00112233445566778899aabb",
 }
 const field = (name: string) => screen.getByLabelText(name) as HTMLInputElement
@@ -40,7 +40,8 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-11-19T12:00:00Z"))
   mocks.today = "2026-11-20" // Deliberately differs from the browser's date.
   mocks.getSession.mockResolvedValue({ data: { session: { access_token: "user-a-token" } } })
-  fetchMock.mockResolvedValue(json(saved))
+  fetchMock.mockImplementation(async (url: string) => url.includes("/shared-habits/join/")
+    ? json({ places_left: 1 }, 200) : json(saved))
   vi.stubGlobal("fetch", fetchMock)
 })
 afterEach(() => {
@@ -54,6 +55,7 @@ describe("create shared habit (#274)", () => {
   it("defaults to Just me and keeps personal creation on /habits with a dashboard redirect", async () => {
     setup(false)
     expect((screen.getByRole("radio", { name: "Just me" }) as HTMLInputElement).checked).toBe(true)
+    expect(field("Start date").value).toBe("2026-11-19")
     expect(screen.queryByLabelText("Join by")).toBeNull()
     expect(screen.queryByLabelText("Max members")).toBeNull()
     review()
@@ -66,15 +68,113 @@ describe("create shared habit (#274)", () => {
     expect(JSON.parse(request.body)).not.toHaveProperty("start_date")
   })
 
-  it("uses the profile's today and defaults today's joining deadline to today", () => {
+  it("defaults shared starts to the next profile-local date and joining to today", () => {
     setup()
-    expect(field("Start date").value).toBe("2026-11-20")
+    expect(field("Start date").value).toBe("2026-11-21")
     expect(field("Join by").value).toBe("2026-11-20")
     expect(field("Join by").min).toBe("2026-11-20")
-    expect(field("Join by").max).toBe("2026-11-20")
+    expect(field("Join by").max).toBe("2026-11-21")
     expect(field("Max members").min).toBe("2")
     expect(field("Max members").max).toBe("50")
     expect(field("Max members").value).toBe("2")
+  })
+
+  it.each([
+    ["2026-11-30", "2026-12-01"], ["2026-12-31", "2027-01-01"], ["2028-02-28", "2028-02-29"],
+  ])("defaults the shared start after %s to %s", (today, next) => {
+    mocks.today = today
+    setup()
+    expect(field("Start date").value).toBe(next)
+    expect(field("Join by").value).toBe(today)
+  })
+
+  it("warns for a same-day start and never offers its unusable invite", async () => {
+    fetchMock.mockResolvedValue(json({ ...saved, start_date: "2026-11-20" }))
+    setup()
+    change("Start date", "2026-11-20")
+    expect(screen.getByText("Starting today means others cannot join this shared habit.")).toBeTruthy()
+    expect(field("Start date").getAttribute("aria-describedby")).toContain("habit-start-warning")
+    review()
+    expect(screen.getByText("Starting today means others cannot join this shared habit.")).toBeTruthy()
+    create()
+    expect(await screen.findByText("This invitation is no longer available.")).toBeTruthy()
+    expect(screen.queryByLabelText("Invite link")).toBeNull()
+    expect(fetchMock.mock.calls.filter(([url]) => url.includes("/shared-habits/join/"))).toHaveLength(0)
+  })
+
+  it.each([
+    [404, "not_found"],
+    [400, "shared_habit_join_ended"],
+    [409, "shared_habit_full"],
+  ])("hides the link for unavailable invite response %s (%s)", async (status, code) => {
+    fetchMock.mockImplementation(async (url: string) => url.includes("/shared-habits/join/")
+      ? json({ error: { code, message: "Unavailable" } }, status) : json(saved))
+    setup()
+    review()
+    create()
+    expect(await screen.findByText("This invitation is no longer available.")).toBeTruthy()
+    expect(screen.queryByLabelText("Invite link")).toBeNull()
+    expect(screen.queryByRole("button", { name: "Retry invite check" })).toBeNull()
+  })
+
+  it("does not offer a link when the habit is full", async () => {
+    fetchMock.mockImplementation(async (url: string) => url.includes("/shared-habits/join/")
+      ? json({ places_left: 0 }, 200) : json(saved))
+    setup()
+    review()
+    create()
+    expect(await screen.findByText("This invitation is no longer available.")).toBeTruthy()
+    expect(screen.queryByLabelText("Invite link")).toBeNull()
+  })
+
+  it("offers retry rather than an unverified link when preview fails", async () => {
+    let available = false
+    fetchMock.mockImplementation(async (url: string) => url.includes("/shared-habits/join/")
+      ? available ? json({ places_left: 1 }, 200) : json({ error: { message: "offline" } }, 500) : json(saved))
+    setup()
+    review()
+    create()
+    expect((await screen.findByRole("alert")).textContent).toContain("Could not check the invite")
+    expect(screen.queryByLabelText("Invite link")).toBeNull()
+    available = true
+    fireEvent.click(screen.getByRole("button", { name: "Retry invite check" }))
+    expect(await screen.findByLabelText("Invite link")).toBeTruthy()
+  })
+
+  it.each([400, 409])("offers retry for unrelated %s errors", async (status) => {
+    fetchMock.mockImplementation(async (url: string) => url.includes("/shared-habits/join/")
+      ? json({ error: { code: "unexpected", message: "Try again" } }, status) : json(saved))
+    setup()
+    review()
+    create()
+    expect(await screen.findByRole("alert")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Retry invite check" })).toBeTruthy()
+    expect(screen.queryByLabelText("Invite link")).toBeNull()
+  })
+
+  it("offers retry for a network failure", async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.includes("/shared-habits/join/")) throw new TypeError("Network error")
+      return json(saved)
+    })
+    setup()
+    review()
+    create()
+    expect(await screen.findByRole("alert")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Retry invite check" })).toBeTruthy()
+    expect(screen.queryByLabelText("Invite link")).toBeNull()
+  })
+
+  it("hides a previously available invite when the owner's local start date arrives", async () => {
+    const view = setup()
+    review()
+    create()
+    expect(await screen.findByLabelText("Invite link")).toBeTruthy()
+    vi.setSystemTime(new Date("2026-11-20T12:00:00Z")) // Nov 21 in Kiritimati.
+    mocks.today = "2026-11-21"
+    view.rerender(<QueryProvider><CreateHabit /></QueryProvider>)
+    expect(screen.queryByLabelText("Invite link")).toBeNull()
+    expect(screen.getByRole("status").textContent).toContain("no longer available")
   })
 
   it("defaults Join by to the day before a future start, including a month boundary", () => {
@@ -134,7 +234,8 @@ describe("create shared habit (#274)", () => {
   })
 
   it.each([2, 50])("creates with member limit %i and shows the saved invitation instead of redirecting", async (limit) => {
-    fetchMock.mockResolvedValue(json({ ...saved, max_members: limit }))
+    fetchMock.mockImplementation(async (url: string) => url.includes("/shared-habits/join/")
+      ? json({ places_left: 1 }, 200) : json({ ...saved, max_members: limit }))
     setup()
     change("Max members", String(limit))
     review()
@@ -142,13 +243,13 @@ describe("create shared habit (#274)", () => {
     create()
     await screen.findByRole("heading", { name: "Your shared habit is ready" })
     expect(screen.getByRole("link", { name: "View shared habit" }).getAttribute("href")).toBe("/shared-habit?id=shared-a")
-    expect(field("Invite link").value).toBe(`${window.location.origin}/join?code=${saved.join_code}`)
+    expect((await screen.findByLabelText("Invite link") as HTMLInputElement).value).toBe(`${window.location.origin}/join?code=${saved.join_code}`)
     const [url, request] = fetchMock.mock.calls[0]
     expect(url).toBe("http://api.test/shared-habits")
     expect(request.headers.Authorization).toBe("Bearer user-a-token")
     expect(JSON.parse(request.body)).toEqual({ name: "Read", plant_type: "pothos",
       target_count: 1, interval_count: 1, interval_unit: "week", num_periods: 4,
-      start_date: "2026-11-20", join_by: "2026-11-20", max_members: limit })
+      start_date: "2026-11-21", join_by: "2026-11-20", max_members: limit })
     expect(mocks.replace).not.toHaveBeenCalled()
   })
 
@@ -192,7 +293,7 @@ describe("create shared habit (#274)", () => {
     review()
     create()
     await screen.findByRole("heading", { name: "Your shared habit is ready" })
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock.mock.calls.filter(([, init]) => init.method === "POST")).toHaveLength(2)
   })
 
   it("sends only one request while creation is pending", async () => {
@@ -203,7 +304,7 @@ describe("create shared habit (#274)", () => {
     const button = screen.getByRole("button", { name: "Create habit" })
     fireEvent.click(button)
     fireEvent.click(button)
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(fetchMock.mock.calls.filter(([, init]) => init.method === "POST")).toHaveLength(1))
     expect((screen.getByRole("button", { name: "Creating…" }) as HTMLButtonElement).disabled).toBe(true)
     resolve(json(saved))
     await screen.findByRole("heading", { name: "Your shared habit is ready" })
@@ -218,7 +319,7 @@ describe("create shared habit (#274)", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Copy invite link" }))
     expect((await screen.findByRole("status")).textContent).toBe("Invite link copied.")
     expect(writeText).toHaveBeenCalledWith(field("Invite link").value)
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls.filter(([, init]) => init.method === "POST")).toHaveLength(1)
   })
 
   it("keeps the invite selectable for manual copying when clipboard access fails", async () => {
@@ -232,7 +333,7 @@ describe("create shared habit (#274)", () => {
     expect(field("Invite link").value).toContain(saved.join_code)
     fireEvent.focus(field("Invite link"))
     expect(field("Invite link").selectionEnd).toBe(field("Invite link").value.length)
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls.filter(([, init]) => init.method === "POST")).toHaveLength(1)
   })
 
   it("does not fabricate an invitation if the saved habit has no join code", async () => {
