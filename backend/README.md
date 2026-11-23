@@ -123,3 +123,26 @@ For the local HTTP integration check, start the backend with the local
 run `node scripts/shared-habit-management-local.mjs` with those same two
 variables and `TEST_API_URL` (default `http://127.0.0.1:31973`). The script
 rejects non-local URLs and creates and deletes disposable local accounts.
+
+### Local shared-habit badge integration check (#341)
+
+With the isolated `codex-271-local-supabase` stack running on ports 54421 and
+54422 and the repository migrations applied, run from `backend/`:
+
+```bash
+eval "$(supabase status -o env --workdir /private/tmp/codex-271-local-supabase 2>/dev/null)"
+export SUPABASE_URL="$API_URL" SUPABASE_PUBLISHABLE_KEY="$PUBLISHABLE_KEY"
+export PORT=31973 TEST_API_URL=http://127.0.0.1:31973
+./node_modules/.bin/tsx src/server.ts > /tmp/codex-341-backend.log 2>&1 &
+test_server_pid=$!
+node scripts/shared-habit-badges-local.mjs
+kill "$test_server_pid"
+```
+
+Ensure port 31973 is free before starting the server and check its log to confirm
+it started. The script refuses other Supabase URLs or Docker container names,
+creates disposable local users and habits, and deletes them in a `finally`
+block. It uses privileged local SQL to create historical fixtures and tests the
+real API, database functions and RLS using user sessions. Interruption or cleanup
+failure can leave fixtures behind. Timezone-boundary coverage is skipped when
+both extreme timezones happen to have the same local date.

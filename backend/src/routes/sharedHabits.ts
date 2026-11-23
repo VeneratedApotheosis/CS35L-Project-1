@@ -6,7 +6,7 @@ import {
 import { notFound } from "../lib/errors.js";
 import { Router } from "express";
 import { z } from "zod";
-import { paginationQuery, type Pagination } from "../lib/pagination.js";
+import { type Pagination } from "../lib/pagination.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import {
@@ -27,7 +27,7 @@ import {
   deleteSharedHabit,
 } from "../services/sharedHabitManagement.js";
 import { addLogBody, logParams } from "./logs.js";
-import { createHabitBody, habitParams } from "./habits.js";
+import { createHabitBody, habitListQuery, habitParams } from "./habits.js";
 
 export const createSharedHabitBody = createHabitBody.extend({
   join_by: createHabitBody.shape.start_date.unwrap(),
@@ -72,11 +72,15 @@ sharedHabitsRouter.post(
 sharedHabitsRouter.get(
   "/shared-habits",
   requireAuth,
-  validate({ query: paginationQuery }),
+  validate({ query: habitListQuery }),
   async (_req, res) => {
     const { user, supabase, valid } = res.locals;
     res.json(
-      await listSharedHabits(supabase, user.id, valid.query as Pagination),
+      await listSharedHabits(
+        supabase,
+        user.id,
+        valid.query as Pagination & { status: "active" | "finished" | "both" },
+      ),
     );
   },
 );

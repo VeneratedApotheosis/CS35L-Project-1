@@ -249,8 +249,8 @@ Create, list and detail (#268), invite preview and joining (#269), logging (#270
 | `POST /shared-habits/:id/code` and `DELETE /shared-habits/:id/code` | The owner regenerates the join code, or closes joining |
 
 **Implemented response contract (#268).** Create returns the saved habit with
-HTTP 201. List accepts `limit` and `offset` and returns
-`{ habits, total, limit, offset }`; each habit includes group `stats`. Since #279 the list is ordered by `created_at`, then `id`, ascending, so older cards stay first as pages load. It also returns `member_count`, caller-only short `own_stats`, and membership-local `own_today`, computed from the same member/log snapshot. Garden cards need no per-habit detail requests. No member names or exact log dates are added to the list.
+HTTP 201. List accepts `limit`, `offset`, and `status` (`active`, `finished`, or `both`, the default) and returns
+`{ habits, total, limit, offset }`; each habit includes group `stats`. Since #279 the list is ordered by `created_at`, then `id`, ascending, so older cards stay first as pages load. It also returns `member_count`, caller-only short `own_stats`, and membership-local `own_today`, computed from the same member/log snapshot. Garden cards need no per-habit detail requests. No member names or exact log dates are added to the list. The status filter uses the group state (including not-yet-started habits as active), filters before pagination, and reports the filtered total. Calculating filtered results currently scans accessible habits and their current member statistics.
 Detail returns the habit, group `stats`, `members`, `own_stats`, and `own_today` (#277). `own_today` is the server date in the caller's saved membership timezone, so the logging form never substitutes the group date or a later profile timezone change.
 Group stats include `today`, `state`, `overall_progress`, `stage`,
 `health_rate`, `health`, `end_date`, and `current_period`. The current-period
@@ -259,7 +259,7 @@ There is no group streak or badge. Member summaries include `user_id`,
 `display_name`, `avatar_url`, `is_owner`, `overall_progress`,
 `current_period_count`, `streak`, and `health`.
 Only `own_stats` contains detailed logs. Aggregate per-day RPC results remain
-inside the backend. The caller's full stats use the membership timezone snapshot.
+inside the backend. The caller's full stats use the membership timezone snapshot. Both short and full `own_stats` include the caller's badge and final progress/consistency after their own local end date, using the same rules as personal habits; these fields are null beforehand. Group completion and the finished filter wait until all current members have reached the end date. Members who leave lose access and no longer contribute to group statistics; their logs remain stored. The full shared target applies to each member, including someone who joined later during the pre-start joining window.
 
 **Invite visibility.** Every current member may invite others; `join_code`
 is intentionally returned to members in list/detail and to the owner on create.
