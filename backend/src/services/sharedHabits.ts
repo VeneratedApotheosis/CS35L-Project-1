@@ -168,16 +168,25 @@ function groupStats(
 export async function listSharedHabits(
   client: SupabaseClient,
   userId: string,
-  page: Pagination,
+  page: Pagination & { status?: "active" | "finished" | "both" },
 ) {
   // RLS selects memberships, not just habits owned by the caller.
-  const { data, error, count } = await client
-    .from("shared_habits")
-    .select(COLUMNS, { count: "exact" })
-    .order("created_at", { ascending: true })
-    .order("id", { ascending: true })
-    .range(page.offset, page.offset + page.limit - 1);
-  if (error) databaseFailure(error);
+  const filtered = page.status === "active" || page.status === "finished";
+  const rows: SharedHabit[] = [];
+  let total: number;
+  for (let offset = filtered ? 0 : page.offset; ; offset += BATCH) {
+    const { data, error, count } = await client
+      .from("shared_habits")
+      .select(COLUMNS, { count: "exact" })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, filtered ? offset + BATCH - 1 : offset + page.limit - 1);
+    if (error) databaseFailure(error);
+    const batch = (data ?? []) as SharedHabit[];
+    rows.push(...batch);
+    total = count ?? 0;
+    if (!filtered || batch.length < BATCH) break;
+  }
   const now = new Date();
   const habits: (SharedHabit & {
     stats: ReturnType<typeof groupStats>;
@@ -185,7 +194,6 @@ export async function listSharedHabits(
     own_stats: ReturnType<typeof shortStats>;
     own_today: string;
   })[] = [];
-  const rows = (data ?? []) as SharedHabit[];
   // [PLACEHOLDER] Still two RPCs per habit plus paging. Bound concurrency to
   // four habits instead of serial calls or up to 100 simultaneous RPC chains.
   for (let offset = 0; offset < rows.length; offset += 4) {
@@ -216,7 +224,19 @@ export async function listSharedHabits(
   }
   // total is the initial query snapshot; a concurrent departure may shorten
   // this page. Keep offset semantics rather than pretending the count is fresh.
-  return { habits, total: count ?? 0, limit: page.limit, offset: page.offset };
+  if (filtered) {
+    const selected = habits.filter(
+      (habit) =>
+        (habit.stats.state === "expired") === (page.status === "finished"),
+    );
+    return {
+      habits: selected.slice(page.offset, page.offset + page.limit),
+      total: selected.length,
+      limit: page.limit,
+      offset: page.offset,
+    };
+  }
+  return { habits, total, limit: page.limit, offset: page.offset };
 }
 
 export async function getSharedHabit(

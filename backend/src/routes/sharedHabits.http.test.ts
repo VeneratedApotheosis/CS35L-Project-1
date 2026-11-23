@@ -176,6 +176,118 @@ describe("shared habit endpoints", () => {
       to: 3,
     });
   });
+  it.each([
+    ["gold", ["2026-11-18", "2026-11-19", "2026-11-20", "2026-11-21"], 1],
+    ["silver", ["2026-11-18", "2026-11-18", "2026-11-18", "2026-11-18"], 1],
+    ["bronze", ["2026-11-18", "2026-11-19", "2026-11-20"], 0.75],
+    ["none", ["2026-11-18"], 0.25],
+  ])(
+    "returns the caller's %s badge and final progress",
+    async (badge, dates, progress) => {
+      vi.setSystemTime(new Date("2026-11-23T12:00:00Z"));
+      db.setResult("shared_habit_logs", "select", {
+        data: dates.map((occurred_on, index) => ({
+          id: String(index),
+          occurred_on,
+        })),
+        error: null,
+      });
+      const res = await get();
+      expect(res.status).toBe(200);
+      expect(res.body.own_stats).toMatchObject({
+        badge,
+        final_progress: progress,
+      });
+      expect(res.body.own_stats.final_consistency).not.toBeNull();
+      expect(res.body.stats).not.toHaveProperty("badge");
+      expect(res.body.members[1]).not.toHaveProperty("badge");
+    },
+  );
+  it("keeps active badges and final results empty", async () => {
+    const res = await get();
+    expect(res.body.own_stats).toMatchObject({
+      badge: null,
+      final_progress: null,
+      final_consistency: null,
+    });
+  });
+  it("filters by group completion before applying pagination", async () => {
+    vi.setSystemTime(new Date("2026-11-23T12:00:00Z"));
+    const finished = { ...habit, id: "finished" };
+    const active = { ...habit, id: "active", start_date: "2026-11-23" };
+    const future = { ...habit, id: "future", start_date: "2026-11-30" };
+    db.setResult("shared_habits", "select", {
+      data: [finished, active, future],
+      error: null,
+      count: 3,
+    });
+    const activeRes = await request(app)
+      .get("/shared-habits?status=active&limit=1&offset=1")
+      .set("Authorization", auth);
+    expect(activeRes.body).toMatchObject({
+      total: 2,
+      limit: 1,
+      offset: 1,
+      habits: [{ id: "future" }],
+    });
+    const finishedRes = await request(app)
+      .get("/shared-habits?status=finished")
+      .set("Authorization", auth);
+    expect(finishedRes.body).toMatchObject({
+      total: 1,
+      habits: [{ id: "finished" }],
+    });
+    expect(
+      (
+        await request(app)
+          .get("/shared-habits?status=invalid")
+          .set("Authorization", auth)
+      ).status,
+    ).toBe(400);
+  });
+  it("uses the last current member's local date for the finished filter", async () => {
+    vi.setSystemTime(new Date("2026-11-22T01:00:00Z"));
+    db.setResult("shared_habits", "select", {
+      data: [habit],
+      error: null,
+      count: 1,
+    });
+    const res = await request(app)
+      .get("/shared-habits?status=active")
+      .set("Authorization", auth);
+    expect(res.body.total).toBe(1);
+    expect(res.body.habits[0].stats.state).not.toBe("expired");
+  });
+  it("excludes departed members from group stats and does not grant them access", async () => {
+    db.setResult("shared_habit_members_info", "select", {
+      data: [members[0]],
+      error: null,
+    });
+    const res = await get();
+    expect(res.body.members).toHaveLength(1);
+    expect(res.body.stats.overall_progress).toBe(0);
+    db.setResult("shared_habit_members_info", "select", {
+      data: [members[1]],
+      error: null,
+    });
+    expect((await get()).status).toBe(404);
+  });
+  it("uses the full shared goal for a member who joined later before the start", async () => {
+    vi.setSystemTime(new Date("2026-11-23T12:00:00Z"));
+    db.setResult("shared_habit_members_info", "select", {
+      data: [{ ...members[0], joined_at: "2026-11-17T23:00:00Z" }, members[1]],
+      error: null,
+    });
+    db.setResult("shared_habit_logs", "select", {
+      data: [{ id: "one", occurred_on: "2026-11-18" }],
+      error: null,
+    });
+    const res = await get();
+    expect(res.body.own_stats).toMatchObject({
+      badge: "none",
+      final_progress: 0.25,
+    });
+  });
   it("handles an empty list without member queries", async () => {
     db.setResult("shared_habits", "select", {
       data: [],
