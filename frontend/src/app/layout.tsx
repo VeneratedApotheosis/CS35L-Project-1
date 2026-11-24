@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { M_PLUS_Rounded_1c } from "next/font/google"
 import { Providers } from "./providers"
 import { ThemeScript } from "./ThemeScript"
@@ -11,6 +11,12 @@ const mplus = M_PLUS_Rounded_1c({
   variable: "--font-mplus",
   display: "swap",
 })
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+}
 
 export const metadata: Metadata = {
   title: "Habit Garden",
