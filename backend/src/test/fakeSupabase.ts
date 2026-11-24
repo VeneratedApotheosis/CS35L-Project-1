@@ -26,6 +26,8 @@ export type RecordedCall = {
   moreFilters?: { column: string; value: unknown }[];
   // An in() filter: the column and the values it must be one of.
   inFilter?: { column: string; values: unknown[] };
+  // An is() filter, such as seen_at is null.
+  isFilter?: { column: string; value: unknown };
   count?: "exact";
   orders?: { column: string; ascending: boolean }[];
   range?: { from: number; to: number };
@@ -103,6 +105,10 @@ export class FakeSupabase {
       },
       in: (column: string, values: unknown[]) => {
         call.inFilter = { column, values };
+        return query;
+      },
+      is: (column: string, value: unknown) => {
+        call.isFilter = { column, value };
         return query;
       },
       eq: (column: string, value: unknown) => {

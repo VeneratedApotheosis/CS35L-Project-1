@@ -1,0 +1,88 @@
+/*
+ * The History tab (#254) and the Badges / History switch above both pages.
+ * See docs/frontend/habit-history-plan.md.
+ */
+
+/* ---- Badges / History switch: two links styled as a segmented control ---- */
+.look-back-tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-secondary);
+}
+.look-back-tabs__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+}
+.look-back-tabs__link:hover { color: var(--color-text); }
+.look-back-tabs__link[aria-current="page"] {
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
+  box-shadow: var(--shadow-button);
+}
+.look-back-tabs__link:focus-visible { outline: var(--line-medium) solid var(--color-focus); outline-offset: var(--focus-offset); }
+
+/* ---- Summary ------------------------------------------------------------- */
+.history-summary { display: flex; flex-direction: column; gap: var(--space-3); }
+.history-summary__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.history-summary__levels { display: flex; flex-wrap: wrap; gap: var(--space-5); list-style: none; margin: 0; padding: 0; }
+.history-summary__level { display: flex; align-items: center; gap: var(--space-2); }
+.history-summary__level strong { font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
+
+/* The level reached by a habit: the tier pill, or a dashed muted one for none. */
+.history-level--none { background: transparent; border: var(--line-thin) dashed var(--color-border-strong); }
+.history-level--none .badge-pill__dot { background: transparent; border: var(--line-thin) solid var(--color-border-strong); }
+
+/* ---- Toolbar ------------------------------------------------------------- */
+.history-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.history-toolbar__levels { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.history-toolbar__count { margin-left: var(--space-1); opacity: 0.7; font-variant-numeric: tabular-nums; }
+.history-toolbar__sort { display: flex; align-items: center; gap: var(--space-2); }
+.history-toolbar__select { width: auto; min-width: 11rem; }
+
+/* ---- Rows ---------------------------------------------------------------- */
+.history-month { padding: 0; overflow: hidden; }
+.history-list { list-style: none; margin: 0; padding: 0; }
+.history-row + .history-row { border-top: var(--line-thin) solid var(--color-border); }
+.history-row__link {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  color: inherit;
+  text-decoration: none;
+}
+.history-row__link:hover { background: var(--color-surface-secondary); }
+.history-row__link:focus-visible { outline: var(--line-medium) solid var(--color-focus); outline-offset: calc(-1 * var(--line-medium)); }
+.history-row__plant { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; overflow: hidden; }
+.history-row__plant svg { width: 100%; height: 100%; }
+.history-row__main { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.history-row__title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.history-row__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.history-row__stats { display: grid; grid-template-columns: repeat(4, minmax(4.5rem, auto)); gap: var(--space-4); margin: 0; }
+.history-row__stats div { display: flex; flex-direction: column; gap: 0.1rem; }
+.history-row__stats dd { margin: 0; font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; }
+.history-row__chevron { color: var(--color-text-muted); }
+
+/* Phones: the plant, name and level, then the four numbers in a 2 x 2 grid. */
+@media (--phone) {
+  .history-row__link { grid-template-columns: 3rem minmax(0, 1fr) auto; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+  .history-row__plant { width: 3rem; height: 3rem; }
+  .history-row__stats { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2) var(--space-4); }
+  .history-row__chevron { grid-column: 3; grid-row: 1; }
+  .history-toolbar__select { min-width: 0; }
+}
+
+/* While a new filter or sort loads, the last list stays, faded. */
+.history-results { transition: opacity var(--transition-fast); }
+.history-results[data-switching] { opacity: 0.55; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .history-results { transition: none; } }

@@ -20,6 +20,7 @@ import { HabitPlantCard } from "./habit/HabitPlantCard"
 import { OverallCard } from "./habit/OverallCard"
 import { ThisPeriodCard } from "./habit/ThisPeriodCard"
 import { useHabitLogging } from "./habit/useHabitLogging"
+import { SharedHabitActions } from "./SharedHabitActions"
 
 const healthLabels = { healthy: "Healthy", slightly_wilted: "Slightly wilted", wilted: "Wilted" }
 const percent = (value: number | null) => value === null ? "—" : new Intl.NumberFormat(undefined, {
@@ -85,6 +86,7 @@ function SharedHabitContent({ habit, userId, refreshFailed }: { habit: SharedHab
       <SharedMembers habit={habit} userId={userId} />
       <SharedInvite key={habit.join_code} habit={habit} />
     </div>
+    <SharedHabitActions habit={habit} userId={userId} busy={logging.busy} />
     <LogDayDialog habit={logDateOpen ? own : null} today={today} onSave={logging.logOn} onClose={() => setLogDateOpen(false)} />
     {logging.notice && <Toast key={logging.noticeId} message={logging.notice.message}
       variant={logging.notice.error ? "error" : "success"} onDismiss={logging.dismiss}
@@ -145,7 +147,7 @@ function SharedInvite({ habit }: { habit: SharedHabitDetail }) {
       <p className="habit-invite__deadline">Join by {formatDate(habit.join_by)}.</p>
       <div className="habit-invite__actions">
         <Button onClick={() => void copyInvite()}>Copy invite link</Button>
-        <Link href={`/join?code=${encodeURIComponent(habit.join_code)}`}>Open invite link</Link>
+        <Link className="habit-invite__link" href={`/join?code=${encodeURIComponent(habit.join_code)}`}>Open invite link</Link>
       </div>
       {message && <p role="status" className="text-body-sm">{message}</p>}
     </> : <p className="habit-invite__deadline">Joining is closed.</p>}

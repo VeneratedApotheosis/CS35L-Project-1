@@ -5,6 +5,7 @@ import Image from "next/image"
 import { UserRound } from "lucide-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
+import { useBadgeNotifier } from "@/components/BadgeNotifier"
 import { Button } from "@/components/Button"
 import { ApiError } from "@/lib/api"
 import { profileKeys, profileWithToday, updateDisplayName, type Profile } from "@/lib/profile"
@@ -13,6 +14,7 @@ import { sharedHabitKeys } from "@/lib/sharedHabits"
 export function ProfileDetails({ profile }: { profile: Profile }) {
   const { user, signOut } = useAuth()
   const client = useQueryClient()
+  const badges = useBadgeNotifier()
   const [draft, setDraft] = useState<string | null>(null)
   const [validationError, setValidationError] = useState("")
   const [failedAvatar, setFailedAvatar] = useState<string | null>(null)
@@ -26,7 +28,8 @@ export function ProfileDetails({ profile }: { profile: Profile }) {
     onMutate: async () => {
       if (user) await client.cancelQueries({ queryKey: profileKeys.user(user.id) })
     },
-    onSuccess: (updated) => {
+    onSuccess: ({ new_badges, ...updated }) => {
+      badges.push(new_badges)
       if (user) {
         client.setQueryData(profileKeys.user(user.id), profileWithToday(updated))
         void client.invalidateQueries({ queryKey: sharedHabitKeys.all(user.id) })

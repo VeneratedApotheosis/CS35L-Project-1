@@ -119,6 +119,30 @@ export function getSharedHabit(id: string): Promise<SharedHabitDetail> {
   return api.get<SharedHabitDetail>(`/shared-habits/${encodeURIComponent(id)}`)
 }
 
+export function leaveSharedHabit(id: string): Promise<void> {
+  return api.delete(`/shared-habits/${encodeURIComponent(id)}/members/me`)
+}
+
+export function removeSharedMember(id: string, userId: string): Promise<void> {
+  return api.delete(`/shared-habits/${encodeURIComponent(id)}/members/${encodeURIComponent(userId)}`)
+}
+
+export function transferSharedOwnership(id: string, userId: string): Promise<void> {
+  return api.post(`/shared-habits/${encodeURIComponent(id)}/transfer`, { user_id: userId })
+}
+
+export function regenerateSharedInvite(id: string): Promise<{ join_code: string }> {
+  return api.post(`/shared-habits/${encodeURIComponent(id)}/code`, {})
+}
+
+export function closeSharedJoining(id: string): Promise<void> {
+  return api.delete(`/shared-habits/${encodeURIComponent(id)}/code`)
+}
+
+export function deleteSharedHabit(id: string): Promise<void> {
+  return api.delete(`/shared-habits/${encodeURIComponent(id)}`)
+}
+
 /** Default to the preceding calendar day, but never before the owner's today. */
 export function defaultJoinBy(start: string, today: string): string {
   if (!start || !today) return ""

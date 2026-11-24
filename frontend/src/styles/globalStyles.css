@@ -23,6 +23,7 @@
 @import "./components/garden.css";
 @import "./components/dashboard.css";
 @import "./components/badges.css";
+@import "./components/history.css";
 @import "./components/login.css";
 
 * {
@@ -42,6 +43,10 @@ body {
   margin: 0;
   background: var(--color-background);
   color: var(--color-text);
+}
+
+@media (--phone) {
+  body { min-height: 100dvh; }
 }
 
 button,

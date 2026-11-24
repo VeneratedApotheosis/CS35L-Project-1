@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
 import { ArrowLeft, Dices } from "lucide-react"
+import { useBadgeNotifier } from "@/components/BadgeNotifier"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
@@ -52,6 +53,7 @@ function subscribeNever() {
 export default function CreateHabit() {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const badges = useBadgeNotifier()
   const { user } = useAuth()
   const profile = useProfile()
 
@@ -252,7 +254,9 @@ export default function CreateHabit() {
         setSubmitting(false)
         return
       }
-      await createHabit(payload)
+      const created = await createHabit(payload)
+      // The notifier lives in the signed-in layout, so it keeps showing on the next page.
+      badges.push(created.new_badges)
       // Refresh every cached page so the new habit appears on return.
       if (user) {
         await queryClient.invalidateQueries({ queryKey: habitKeys.all(user.id) })

@@ -5,6 +5,7 @@ import { PLANT_TYPES } from "../domain/plants.js";
 import { paginationQuery } from "../lib/pagination.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
+import { awardNewBadges } from "../services/achievements.js";
 import {
   createHabit,
   deleteHabit,
@@ -53,7 +54,9 @@ habitsRouter.post(
     const { user, supabase, valid } = res.locals;
     const input = valid.body as CreateHabitInput;
     const habit = await createHabit(supabase, user.id, input);
-    res.status(201).json(habit);
+    // Badges earned by creating it, such as Seed Money. Never fails the create.
+    const new_badges = await awardNewBadges(supabase, user.id);
+    res.status(201).json({ ...habit, new_badges });
   },
 );
 

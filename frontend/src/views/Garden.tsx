@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+import { useBadgeNotifier } from "@/components/BadgeNotifier"
 import { Toast } from "@/components/Toast"
 import { addActivity, deleteActivity } from "@/lib/logs"
 import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query"
@@ -38,6 +39,7 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
     enabled: Boolean(user), retry: false, refetchInterval: 60_000,
   })
   const client = useQueryClient()
+  const badges = useBadgeNotifier()
   const writing = useRef(false)
   const [noticeId, setNoticeId] = useState(0)
   const [busy, setBusy] = useState(false)
@@ -51,6 +53,7 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
     try {
       const result = await addActivity(habitId, profile.data.today)
       void client.invalidateQueries({ queryKey: habitKeys.all(user.id) })
+      badges.push(result.new_badges)
       setNotice({ message: "Activity logged for today.", undo: () => { void undoLog(habitId, result.log.id) } })
     } catch (error) {
       setNotice({ message: error instanceof ApiError && error.status === 401 ? "Your session expired. Sign in again to log activity." : "Couldn't log activity. Check your connection and try again.", error: true })
@@ -65,6 +68,7 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
     try {
       const result = await addActivity(habitId, date)
       void client.invalidateQueries({ queryKey: habitKeys.all(user.id) })
+      badges.push(result.new_badges)
       setNoticeId((id) => id + 1)
       setNotice({ message: `Activity logged for ${formatDate(date)}.`, undo: () => { void undoLog(habitId, result.log.id) } })
     } finally { writing.current = false; setBusy(false) }

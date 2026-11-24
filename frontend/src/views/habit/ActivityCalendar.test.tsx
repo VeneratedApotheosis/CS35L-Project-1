@@ -47,6 +47,14 @@ it("fills logged days, keeps their date, shows the count, includes leap day, and
   expect(screen.getByLabelText("Feb 29, 2028: 1 activity")).toBeTruthy()
 })
 
+it("keeps seven weekday columns and manageable days accessible without a scroll region", () => {
+  render(<ActivityCalendar habit={habit} today="2028-02-16" busy={false} onRemove={noop} />)
+  const table = screen.getByRole("table", { name: "Activity calendar for February 2028" })
+  expect(within(table).getAllByRole("columnheader")).toHaveLength(7)
+  expect(within(table).getByRole("button", { name: /Manage$/ })).toBeTruthy()
+  expect(screen.queryByRole("region", { name: /scroll horizontally/i })).toBeNull()
+})
+
 it("only lets the current period's days be managed; earlier ones are locked", () => {
   render(<ActivityCalendar habit={habit} today="2028-02-16" busy={false} onRemove={noop} />)
   expect(screen.getAllByRole("button", { name: /Manage$/ })).toHaveLength(1)

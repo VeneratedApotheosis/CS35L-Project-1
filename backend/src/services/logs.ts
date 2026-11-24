@@ -16,13 +16,23 @@ export async function fetchLogs(
   supabase: SupabaseClient,
   habitIds: readonly string[],
 ): Promise<Map<string, LogRow[]>> {
-  const byHabit = new Map<string, LogRow[]>();
+  return fetchLogColumns<LogRow>(supabase, habitIds, LOG_COLUMNS);
+}
+
+// The same as `fetchLogs`, with the columns chosen by the caller. They must
+// include habit_id.
+export async function fetchLogColumns<Row extends { habit_id: string }>(
+  supabase: SupabaseClient,
+  habitIds: readonly string[],
+  columns: string,
+): Promise<Map<string, Row[]>> {
+  const byHabit = new Map<string, Row[]>();
   if (habitIds.length === 0) return byHabit;
 
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await supabase
       .from("activity_logs")
-      .select(LOG_COLUMNS)
+      .select(columns)
       .in("habit_id", [...habitIds])
       .order("occurred_on", { ascending: true })
       .order("id", { ascending: true })
@@ -32,7 +42,7 @@ export async function fetchLogs(
       logger.error({ err: error }, "could not load logs");
       throw new AppError(500, "internal_error", "Could not load logs");
     }
-    const rows = (data ?? []) as LogRow[];
+    const rows = (data ?? []) as unknown as Row[];
     for (const row of rows) {
       const list = byHabit.get(row.habit_id) ?? [];
       list.push(row);

@@ -65,25 +65,7 @@
   color: var(--color-text-secondary);
 }
 
-/* ---- Card ---------------------------------------------------------------- */
-.badge-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-6) var(--space-4) var(--space-4);
-  text-align: center;
-}
-.badge-card[data-state="locked"] { background: var(--color-surface-secondary); border-style: dashed; border-color: var(--color-border-strong); }
-.badge-card__text { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; }
-.badge-card__name { margin: 0; }
-.badge-card[data-state="locked"] .badge-card__name { color: var(--color-text-secondary); }
-.badge-card__progress { display: flex; align-items: center; gap: var(--space-2); width: 100%; }
-.badge-card[data-state="in_progress"] { border-color: var(--color-border-strong); }
-.badge-card__count { color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
-.badge-card__meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); }
-
+/* ---- Pills ---------------------------------------------------------------- */
 .badge-pill {
   --pill-dot: var(--color-border-strong);
   display: inline-flex;
@@ -96,7 +78,6 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
 }
-.badge-card[data-state="locked"] .badge-pill { background: var(--color-surface); }
 .badge-pill[data-tier="bronze"] { --pill-dot: var(--badge-bronze); }
 .badge-pill[data-tier="silver"] { --pill-dot: var(--badge-silver); }
 .badge-pill[data-tier="gold"] { --pill-dot: var(--badge-gold); }
@@ -104,16 +85,88 @@
 .badge-pill__dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--pill-dot); }
 .badge-pill--secret { padding-left: var(--space-3); color: var(--color-text); }
 .badge-pill--secret .icon { color: var(--badge-secret); }
-.badge-card[data-secret] { border-color: var(--badge-secret); }
 
-/* ---- Page mockup --------------------------------------------------------- */
-.badge-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr)); }
-.badge-summary { display: flex; flex-direction: column; gap: var(--space-5); }
-.badge-summary__top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
-.badge-summary__tiers { display: flex; flex-wrap: wrap; gap: var(--space-6); }
-.badge-summary__tier { display: flex; align-items: center; gap: var(--space-2); }
-.badge-summary__tier strong { font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
-.badge-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.badge-spotlight { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; }
+/* ---- Style guide helpers ---------------------------------------------------- */
 .badge-lineup { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-6); }
 .badge-lineup figure { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); margin: 0; }
+
+/*
+ * The Badges page (#253): a count, a Latest strip and groups of compact badge
+ * grids, in the way osu! lays out its medals. Slots hold only the badge.
+ */
+.badge-summary { display: flex; flex-direction: column; gap: var(--space-5); }
+.badge-summary__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.badge-summary__tiers { display: flex; flex-wrap: wrap; gap: var(--space-6); list-style: none; margin: 0; padding: 0; }
+.badge-summary__tier { display: flex; align-items: center; gap: var(--space-2); }
+.badge-summary__tier strong { font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
+.badge-summary__tier-text { gap: 0; }
+
+.badge-toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* A group: a rule, a small heading with its earned count, then the grid. */
+.badge-group { display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-4); border-top: var(--line-thick) solid var(--color-border-strong); }
+.badge-group__title { display: flex; align-items: baseline; gap: var(--space-3); margin: 0; }
+.badge-group__count { color: var(--color-text-muted); font-size: var(--font-size-md); font-weight: var(--font-weight-regular); font-variant-numeric: tabular-nums; }
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.75rem, 1fr)); gap: var(--space-3); list-style: none; margin: 0; padding: 0; }
+.badge-grid__cell { display: grid; min-width: 0; }
+
+/* ---- A slot: just the badge, details on hover, focus or click --------------- */
+.badge-slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.badge-slot .badge-medal { --medal-size: min(100%, 5.25rem); }
+.badge-slot:focus-visible { outline: var(--line-medium) solid var(--color-focus); outline-offset: var(--focus-offset); }
+
+.badge-slot__tip {
+  display: none;
+  position: absolute;
+  z-index: var(--z-tooltip);
+  left: 50%;
+  top: calc(100% + var(--space-1));
+  transform: translateX(-50%);
+  width: min(15rem, 70vw);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: var(--line-thin) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover);
+  text-align: left;
+  pointer-events: none;
+}
+.badge-slot[data-tip="above"] .badge-slot__tip { top: auto; bottom: calc(100% + var(--space-1)); }
+.badge-slot__tip-row { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.badge-slot:focus-visible .badge-slot__tip { display: flex; }
+@media (hover: hover) {
+  .badge-slot:hover .badge-slot__tip { display: flex; }
+  .badge-slot:hover .badge-medal { transform: translateY(-2px); }
+  .badge-slot .badge-medal { transition: transform var(--transition-fast); }
+}
+
+/* ---- Details dialog ----------------------------------------------------- */
+.badge-details__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-6); text-align: center; }
+.badge-details__status { align-items: center; min-width: 8rem; }
+.badge-details__pills { display: flex; gap: var(--space-1); justify-content: center; margin: 0; }
+.badge-details__bar { width: 10rem; height: 0.5rem; border-radius: var(--radius-pill); background: var(--color-border); overflow: hidden; }
+.badge-details__bar > span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--color-primary); }
+.badge-details__actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); }
+.badge-spotlight { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; }
+.badge-spotlight__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
+
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-slot .badge-medal { transition: none; }
+}

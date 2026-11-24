@@ -325,7 +325,7 @@
  * On a phone or a touch screen there is no hover, and no room around a plant: the card is shown
  * only once tapped, as a sheet at the bottom of the screen, with its own background.
  */
-@media (max-width: 40rem), (hover: none), (pointer: coarse) {
+@media (--phone), (hover: none), (pointer: coarse) {
   .garden-card__surface, .garden-card:not([data-open="true"]) { display: none; }
   .garden-card[data-open="true"] {
     position: fixed;
@@ -346,11 +346,15 @@
     pointer-events: auto;
   }
   .garden-card[data-open="true"] { flex-direction: column !important; }
+  /* A long name wraps in the sheet instead of being cut off (a touch screen has no hover to read it). */
+  .garden-card__name { white-space: normal; overflow-wrap: anywhere; }
   .garden-card[data-open="true"] .garden-card__content { width: auto; height: auto; gap: var(--space-4); }
   .garden-card[data-open="true"] .garden-card__side { padding: 0 var(--card-pad) var(--card-pad); }
+  /* Fingers need the touch target the desktop sizes above are smaller than. */
+  .garden-card[data-open="true"] .garden-card__actions .button { min-height: var(--touch-target); }
 }
 
-@media (min-width: 52rem) and ((hover: none) or (pointer: coarse)) {
+@media (--not-phone) and ((hover: none) or (pointer: coarse)) {
   .garden-card[data-open="true"] {
     bottom: var(--space-4);
     max-height: calc(100dvh - var(--space-8));

@@ -5,7 +5,7 @@ import { Icon } from "./Icon"
 const destinations = [
   { label: "My Garden", href: "/", icon: Sprout, available: true },
   { label: "Dashboard", href: "/dashboard", icon: ChartNoAxesCombined, available: true },
-  { label: "Badges", href: "/badges", icon: Flower2, available: false },
+  { label: "Badges", href: "/badges", icon: Flower2, available: true },
   { label: "Settings", href: "/settings", icon: Settings, available: true },
 ] as const
 
@@ -31,7 +31,7 @@ export function NavBar({ currentPath, preview = false }: {
               <li key={href} className="navbar__item">
                 {available ? (
                   <Link className="navbar__link" href={href} aria-label={label}
-                    aria-current={path === href ? "page" : undefined}>
+                    aria-current={path === href || (href === "/badges" && path === "/history") ? "page" : undefined}>
                     <Icon icon={icon} size="sm" />
                     {href === "/" ? (
                       <>
