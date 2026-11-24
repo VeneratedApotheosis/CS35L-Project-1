@@ -1,10 +1,11 @@
 import type { Badge } from "./facts.js";
+import { challengeBadges } from "./rules/challenges.js";
+import { comebackBadges } from "./rules/comebacks.js";
 import { finishingBadges } from "./rules/finishing.js";
 import { gardenBadges } from "./rules/garden.js";
 import { gettingStartedBadges } from "./rules/gettingStarted.js";
 import { loggingBadges } from "./rules/logging.js";
 import { metaBadges } from "./rules/meta.js";
-import { challengeBadges, comebackBadges } from "./rules/later.js";
 import { streakBadges } from "./rules/streaks.js";
 import type { ChapterId } from "./types.js";
 
