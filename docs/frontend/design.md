@@ -109,13 +109,14 @@ The plant is the main visual. Style reference: the icons in Animal Crossing: New
 - **Two tones per leaf**, with the lighter half on one side of the midrib, plus a soft highlight.
 - **Soft shapes.** Rounded corners and stems, a small inward notch on heart leaves.
 - **Colors** come from the plant's own palette and the pot palettes (terracotta, cream, sage, sky, blush), which sit well on the milk background.
-- **Each plant is unique but stable.** A habit's integer seed always draws the same plant and pot.
-- **Growth is a small number of stages**, each a larger copy of the full plant, not a continuous animation. Stage count and sizes are in the plant config, not in components.
+- **Each plant is unique but stable.** The seed is made by hashing the habit's id (`habitSeed(habit.id)`), so the same habit always draws the same plant and pot. No seed is stored and the generator has no versions. The generator is final: changing it changes the plant of every habit (see [plant-generation.md](plant-generation.md#status-final)).
+- **Growth is four stages**, each a larger copy of the full plant, not a continuous animation. The sizes are in the plant config, not in components.
+- **Health is three states with one shared wilt look.** Healthy, slightly wilted and wilted draw every plant at a wilt amount of 0, 0.5 and 1.
 - **Size.** The `scale` prop resizes the whole picture (plant and pot). It never changes where leaves or stems sit.
 - **Containment.** Leaves stay above the soil line and within the pot's width (8px overhang allowed), so plants never overlap neighbors in the grid.
 - **The pot is drawn separately** (`PottedPlant`): the seed also picks the pot's look — palette, band and finish — so any pot can go with any plant.
 
-Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant**, **Kimberly Queen**, **lily**, **rose**, **monstera**, **philodendron** and **lotus** — ids `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`. The create-habit picker, the previews and the backend's `plant_type` validation all read the same list (`frontend/src/pottedPlant/plants/plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`). Every plant except the lotus is built on the shared stage engine; the lotus is a water plant with its own drawing.
+Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant**, **Kimberly Queen**, **lily**, **rose**, **monstera**, **philodendron** and **lotus** — ids `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`. The create-habit picker, the previews and the backend's `plant_type` validation all read the same list (`frontend/src/pottedPlant/plants/plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`). Every plant except the lotus is built on the shared stage engine; the lotus is a water plant with its own drawing. Spider plant and calathea are also drawn on `/plants` but are not offered.
 
 ## 7. Layout
 
