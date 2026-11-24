@@ -75,7 +75,7 @@ export default function HabitDetails({ id }: { id: string }) {
           <HabitHeader habit={habit.data} onDelete={() => setDeleteOpen(true)} />
           {habit.isError && <p role="alert" className="text-body-sm">Couldn&apos;t refresh the latest details. Your last saved activity is still shown.</p>}
           <div className="habit-grid">
-            <HabitPlantCard habit={habit.data} />
+            <HabitPlantCard habit={habit.data} stats={habit.data.stats} />
             <ThisPeriodCard habit={habit.data} today={today} busy={logging.busy}
               onLogToday={() => { void logging.logToday() }} onLogDate={() => setLogDateOpen(true)} />
             <ActivityCalendar key={habit.data.id} habit={habit.data} today={today} busy={logging.busy}

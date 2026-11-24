@@ -49,4 +49,19 @@ describe("ProgressBar", () => {
     expect(markup).toContain('aria-valuenow="27"')
     expect(markup).not.toContain('habit-progress__track--segmented')
   })
+
+  it("accepts a fractional average, filling the pill it ends in by that fraction", () => {
+    const markup = render(1.5, 3)
+    expect(markup).toContain('aria-valuenow="1.5"')
+    expect(markup).toContain('aria-valuetext="1.5 of 3 activities"')
+    expect(markup).toContain('>1.5/3</span>')
+    expect(markup.match(/habit-progress__step--complete/g)).toHaveLength(1)
+    expect(markup).toContain("var(--color-link) 50%")
+  })
+
+  it("shows at most two decimals and still rejects a negative or non-finite count", () => {
+    expect(render(4 / 3, 3)).toContain('>1.33/3</span>')
+    expect(() => render(-0.5, 3)).toThrow(RangeError)
+    expect(() => render(Number.NaN, 3)).toThrow(RangeError)
+  })
 })

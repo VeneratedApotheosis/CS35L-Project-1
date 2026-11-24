@@ -28,6 +28,14 @@ it("shows the goal, the period and the days left in it, with the period's dates 
   expect(screen.getByText("Habit ends Nov 20")).toBeTruthy()
 })
 
+it("shows how many members a shared habit has out of its maximum, and nothing for a personal habit", () => {
+  const view = render(<OverallCard habit={habit} today="2026-11-16" members={{ count: 2, max: 5 }} />)
+  expect(screen.getByText("Members")).toBeTruthy()
+  expect(screen.getByText("2 of 5")).toBeTruthy()
+  view.rerender(<OverallCard habit={habit} today="2026-11-16" />)
+  expect(screen.queryByText("Members")).toBeNull()
+})
+
 it.each([
   ["2026-11-14", "7 days"],
   ["2026-11-16", "5 days"],

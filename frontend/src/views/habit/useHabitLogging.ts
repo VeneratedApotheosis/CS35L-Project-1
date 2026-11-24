@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api"
 import { formatDate } from "@/lib/goal"
 import { habitKeys } from "@/lib/habits"
 import { addActivity, deleteActivity } from "@/lib/logs"
+import { addSharedActivity, deleteSharedActivity, sharedHabitKeys, type SharedHabitDetail, type SharedLogStats } from "@/lib/sharedHabits"
 
 export interface LoggingNotice {
   message: string
@@ -14,11 +15,28 @@ export interface LoggingNotice {
   undo?: () => void
 }
 
+/** What a save changed in the caller's own logs, so the shared page can show it before the refetch lands. */
+interface LogEdit {
+  added?: { id: string; occurred_on: string }
+  removedId?: string
+}
+
+function adjustDays(days: { date: string; count: number }[], date: string, by: 1 | -1) {
+  const next = days.some((day) => day.date === date)
+    ? days.map((day) => day.date === date ? { ...day, count: day.count + by } : day)
+    : [...days, { date, count: by }]
+  return next.filter((day) => day.count > 0)
+}
+
 /**
  * Logging from the habit's page: today, or another day, with the same Undo toast as the Garden. Every
  * save refetches the habit, so the page shows the saved state. Only one write runs at a time.
+ *
+ * With `shared`, the habit is a shared habit and the logs are the caller's own (`today` is their `own_today`).
+ * The response's group stats, own stats and member row are put into the cache first, so a failed refetch
+ * cannot make a saved log look unsaved.
  */
-export function useHabitLogging(habitId: string, today: string | undefined) {
+export function useHabitLogging(habitId: string, today: string | undefined, shared = false) {
   const { user } = useAuth()
   const client = useQueryClient()
   const writing = useRef(false)
@@ -26,8 +44,41 @@ export function useHabitLogging(habitId: string, today: string | undefined) {
   const [noticeId, setNoticeId] = useState(0)
   const [notice, setNotice] = useState<LoggingNotice | null>(null)
 
-  function refresh() {
-    if (user) void client.invalidateQueries({ queryKey: habitKeys.all(user.id) })
+  function refresh(result: SharedLogStats | null, edit: LogEdit) {
+    if (!user) return
+    if (shared && result) {
+      client.setQueryData<SharedHabitDetail>(sharedHabitKeys.detail(user.id, habitId), (old) => {
+        if (!old) return old
+        const own = old.own_stats
+        const samePeriod = own.current_period.start === result.own_stats.current_period.start
+        const logs = samePeriod ? own.current_period_logs : []
+        const removed = edit.removedId ? own.current_period_logs.find((log) => log.id === edit.removedId) : undefined
+        const logDays = edit.added ? adjustDays(own.log_days, edit.added.occurred_on, 1)
+          : removed ? adjustDays(own.log_days, removed.occurred_on, -1) : own.log_days
+        return {
+          ...old, stats: result.stats, own_today: result.own_today,
+          own_stats: { ...own, ...result.own_stats, log_days: logDays,
+            current_period_logs: result.own_stats.state === "expired" ? []
+              : edit.added ? [...logs, edit.added] : logs.filter((log) => log.id !== edit.removedId) },
+          members: old.members.map((member) => member.user_id === user.id ? {
+            ...member, overall_progress: result.own_stats.overall_progress,
+            current_period_count: result.own_stats.current_period.count,
+            health: result.own_stats.health, streak: result.own_stats.streak,
+          } : member),
+        }
+      })
+    }
+    void client.invalidateQueries({ queryKey: shared ? sharedHabitKeys.all(user.id) : habitKeys.all(user.id) })
+  }
+
+  async function removeRemote(logId: string) {
+    if (user && shared) await client.cancelQueries({ queryKey: sharedHabitKeys.detail(user.id, habitId) })
+    if (shared) {
+      refresh(await deleteSharedActivity(habitId, logId), { removedId: logId })
+    } else {
+      await deleteActivity(habitId, logId)
+      refresh(null, { removedId: logId })
+    }
   }
 
   async function undo(logId: string) {
@@ -36,8 +87,7 @@ export function useHabitLogging(habitId: string, today: string | undefined) {
     setNoticeId((id) => id + 1)
     setBusy(true)
     try {
-      await deleteActivity(habitId, logId)
-      refresh()
+      await removeRemote(logId)
       setNotice({ message: "Activity removed." })
     } catch {
       setNotice({ message: "Couldn't undo activity. Try again in a moment.", error: true })
@@ -45,12 +95,22 @@ export function useHabitLogging(habitId: string, today: string | undefined) {
   }
 
   async function save(date: string) {
-    const result = await addActivity(habitId, date)
-    refresh()
+    // The cache is written from the response, so a refetch that started before the write must not land over it.
+    if (user && shared) await client.cancelQueries({ queryKey: sharedHabitKeys.detail(user.id, habitId) })
+    let log: { id: string; occurred_on: string }
+    if (shared) {
+      const result = await addSharedActivity(habitId, date)
+      log = { id: result.log.id, occurred_on: result.log.occurred_on }
+      refresh(result, { added: log })
+    } else {
+      const result = await addActivity(habitId, date)
+      log = { id: result.log.id, occurred_on: result.log.occurred_on }
+      refresh(null, { added: log })
+    }
     setNoticeId((id) => id + 1)
     setNotice({
       message: date === today ? "Activity logged for today." : `Activity logged for ${formatDate(date)}.`,
-      undo: () => { void undo(result.log.id) },
+      undo: () => { void undo(log.id) },
     })
   }
 
@@ -89,8 +149,7 @@ export function useHabitLogging(habitId: string, today: string | undefined) {
     setNoticeId((id) => id + 1)
     setBusy(true)
     try {
-      await deleteActivity(habitId, logId)
-      refresh()
+      await removeRemote(logId)
       setNotice({ message: "Activity removed." })
     } catch (error) {
       setNotice({

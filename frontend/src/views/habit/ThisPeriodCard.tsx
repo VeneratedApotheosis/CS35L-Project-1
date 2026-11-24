@@ -2,6 +2,7 @@ import { CalendarDays, Check } from "lucide-react"
 import { Button } from "@/components/Button"
 import { ProgressBar } from "@/components/ProgressBar"
 import { ProgressRing } from "@/components/ProgressRing"
+import { formatDate } from "@/lib/goal"
 import type { HabitDetail } from "@/lib/habits"
 import { encouragement, unitWord } from "../garden/HabitCard"
 
@@ -12,7 +13,14 @@ export function periodTitle(habit: HabitDetail): string {
 }
 
 export interface ThisPeriodCardProps {
+  /** The habit as the person logging sees it: for a shared habit, `stats` are their own. */
   habit: HabitDetail
+  /**
+   * Set for a shared habit: the group's average activities per member this period, which is the main bar
+   * (it may be fractional). The habit's own period count is then a second, smaller bar, and the three figures
+   * are labelled as the member's own. A shared habit cannot be logged before it starts.
+   */
+  group?: { count: number; target: number }
   /** Today in the profile's time zone, once it is known. */
   today: string | undefined
   /** A save is running, so logging waits. */
@@ -26,28 +34,36 @@ export interface ThisPeriodCardProps {
  * consistency and the streak, then the two ways to log: today, or another day of the period. The
  * numbers all come from the server.
  */
-export function ThisPeriodCard({ habit, today, busy, onLogToday, onLogDate }: ThisPeriodCardProps) {
+export function ThisPeriodCard({ habit, group, today, busy, onLogToday, onLogDate }: ThisPeriodCardProps) {
   const { stats } = habit
   const { count, target } = stats.current_period
   const rate = stats.consistency.rate
   const unit = unitWord(habit)
   const finished = stats.state === "expired"
-  const canLog = !finished && Boolean(today) && !busy
+  const waitsForStart = Boolean(group) && stats.state === "not_started"
+  const canLog = !finished && !waitsForStart && Boolean(today) && !busy
   return (
     <section className="habit-card habit-period" aria-labelledby="habit-period-title">
       <h2 id="habit-period-title" className="habit-period__title">{periodTitle(habit)}</h2>
 
       <div className="habit-period__bar">
-        <ProgressBar label={`${habit.name}: current period`} caption={encouragement(habit)} count={count} target={target} />
+        {group ? (
+          <>
+            <ProgressBar label="Group average this period" caption="Group average per member" count={group.count} target={group.target} />
+            <ProgressBar className="habit-period__own" label="Your progress this period" caption="You" count={count} target={target} />
+          </>
+        ) : (
+          <ProgressBar label={`${habit.name}: current period`} caption={encouragement(habit)} count={count} target={target} />
+        )}
       </div>
 
       <dl className="habit-period__metrics">
         <div className="habit-period__overall">
-          <dt>{stats.overall_progress === null ? "No total goal" : "Overall progress"}</dt>
-          <dd><ProgressRing label="Overall progress" value={stats.overall_progress} /></dd>
+          <dt>{stats.overall_progress === null ? "No total goal" : group ? "Your overall progress" : "Overall progress"}</dt>
+          <dd><ProgressRing label={group ? "Your overall progress" : "Overall progress"} value={stats.overall_progress} /></dd>
         </div>
         <div>
-          <dt>Consistency</dt>
+          <dt>{group ? "Your consistency" : "Consistency"}</dt>
           <dd>
             <span className="habit-period__value">{rate === null ? "—" : `${Math.round(rate * 100)}%`}</span>
             <span className="habit-period__sub">
@@ -56,7 +72,7 @@ export function ThisPeriodCard({ habit, today, busy, onLogToday, onLogDate }: Th
           </dd>
         </div>
         <div>
-          <dt>Current streak</dt>
+          <dt>{group ? "Your streak" : "Current streak"}</dt>
           <dd>
             <span className="habit-period__value">{stats.streak} {stats.streak === 1 ? unit : `${unit}s`}</span>
             <span className="habit-period__sub">Consecutive periods meeting your goal.</span>
@@ -69,6 +85,7 @@ export function ThisPeriodCard({ habit, today, busy, onLogToday, onLogDate }: Th
         <Button variant="secondary" icon={CalendarDays} full disabled={!canLog} onClick={onLogDate}>Log date</Button>
       </div>
       {finished && <p className="habit-period__sub">This habit has finished, so its activity is locked.</p>}
+      {waitsForStart && <p className="habit-period__sub">This habit starts on {formatDate(habit.start_date)}. You can log from then.</p>}
     </section>
   )
 }
