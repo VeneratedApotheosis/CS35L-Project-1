@@ -31,17 +31,26 @@
   margin-top: var(--space-5);
 }
 
-.toast {
+.toast-stack {
   position: fixed;
   z-index: var(--z-tooltip);
   bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4));
   left: 50%;
   translate: -50% 0;
+  width: min(32rem, calc(100% - var(--space-8)));
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-3);
+  pointer-events: auto;
+}
+
+.toast {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
-  width: min(32rem, calc(100% - var(--space-8)));
+  width: 100%;
+  pointer-events: auto;
   padding: var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -51,10 +60,9 @@
   animation: feedback-appear 160ms ease-out;
 }
 
-/* A second toast that sits one toast-height above the first, such as a badge
-   earned by the same log that shows the Undo toast. */
+/* Badge notifications follow ordinary toasts, regardless of their heights. */
 .toast--raised {
-  translate: -50% calc(-100% - var(--space-3));
+  order: 1;
 }
 
 .toast__message {
@@ -97,7 +105,28 @@
 }
 
 @media (--not-phone) {
-  .toast { bottom: var(--space-6); }
+  .toast-stack {
+    --toast-bottom: max(var(--space-6), calc(var(--keyboard-inset, 0px) + var(--space-4)));
+    bottom: var(--toast-bottom);
+    max-height: max(0px, calc(100dvh - var(--toast-bottom) - var(--space-4)));
+    overflow-y: auto;
+  }
+}
+
+@media (--phone) {
+  .modal {
+    width: min(32rem, calc(100% - max(var(--space-4), env(safe-area-inset-left, 0px)) - max(var(--space-4), env(safe-area-inset-right, 0px))));
+    max-height: calc(100dvh - max(var(--space-4), env(safe-area-inset-top, 0px)) - max(var(--space-4), env(safe-area-inset-bottom, 0px)));
+    padding: var(--space-5);
+    overflow-wrap: anywhere;
+  }
+  .modal .input { min-width: 0; max-width: 100%; }
+  .toast-stack {
+    --toast-bottom: max(calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4)), calc(var(--keyboard-inset, 0px) + var(--space-4)));
+    bottom: var(--toast-bottom);
+    max-height: max(0px, calc(100dvh - var(--toast-bottom) - max(var(--space-4), env(safe-area-inset-top, 0px))));
+    overflow-y: auto;
+  }
 }
 
 @keyframes feedback-appear {

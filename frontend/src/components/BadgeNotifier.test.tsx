@@ -5,6 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryProvider } from "@/lib/QueryProvider"
 import type { ApiBadge } from "@/lib/badges"
 import { BadgeNotifierProvider, useBadgeNotifier } from "./BadgeNotifier"
+import { useHabitLogging } from "@/views/habit/useHabitLogging"
+import { Toast } from "./Toast"
+
+const logApi = vi.hoisted(() => ({ addActivity: vi.fn(), deleteActivity: vi.fn() }))
+vi.mock("@/lib/logs", () => logApi)
 
 const auth = vi.hoisted(() => {
   vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test")
@@ -58,11 +63,37 @@ beforeEach(() => {
 })
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.unstubAllGlobals()
   vi.resetAllMocks()
 })
 
 describe("BadgeNotifier", () => {
+  it("keeps the activity Undo available after a badge dialog has covered it", async () => {
+    serve()
+    logApi.addActivity.mockResolvedValue({ log: { id: "log-1", occurred_on: "2026-11-24" }, new_badges: [gold] })
+    logApi.deleteActivity.mockResolvedValue({ stats: {} })
+    function Logging() {
+      const logging = useHabitLogging("habit-1", "2026-11-24", false)
+      return <>
+        <button onClick={() => { void logging.logToday() }}>Log</button>
+        {logging.notice && <Toast key={logging.noticeId} message={logging.notice.message} onDismiss={logging.dismiss}
+          action={logging.notice.undo ? { label: "Undo", onClick: logging.notice.undo } : undefined} />}
+      </>
+    }
+    vi.useFakeTimers()
+    render(<QueryProvider><BadgeNotifierProvider><Logging /></BadgeNotifierProvider></QueryProvider>)
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Log" })); await Promise.resolve() })
+    expect(screen.getByRole("dialog", { name: "Badge earned" })).toBeTruthy()
+    expect(screen.getByText("Activity logged for today.")).toBeTruthy()
+    act(() => vi.advanceTimersByTime(10000))
+    expect(screen.getByText("Activity logged for today.")).toBeTruthy()
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Badge earned" })).getByRole("button", { name: "Nice" }))
+    act(() => vi.advanceTimersByTime(4999))
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Undo" })); await Promise.resolve() })
+    expect(logApi.deleteActivity).toHaveBeenCalledWith("habit-1", "log-1")
+  })
+
   it("shows badges earned while the app was closed, and marks them seen", async () => {
     serve([badge()])
     renderNotifier()
