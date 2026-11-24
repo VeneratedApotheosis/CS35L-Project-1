@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => {
 })
 vi.mock("@/auth/useAuth", () => ({ useAuth: () => mocks }))
 vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: mocks.getSession } } }))
-vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(mocks.id ? { id: mocks.id } : {}) }))
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }), useSearchParams: () => new URLSearchParams(mocks.id ? { id: mocks.id } : {}) }))
 vi.mock("@/pottedPlant/plants/plantTypes", () => {
   const plant = { id: "pothos", label: "Pothos", Preview: ({ stage, wilt }: { stage: number; wilt: number }) => <svg data-testid="plant-art" data-stage={stage} data-wilt={wilt} /> }
   return { plantTypeById: () => plant }
@@ -86,7 +86,8 @@ describe("shared habit details (#276, #337)", () => {
     expect(screen.getByRole("region", { name: "Activity log" })).toBeTruthy()
   })
 
-  it("has no Delete button for a member, even the owner", async () => {
+  it("has no Delete button for a regular member", async () => {
+    mocks.user = { id: "member-b" }
     setup()
     await screen.findByRole("heading", { name: "Read together" })
     expect(screen.queryByRole("button", { name: /Delete/ })).toBeNull()
