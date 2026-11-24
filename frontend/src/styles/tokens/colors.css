@@ -24,6 +24,19 @@
   --birch-top: #f4e3c0;
   --birch-deep: #c9a574;
 
+  /* Achievement badge medals. Flat fills: a rim and a lighter face for each tier. Locked medals use the theme's neutral surfaces. */
+  --badge-bronze: #c98a5b;
+  --badge-bronze-face: #efcfb0;
+  --badge-silver: #aeb5b3;
+  --badge-silver-face: #e4e8e5;
+  --badge-gold: #e9b92f;
+  --badge-gold-face: #fbe8a4;
+  --badge-platinum: #48bda6;
+  --badge-platinum-face: #c9eee6;
+  --badge-secret: #ee87a5;
+  --badge-secret-face: #fbd9e4;
+  --badge-shine: #ffffff;
+
   --action-green: #83c17d;
   --action-green-selected: #4a8c46;
   --action-green-dark: #5c9d57;

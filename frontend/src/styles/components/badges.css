@@ -1,0 +1,119 @@
+/*
+ * Achievement badges. Flat fills only (see the illustration rules in
+ * docs/frontend/design.md): a coloured rim, a lighter face and a small shine.
+ * The tier is also written out as text everywhere, never colour alone.
+ */
+.badge-medal {
+  --badge-rim: var(--color-border-strong);
+  --badge-face: var(--color-surface-secondary);
+  --badge-art: var(--ink);
+  --medal-size: 6rem;
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--medal-size);
+  aspect-ratio: 1;
+}
+.badge-medal[data-size="sm"] { --medal-size: 3.5rem; }
+.badge-medal[data-size="lg"] { --medal-size: 10rem; }
+
+.badge-medal[data-tier="bronze"] { --badge-rim: var(--badge-bronze); --badge-face: var(--badge-bronze-face); }
+.badge-medal[data-tier="silver"] { --badge-rim: var(--badge-silver); --badge-face: var(--badge-silver-face); }
+.badge-medal[data-tier="gold"] { --badge-rim: var(--badge-gold); --badge-face: var(--badge-gold-face); }
+.badge-medal[data-tier="platinum"] { --badge-rim: var(--badge-platinum); --badge-face: var(--badge-platinum-face); }
+/* Secret badges: their own pink starburst, whatever the tier. Only ever shown once earned. */
+.badge-medal[data-tier="secret"] { --badge-rim: var(--badge-secret); --badge-face: var(--badge-secret-face); }
+
+/* In progress: not a medal yet. A flat disc in a ring that fills with the tier colour as you go. */
+.badge-medal[data-state="in_progress"] { --badge-face: var(--color-surface); --badge-art: var(--color-text-secondary); }
+.badge-medal__track { fill: none; stroke: var(--color-border); stroke-width: 7; }
+.badge-medal__arc { fill: none; stroke: var(--badge-rim); stroke-width: 7; stroke-linecap: round; }
+.badge-medal[data-state="in_progress"] .badge-medal__face { stroke: var(--color-border); stroke-width: 1; }
+.badge-medal[data-state="locked"] { --badge-rim: var(--color-border-strong); --badge-face: var(--color-surface-secondary); --badge-art: var(--color-text-muted); }
+
+.badge-medal__base { position: absolute; inset: 0; width: 100%; height: 100%; }
+.badge-medal__rim { fill: var(--badge-rim); }
+.badge-medal__face { fill: var(--badge-face); }
+.badge-medal__shine { fill: var(--badge-shine); opacity: 0.55; }
+.badge-medal[data-state="locked"] .badge-medal__shine { opacity: 0.18; }
+.badge-medal__spark { fill: var(--badge-gold); }
+.badge-medal__spark--secret { fill: var(--badge-secret); }
+
+.badge-medal__art {
+  position: absolute;
+  inset: 17%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  color: var(--badge-art);
+}
+.badge-medal__icon { width: 52%; height: 52%; stroke-width: 2; }
+.badge-medal[data-state="locked"] .badge-medal__icon,
+.badge-medal[data-state="in_progress"] .badge-medal__icon { opacity: 0.7; }
+
+.badge-medal__lock {
+  position: absolute;
+  right: 2%;
+  bottom: 2%;
+  display: grid;
+  place-items: center;
+  width: 28%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+}
+
+/* ---- Card ---------------------------------------------------------------- */
+.badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-6) var(--space-4) var(--space-4);
+  text-align: center;
+}
+.badge-card[data-state="locked"] { background: var(--color-surface-secondary); border-style: dashed; border-color: var(--color-border-strong); }
+.badge-card__text { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; }
+.badge-card__name { margin: 0; }
+.badge-card[data-state="locked"] .badge-card__name { color: var(--color-text-secondary); }
+.badge-card__progress { display: flex; align-items: center; gap: var(--space-2); width: 100%; }
+.badge-card[data-state="in_progress"] { border-color: var(--color-border-strong); }
+.badge-card__count { color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.badge-card__meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); }
+
+.badge-pill {
+  --pill-dot: var(--color-border-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.15rem var(--space-3) 0.15rem var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+.badge-card[data-state="locked"] .badge-pill { background: var(--color-surface); }
+.badge-pill[data-tier="bronze"] { --pill-dot: var(--badge-bronze); }
+.badge-pill[data-tier="silver"] { --pill-dot: var(--badge-silver); }
+.badge-pill[data-tier="gold"] { --pill-dot: var(--badge-gold); }
+.badge-pill[data-tier="platinum"] { --pill-dot: var(--badge-platinum); }
+.badge-pill__dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--pill-dot); }
+.badge-pill--secret { padding-left: var(--space-3); color: var(--color-text); }
+.badge-pill--secret .icon { color: var(--badge-secret); }
+.badge-card[data-secret] { border-color: var(--badge-secret); }
+
+/* ---- Page mockup --------------------------------------------------------- */
+.badge-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr)); }
+.badge-summary { display: flex; flex-direction: column; gap: var(--space-5); }
+.badge-summary__top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
+.badge-summary__tiers { display: flex; flex-wrap: wrap; gap: var(--space-6); }
+.badge-summary__tier { display: flex; align-items: center; gap: var(--space-2); }
+.badge-summary__tier strong { font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
+.badge-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.badge-spotlight { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; }
+.badge-lineup { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-6); }
+.badge-lineup figure { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); margin: 0; }
