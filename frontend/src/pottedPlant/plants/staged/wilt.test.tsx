@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { VIEWBOX } from "../../genome"
 import { Pot, potLookFromSeed } from "../../pots"
 import { PLANT_TYPES } from "../plantTypes"
 import { KIMBERLY_QUEEN_SPECIES } from "../kimberlyQueen/kimberlyQueenStages"
@@ -9,8 +10,10 @@ import { PEACE_LILY_SPECIES } from "../peaceLily/peaceLilyStages"
 import { PHILODENDRON_SPECIES } from "../philodendron/philodendronStages"
 import { PILEA_SPECIES } from "../pilea/pileaStages"
 import { POTHOS_SPECIES } from "../pothos/pothosStages"
+import { CALATHEA_SPECIES } from "../calathea/calatheaStages"
 import { ROSE_SPECIES } from "../rose/roseStages"
 import { SNAKE_PLANT_SPECIES } from "../snakePlant/snakePlantStages"
+import { SPIDER_PLANT_SPECIES } from "../spiderPlant/spiderPlantStages"
 import { createStagedPlant, leafOutline } from "./generate"
 import type { StagedPlantSpecies } from "./types"
 import { bendPoint, browningOf, WILT, wiltForHealth, wiltPlant } from "./wilt"
@@ -19,7 +22,9 @@ type Species = StagedPlantSpecies<never>
 const SPECIES = [
   POTHOS_SPECIES, PEACE_LILY_SPECIES, PILEA_SPECIES, SNAKE_PLANT_SPECIES, KIMBERLY_QUEEN_SPECIES,
   LILY_SPECIES, ROSE_SPECIES, MONSTERA_SPECIES, PHILODENDRON_SPECIES,
+  SPIDER_PLANT_SPECIES, CALATHEA_SPECIES,
 ] as unknown as Species[]
+const [FRAME_LEFT, FRAME_TOP, FRAME_WIDTH, FRAME_HEIGHT] = VIEWBOX.split(" ").map(Number)
 const SEEDS = Array.from({ length: 6 }, (_, i) => i + 1)
 
 const mean = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
@@ -44,7 +49,7 @@ describe("wilting a staged plant", () => {
       expect(angles[1], species.config.name).toBeGreaterThan(angles[0])
       expect(angles[2], species.config.name).toBeGreaterThan(angles[1])
     }
-  }, 60_000)
+  })
 
   it("bends the stems more as the plant wilts, tilting each tip outward", () => {
     for (const species of SPECIES) {
@@ -83,7 +88,7 @@ describe("wilting a staged plant", () => {
   })
 
   it("makes the average fully wilted leaf almost horizontal", () => {
-    const pothosLike = [POTHOS_SPECIES, PEACE_LILY_SPECIES, PILEA_SPECIES, LILY_SPECIES, ROSE_SPECIES, MONSTERA_SPECIES, PHILODENDRON_SPECIES]
+    const pothosLike = [SPIDER_PLANT_SPECIES, CALATHEA_SPECIES, POTHOS_SPECIES, PEACE_LILY_SPECIES, PILEA_SPECIES, LILY_SPECIES, ROSE_SPECIES, MONSTERA_SPECIES, PHILODENDRON_SPECIES]
     for (const species of pothosLike as unknown as Species[]) {
       const average = mean(SEEDS.flatMap((seed) => lastStage(species, seed, 1).leaves.map((leaf) => Math.abs(leaf.angle))))
       expect(average, species.config.name).toBeGreaterThanOrEqual(60)
@@ -91,7 +96,7 @@ describe("wilting a staged plant", () => {
     }
   })
 
-  it("keeps every leaf inside the side limits and above the soil at all three health states", () => {
+  it("keeps every leaf inside the side limits, above the soil and inside the picture frame at all three health states", () => {
     for (const species of SPECIES) {
       const { limits } = species.config
       for (const wilt of [0.5, 1]) {
@@ -103,13 +108,17 @@ describe("wilting a staged plant", () => {
                 expect(x, species.config.name).toBeGreaterThanOrEqual(limits.left - 0.01)
                 expect(x, species.config.name).toBeLessThanOrEqual(limits.right + 0.01)
                 expect(y, species.config.name).toBeLessThanOrEqual(limits.floor + 0.01)
+                expect(x, species.config.name).toBeGreaterThanOrEqual(FRAME_LEFT)
+                expect(x, species.config.name).toBeLessThanOrEqual(FRAME_LEFT + FRAME_WIDTH)
+                expect(y, species.config.name).toBeGreaterThanOrEqual(FRAME_TOP)
+                expect(y, species.config.name).toBeLessThanOrEqual(FRAME_TOP + FRAME_HEIGHT)
               }
             }
           }
         }
       }
     }
-  }, 60_000)
+  })
 
   it("browns about half of the leaves, and a quarter of all of them a darker brown", () => {
     const leaves = SEEDS.flatMap((seed) => lastStage(POTHOS_SPECIES as unknown as Species, seed, 1).leaves)
