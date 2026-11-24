@@ -155,12 +155,12 @@ The page uses the medium measure ([Page width](design.md#7-layout)); the page sh
 
 The Badges page (`/badges`, `views/Badges.tsx`) has a summary and two tabs. **It is a mock for now:** it reads placeholder data from `views/badges/placeholderBadges.ts` because the badges backend is not built. Add `?demo=empty` to the address to see the new-user state. The achievement ideas are in [badges-ideas.md](../badges-ideas.md) and the medals are in the style guide (`/style-guide`, "Badge medals").
 
-- **Summary:** "11 of 23 earned", the earned count for each tier (Bronze, Silver, Gold, Platinum) and a "Next up" line for the badge that is closest to done. The total counts only badges the user can see, so it grows when a secret badge is found.
-- **Achievements tab:** account-wide badges in groups (Getting started, Logging milestones, Finishing habits, Streaks), with filters for All, Earned, In progress and Locked. Each card states the name, rule, tier and status in words. Earned badges are solid medals with the date. In-progress badges are a ring that fills with the tier color and a count ("7 of 10"). Locked badges are muted, dashed cards with a lock. Earned badges are permanent.
+- **Summary:** "11 of 23 earned" and the earned count for each tier (Bronze, Silver, Gold, Platinum). The total counts only badges the user can see, so it grows when a secret badge is found.
+- **Achievements tab:** account-wide badges in groups (Getting started, Logging milestones, Finishing habits, Streaks), with filters for All, Earned, In progress and Locked. Each card has a large medal, then the tier and one small detail on the same line, then the name and rule. The detail is the date for earned badges and the count ("7 of 10") for in-progress ones. Earned badges are solid medals. In-progress badges are a ring that fills with the tier color. Locked badges are muted, dashed cards with a lock. Earned badges are permanent.
 - **Secret badges:** never shown as locked or in progress, and never counted ahead of time. Once earned they appear under "Secret badges" with their own pink starburst medal and a "Secret" label next to the tier.
 - **Finished habits tab:** at most one badge per habit. Each card shows the plant at its final stage and health, a small level medal (Bronze, Silver or Gold), the habit name and the completion date. Clicking one opens a dialog with the goal and duration, final overall progress and consistency, total activities, final plant stage and health, and the level.
 - **Habit history:** all expired habits, including those without badges, with final stats and activity history.
-- **Empty state:** achievements are all listed as locked with "Log your first activity to earn your first badge.", and the finished habits tab explains when a habit earns a badge and links back to the garden.
+- **Empty state:** achievements are all listed as locked, and the finished habits tab explains when a habit earns a badge and links back to the garden.
 - **Nav:** Overall Dashboard, My Garden, Settings.
 
 ### 7 Settings

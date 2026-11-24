@@ -15,12 +15,12 @@ afterEach(cleanup)
 const allAchievements = [...placeholderCategories.flatMap((category) => category.badges), ...placeholderSecretBadges]
 
 describe("Badges page", () => {
-  it("summarizes how many badges are earned and what is next", () => {
+  it("summarizes how many badges are earned", () => {
     render(<BadgesPage />)
     const earned = allAchievements.filter((badge) => badge.state === "earned").length
     expect(screen.getByRole("heading", { level: 1, name: "Badges" })).toBeTruthy()
     expect(screen.getByRole("heading", { name: `${earned} of ${allAchievements.length} earned` })).toBeTruthy()
-    expect(screen.getByText(/Next up:/).parentElement?.textContent).toContain("Ten Taps")
+    expect(screen.queryByText(/Next up/)).toBeNull()
   })
 
   it("groups achievements and states each badge's tier and status in words", () => {
@@ -80,12 +80,11 @@ describe("Badges page", () => {
   describe("for a new user (?demo=empty)", () => {
     beforeEach(() => { search.current = new URLSearchParams("demo=empty") })
 
-    it("encourages them, lists every badge as locked and shows no secret badges", () => {
+    it("lists every badge as locked and shows no secret badges", () => {
       render(<BadgesPage />)
       const total = placeholderCategories.flatMap((category) => category.badges).length
       expect(screen.getByRole("heading", { name: `0 of ${total} earned` })).toBeTruthy()
-      expect(screen.getByText("Log your first activity to earn your first badge.")).toBeTruthy()
-      expect(screen.queryByRole("heading", { name: "Secret badges" })).toBeNull()
+        expect(screen.queryByRole("heading", { name: "Secret badges" })).toBeNull()
       expect(screen.queryByRole("article", { name: /Earned$/ })).toBeNull()
       expect(screen.getByRole("article", { name: "Seed Money. Bronze. Locked" })).toBeTruthy()
     })

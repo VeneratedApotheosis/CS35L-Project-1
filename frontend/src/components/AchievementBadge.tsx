@@ -127,20 +127,20 @@ export function BadgeCard({ name, description, tier, state, art, secret = false,
   return (
     <article className="card badge-card" data-state={shownState} data-secret={secret || undefined} aria-label={label}>
       <BadgeMedal tier={tier} state={shownState} secret={secret} art={art} progress={progress ? progress.count / progress.target : 0} />
-      <div className="badge-card__text">
-        <h3 className="text-h3 badge-card__name">{name}</h3>
-        <p className="text-body-sm text-secondary">{description}</p>
-      </div>
-      {shownState === "in_progress" && progress && (
-        <p className="text-caption badge-card__count" role="progressbar" aria-label={`${name} progress`} aria-valuemin={0} aria-valuemax={progress.target} aria-valuenow={Math.min(progress.count, progress.target)}>
-          {progress.count} of {progress.target}
-        </p>
-      )}
       <div className="badge-card__meta">
         {secret && <span className="badge-pill badge-pill--secret"><Icon icon={Sparkles} size="xs" />Secret</span>}
         <span className="badge-pill" data-tier={tier}><span className="badge-pill__dot" />{tierLabels[tier]}</span>
         {shownState === "earned" && earnedOn && <span className="text-caption text-muted badge-card__date">{earnedOn}</span>}
+        {shownState === "in_progress" && progress && (
+          <span className="text-caption text-muted badge-card__date" role="progressbar" aria-label={`${name} progress`} aria-valuemin={0} aria-valuemax={progress.target} aria-valuenow={Math.min(progress.count, progress.target)}>
+            {progress.count} of {progress.target}
+          </span>
+        )}
         {shownState === "locked" && <span className="text-caption text-muted badge-card__date">Locked</span>}
+      </div>
+      <div className="badge-card__text">
+        <h3 className="text-h3 badge-card__name">{name}</h3>
+        <p className="text-body-sm text-secondary">{description}</p>
       </div>
     </article>
   )
