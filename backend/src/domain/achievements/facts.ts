@@ -172,3 +172,29 @@ export function buildFacts(input: BadgeInput): BadgeFacts {
   }
   return { input, habits, totalLogs, days, earned: new Set(input.earned) };
 }
+
+// The most days in a row with no log at all, between two log days, in a
+// sorted list. Logs on Nov 1 and Nov 16 leave 14 quiet days (Nov 2 to 15).
+export function longestQuietSpell(dates: readonly string[]): number {
+  const unique = [...new Set(dates)].sort();
+  let longest = 0;
+  for (let i = 1; i < unique.length; i += 1) {
+    const gap = daysBetween(unique[i - 1] as string, unique[i] as string) - 1;
+    longest = Math.max(longest, gap);
+  }
+  return longest;
+}
+
+// How many of the sorted dates fall in [from, to).
+export function countBetween(
+  dates: readonly string[],
+  from: string,
+  to: string,
+): number {
+  return dates.filter((date) => date >= from && date < to).length;
+}
+
+// Every date with a log, on any habit, oldest first.
+export function logDays(facts: BadgeFacts): string[] {
+  return [...facts.days.keys()].sort();
+}
