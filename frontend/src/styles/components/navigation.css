@@ -249,6 +249,7 @@
 
 /* On a phone a page keeps the notch clear above it and has room below. */
 @media (--phone) {
+  .navbar__link, .navbar__add { min-width: var(--touch-target); }
   .app-shell { min-height: 100dvh; }
   .app-shell__content {
     padding-top: calc(var(--page-padding) + env(safe-area-inset-top, 0px));
