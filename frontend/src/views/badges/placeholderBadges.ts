@@ -4,8 +4,6 @@ import {
   Rocket, Shield, Sparkles, Sprout, Star, Sun, Sunrise, Swords, Target, Timer, TreeDeciduous, Trophy, Umbrella, Wind, Zap,
 } from "lucide-react"
 import type { BadgeInfo } from "@/components/AchievementBadge"
-import type { IntervalUnit } from "@/lib/habits"
-import type { PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 
 /*
  * PLACEHOLDER DATA. The badges backend is not built yet, so the Badges page
@@ -134,33 +132,4 @@ export const placeholderSecretBadges: PlaceholderAchievement[] = [
   { id: "early-bird", name: "Early Bird", description: "Log an activity before 6 AM.", tier: "bronze", state: "earned", art: { icon: Sunrise }, secret: true, earnedOn: "Nov 18" },
   { id: "night-owl", name: "Night Owl", description: "Log an activity between midnight and 4 AM.", tier: "bronze", state: "earned", art: { icon: Moon }, secret: true, earnedOn: "Nov 20" },
   { id: "leap-of-faith", name: "Leap of Faith", description: "Log an activity on February 29th.", tier: "gold", state: "earned", art: { icon: Sparkles }, secret: true, earnedOn: "Nov 20" },
-]
-
-export type HabitBadgeLevel = "gold" | "silver" | "bronze"
-
-/** A finished habit that earned a Bronze, Silver or Gold badge. Mirrors what GET /dashboard's `finished` list plus the habit's goal will give. */
-export interface PlaceholderHabitBadge {
-  id: string
-  name: string
-  plantType: PlantTypeId
-  level: HabitBadgeLevel
-  endDate: string
-  targetCount: number
-  intervalCount: number
-  intervalUnit: IntervalUnit
-  numPeriods: number
-  /** 0 to 1. */
-  progress: number
-  /** 0 to 1. */
-  consistency: number
-  totalActivities: number
-  finalStage: 1 | 2 | 3 | 4
-  finalHealth: "healthy" | "slightly_wilted" | "wilted"
-}
-
-export const placeholderHabitBadges: PlaceholderHabitBadge[] = [
-  { id: "demo-read", name: "Read a little", plantType: "pothos", level: "gold", endDate: "2026-11-22", targetCount: 3, intervalCount: 1, intervalUnit: "week", numPeriods: 4, progress: 1, consistency: 1, totalActivities: 13, finalStage: 4, finalHealth: "healthy" },
-  { id: "demo-walk", name: "Take a walk", plantType: "monstera", level: "gold", endDate: "2026-11-15", targetCount: 5, intervalCount: 1, intervalUnit: "week", numPeriods: 6, progress: 1, consistency: 0.83, totalActivities: 31, finalStage: 4, finalHealth: "healthy" },
-  { id: "demo-piano", name: "Practice piano", plantType: "rose", level: "silver", endDate: "2026-11-08", targetCount: 4, intervalCount: 1, intervalUnit: "week", numPeriods: 4, progress: 1, consistency: 0.75, totalActivities: 16, finalStage: 4, finalHealth: "slightly_wilted" },
-  { id: "demo-water", name: "Drink water", plantType: "peace_lily", level: "bronze", endDate: "2026-10-30", targetCount: 7, intervalCount: 1, intervalUnit: "week", numPeriods: 3, progress: 0.71, consistency: 0.33, totalActivities: 15, finalStage: 3, finalHealth: "wilted" },
 ]

@@ -107,14 +107,8 @@
 .badge-group { display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-4); border-top: 3px solid var(--color-border-strong); }
 .badge-group__title { display: flex; align-items: baseline; gap: var(--space-3); margin: 0; }
 .badge-group__count { color: var(--color-text-muted); font-size: var(--font-size-md); font-weight: var(--font-weight-regular); font-variant-numeric: tabular-nums; }
-.badge-group__note { margin: 0; max-width: 40rem; }
 .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.75rem, 1fr)); gap: var(--space-3); list-style: none; margin: 0; padding: 0; }
 .badge-grid__cell { display: grid; min-width: 0; }
-
-/* The latest badges: a lifted band with the medals a little larger. */
-.badge-latest { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4) var(--space-5) var(--space-5); border-radius: var(--radius-lg); background: var(--color-surface-secondary); }
-.badge-latest__row { display: flex; flex-wrap: wrap; gap: var(--space-3); list-style: none; margin: 0; padding: 0; }
-.badge-latest__row > li { width: 6.5rem; }
 
 /* ---- A slot: just the badge, details on hover, focus or click --------------- */
 .badge-slot {
@@ -131,15 +125,7 @@
   font: inherit;
 }
 .badge-slot .badge-medal { --medal-size: min(100%, 5.25rem); }
-.badge-latest__row .badge-slot .badge-medal { --medal-size: min(100%, 6.5rem); }
 .badge-slot:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
-.badge-slot--empty { border: 2px dashed var(--color-border-strong); opacity: 0.6; }
-.badge-slot--empty > span { display: block; }
-
-/* A finished habit: the plant in a soft frame, with its level medal in the corner. */
-.badge-slot__frame { position: relative; display: block; width: 84%; aspect-ratio: 1; border-radius: var(--radius-md); background: var(--color-surface-secondary); overflow: visible; }
-.badge-slot__frame > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.badge-slot .badge-slot__level { position: absolute; top: -0.5rem; right: -0.5rem; --medal-size: 2.5rem; }
 
 .badge-slot__tip {
   display: none;
@@ -165,7 +151,7 @@
 .badge-slot:focus-visible .badge-slot__tip { display: flex; }
 @media (hover: hover) {
   .badge-slot:hover .badge-slot__tip { display: flex; }
-  .badge-slot:not(.badge-slot--habit):hover .badge-medal { transform: translateY(-2px); }
+  .badge-slot:hover .badge-medal { transform: translateY(-2px); }
   .badge-slot .badge-medal { transition: transform var(--transition-fast); }
 }
 
@@ -175,11 +161,6 @@
 .badge-details__pills { display: flex; gap: var(--space-1); justify-content: center; margin: 0; }
 .badge-details__bar { width: 10rem; height: 0.5rem; border-radius: var(--radius-pill); background: var(--color-border); overflow: hidden; }
 .badge-details__bar > span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--color-primary); }
-.badge-details__plant { width: 9rem; }
-.badge-details__plant > svg { display: block; width: 100%; height: auto; }
-.badge-details__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-4); margin: 0; }
-.badge-details__facts > div:first-child { grid-column: 1 / -1; }
-.badge-details__facts dd { margin: 0; font-weight: var(--font-weight-bold); }
 .badge-details__actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); }
 .badge-spotlight { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; }
 

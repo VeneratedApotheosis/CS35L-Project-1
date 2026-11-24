@@ -489,7 +489,7 @@ export default function StyleGuide() {
           index="11"
           eyebrow="Achievements"
           title="Badges page"
-          description="A count, a Latest strip and groups of compact badge grids, laid out the way osu! lays out its medals. Slots hold only the badge, with no text. Hover or focus one for a small card with its name, tier, rule and status, or click it for the details, with buttons to step to the next badge. Hide locked drops the locked badges. Finished habits show the plant in a frame with the level medal in the corner, and the Secret group only appears once a secret badge is earned. All the badges here are demo data."
+          description="A count and groups of compact badge grids, laid out the way osu! lays out its medals. Slots hold only the badge, with no text. Hover or focus one for a small card with its name, tier, rule and status, or click it for the details, with buttons to step to the next badge. Hide locked drops the locked badges, and the Secret group only appears once a secret badge is earned. All the badges here are demo data."
         >
           <BadgeCollectionExample />
         </Section>

@@ -4,8 +4,8 @@ import { useMemo, useSyncExternalStore } from "react"
 import { BadgeCollection } from "./badges/BadgeCollection"
 import { buildGroups } from "./badges/groups"
 import {
-  placeholderChapters, placeholderHabitBadges, placeholderSecretBadges,
-  type PlaceholderAchievement, type PlaceholderChapter, type PlaceholderHabitBadge,
+  placeholderChapters, placeholderSecretBadges,
+  type PlaceholderAchievement, type PlaceholderChapter,
 } from "./badges/placeholderBadges"
 
 /** The same list with every badge set back to locked, for the new-user look. */
@@ -30,8 +30,7 @@ export default function Badges() {
 
   const groups = useMemo(() => {
     const secrets: PlaceholderAchievement[] = empty ? [] : placeholderSecretBadges
-    const habits: PlaceholderHabitBadge[] = empty ? [] : placeholderHabitBadges
-    return buildGroups(empty ? withNothingEarned(placeholderChapters) : placeholderChapters, secrets, habits)
+    return buildGroups(empty ? withNothingEarned(placeholderChapters) : placeholderChapters, secrets)
   }, [empty])
 
   return (

@@ -2,8 +2,8 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import BadgesPage from "@/app/(signed-in)/badges/page"
-import { buildGroups, latestEarned } from "./badges/groups"
-import { placeholderChapters, placeholderHabitBadges, placeholderSecretBadges } from "./badges/placeholderBadges"
+import { buildGroups } from "./badges/groups"
+import { placeholderChapters, placeholderSecretBadges } from "./badges/placeholderBadges"
 
 HTMLDialogElement.prototype.showModal = function showModal() { this.setAttribute("open", "") }
 HTMLDialogElement.prototype.close = function close() { this.removeAttribute("open") }
@@ -12,30 +12,28 @@ const visit = (search = "") => window.history.replaceState(null, "", `/badges${s
 beforeEach(() => visit())
 afterEach(cleanup)
 
-const groups = buildGroups(placeholderChapters, placeholderSecretBadges, placeholderHabitBadges)
-const badges = groups.flatMap((group) => group.items).filter((item) => item.kind === "badge")
+const groups = buildGroups(placeholderChapters, placeholderSecretBadges)
+const badges = groups.flatMap((group) => group.items)
 const earnedCount = badges.filter((item) => item.badge.state === "earned").length
 
 const slot = (name: RegExp | string) => screen.getByRole("button", { name })
 const group = (name: string) => screen.getByRole("heading", { level: 2, name: new RegExp(`^${name}`) }).closest("section")!
 
 describe("Badges page", () => {
-  it("shows the count, the tier counts and the groups in order", () => {
+  it("shows the count and the tier counts, with no Latest or Finished habits section", () => {
     render(<BadgesPage />)
     expect(screen.getByRole("heading", { level: 1, name: "Badges" })).toBeTruthy()
     expect(screen.getByRole("heading", { name: `${earnedCount} of ${badges.length} earned` })).toBeTruthy()
     expect(within(screen.getByRole("list", { name: "Earned badges by tier" })).getAllByRole("listitem")).toHaveLength(4)
-    const titles = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)
-    expect(titles.slice(2, 4)).toEqual(expect.arrayContaining(["Getting started5/8"]))
-    expect(titles.some((title) => title?.startsWith("Finished habits"))).toBe(true)
+    expect(screen.queryByRole("heading", { name: "Latest" })).toBeNull()
+    expect(screen.queryByRole("heading", { level: 2, name: /^Finished habits/ })).toBeNull()
   })
 
-  it("shows the latest badges, newest first", () => {
+  it("lists the groups in order, each with its earned count", () => {
     render(<BadgesPage />)
-    const latest = within(screen.getByRole("heading", { name: "Latest" }).closest("section")!).getAllByRole("button")
-    const expected = latestEarned(groups, 8)
-    expect(latest).toHaveLength(8)
-    expect(latest[0].getAttribute("aria-label")).toContain(expected[0].badge.name)
+    const titles = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)
+    expect(titles[1]).toBe("Getting started5/8")
+    expect(titles.at(-1)).toBe("Secret badges3")
   })
 
   it("puts only the badge in a slot and says everything else in its name", () => {
@@ -99,7 +97,7 @@ describe("Badges page: details", () => {
   })
 })
 
-describe("Badges page: secret badges and finished habits", () => {
+describe("Badges page: secret badges", () => {
   it("has a Secret group that lists only earned secret badges, as secret", () => {
     render(<BadgesPage />)
     const secret = group("Secret badges")
@@ -110,35 +108,17 @@ describe("Badges page: secret badges and finished habits", () => {
     expect(screen.queryByRole("button", { name: /Secret\. .*Locked/ })).toBeNull()
     expect(screen.queryByRole("button", { name: /Secret\. .*In progress/ })).toBeNull()
   })
-
-  it("shows one slot per finished habit and opens its details", () => {
-    render(<BadgesPage />)
-    expect(within(group("Finished habits")).getAllByRole("button", { name: /badge\. Finished/ })).toHaveLength(placeholderHabitBadges.length)
-    fireEvent.click(slot(/^Read a little\. Gold badge\. Finished Nov 22, 2026\./))
-    const dialog = screen.getByRole("dialog", { name: "Read a little" })
-    expect(within(dialog).getByText("3 times every week, for 4 weeks")).toBeTruthy()
-    expect(within(dialog).getByText("Final progress").nextSibling?.textContent).toBe("100%")
-    expect(within(dialog).getByText("Total activities").nextSibling?.textContent).toBe("13")
-    expect(within(dialog).getByText("Stage 4, healthy")).toBeTruthy()
-  })
 })
 
 describe("Badges page for a new user (?demo=empty)", () => {
   beforeEach(() => visit("?demo=empty"))
 
-  it("has nothing earned, a gentle line, and no Secret group or latest row", () => {
+  it("has nothing earned, every badge locked and no Secret group", () => {
     render(<BadgesPage />)
     const total = placeholderChapters.flatMap((chapter) => chapter.badges).length
     expect(screen.getByRole("heading", { name: `0 of ${total} earned` })).toBeTruthy()
-    expect(screen.getByText("Your first badge is one log away.")).toBeTruthy()
-    expect(screen.queryByRole("heading", { level: 2, name: /^Secret badges/ })).toBeNull()
-  })
-
-  it("lists every badge as locked, and explains the empty finished habits group", () => {
-    render(<BadgesPage />)
     expect(slot("Seed Money. Bronze. Locked.")).toBeTruthy()
     expect(screen.queryByRole("button", { name: /Earned/ })).toBeNull()
-    expect(within(group("Finished habits")).getByText(/earns a Bronze, Silver or Gold badge/)).toBeTruthy()
-    expect(screen.queryByRole("button", { name: /badge\. Finished/ })).toBeNull()
+    expect(screen.queryByRole("heading", { level: 2, name: /^Secret badges/ })).toBeNull()
   })
 })

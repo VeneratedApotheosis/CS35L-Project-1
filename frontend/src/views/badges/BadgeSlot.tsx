@@ -1,14 +1,9 @@
 "use client"
 
-import { Medal } from "lucide-react"
-import { BadgeMedal, BadgePills, badgeSummary, shownState, tierLabels } from "@/components/AchievementBadge"
-import { formatDate } from "@/lib/goal"
-import { habitSeed } from "@/pottedPlant/habitSeed"
-import { plantTypeById } from "@/pottedPlant/plants/plantTypes"
-import { wiltForHealth } from "@/pottedPlant/plants/staged/wilt"
+import { BadgePills, BadgeMedal, badgeSummary, shownState } from "@/components/AchievementBadge"
 import type { BadgeItem } from "./groups"
 
-function statusText(badge: Extract<BadgeItem, { kind: "badge" }>["badge"]): string {
+function statusText(badge: BadgeItem["badge"]): string {
   const state = shownState(badge)
   if (state === "earned") return badge.earnedOn ? `Earned ${badge.earnedOn}` : "Earned"
   if (state === "in_progress" && badge.progress) return `In progress: ${badge.progress.count} of ${badge.progress.target}`
@@ -20,25 +15,6 @@ function statusText(badge: Extract<BadgeItem, { kind: "badge" }>["badge"]): stri
  * shows a small card, and clicking or tapping it opens the details.
  */
 export function BadgeSlot({ item, onOpen }: { item: BadgeItem; onOpen: (id: string) => void }) {
-  if (item.kind === "habit") {
-    const { habit } = item
-    const plant = plantTypeById(habit.plantType)
-    const label = `${habit.name}. ${tierLabels[habit.level]} badge. Finished ${formatDate(habit.endDate)}.`
-    return (
-      <button type="button" className="badge-slot badge-slot--habit" aria-label={label} onClick={() => onOpen(item.id)}>
-        <span className="badge-slot__frame" aria-hidden="true">
-          {plant && <plant.Preview seed={habitSeed(habit.id)} stage={habit.finalStage} wilt={wiltForHealth(habit.finalHealth)} />}
-          <BadgeMedal tier={habit.level} size="sm" art={{ icon: Medal }} className="badge-slot__level" />
-        </span>
-        <span className="badge-slot__tip" aria-hidden="true">
-          <strong className="text-body-sm">{habit.name}</strong>
-          <span className="badge-slot__tip-row"><BadgePills tier={habit.level} /></span>
-          <span className="text-caption text-secondary">Finished {formatDate(habit.endDate)}</span>
-        </span>
-      </button>
-    )
-  }
-
   const { badge } = item
   const state = shownState(badge)
   return (
@@ -53,9 +29,4 @@ export function BadgeSlot({ item, onOpen }: { item: BadgeItem; onOpen: (id: stri
       </span>
     </button>
   )
-}
-
-/** A dashed circle where a finished habit's badge will go. Decorative. */
-export function EmptySlot() {
-  return <li className="badge-slot badge-slot--empty" aria-hidden="true"><span /></li>
 }
