@@ -5,6 +5,23 @@ import { describe, expect, it } from "vitest"
 // A touch device can be wider than a phone. Keep the card and fixed panel in
 // the same media rule so they cannot accidentally appear together again.
 describe("garden touch panel styles", () => {
+  it("wraps long habit names in the touch panel without changing the desktop rule", () => {
+    const css = postcss.parse(readFileSync("src/styles/components/garden.css", "utf8"))
+    let desktop = ""
+    let touch = false
+    css.walkRules(".garden-peek__name", (rule) => {
+      if (rule.parent?.type === "root") {
+        rule.walkDecls("white-space", (decl) => { desktop = decl.value })
+      } else if (rule.parent?.type === "atrule" && rule.parent.params.includes("(hover: none)") && rule.parent.params.includes("(pointer: coarse)")) {
+        const values: Record<string, string> = {}
+        rule.walkDecls((decl) => { values[decl.prop] = decl.value })
+        touch = values["white-space"] === "normal" && values["overflow-wrap"] === "anywhere"
+      }
+    })
+    expect(desktop).toBe("nowrap")
+    expect(touch).toBe(true)
+  })
+
   it("hides the hover card wherever the panel becomes fixed", () => {
     const css = postcss.parse(readFileSync("src/styles/components/garden.css", "utf8"))
     let checked = false
