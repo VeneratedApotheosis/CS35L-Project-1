@@ -5,6 +5,7 @@ import { pinoHttp } from "pino-http";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { badgesRouter } from "./routes/badges.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { habitsRouter } from "./routes/habits.js";
 import { healthRouter } from "./routes/health.js";
@@ -25,6 +26,7 @@ app.use(habitsRouter);
 app.use(sharedHabitsRouter);
 app.use(logsRouter);
 app.use(dashboardRouter);
+app.use(badgesRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

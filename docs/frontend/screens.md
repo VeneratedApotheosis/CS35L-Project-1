@@ -154,7 +154,9 @@ The page uses the medium measure ([Page width](design.md#7-layout)); the page sh
 
 ### 6 Badges and Habit History
 
-The Badges page (`/badges`, `views/Badges.tsx`) is laid out the way osu! lays out its medals: a count, then groups of compact medal grids with no text. **It is a mock for now:** it reads placeholder data from `views/badges/placeholderBadges.ts` because the badges backend is not built. Add `?demo=empty` to the address to see the new-user state. The achievement ideas are in [badges-ideas.md](../badges-ideas.md) and the medals are in the style guide (`/style-guide`, "Badge medals" and "Badges page").
+The Badges page (`/badges`, `views/Badges.tsx`) is laid out the way osu! lays out its medals: a count, then groups of compact medal grids with no text. It reads the badge book from `GET /me/badges` (`lib/badges.ts`), with a loading line, and an error card with a retry, like the Dashboard. The backend sends no art, so `views/badges/badgeIcons.ts` maps each badge id to an icon, with a fallback for unknown ids. The style guide and tests use `views/badges/sampleBadgeBook.ts`, sample data in the same shape.
+
+**Earning a badge.** `components/BadgeNotifier.tsx` sits in the signed-in layout. Logging, creating a habit and saving the display name push the `new_badges` from their response to it, and on load it asks `GET /me/badges/unseen` for badges earned while the app was closed. Badges show one at a time. Bronze and Silver get a toast with "View badges", raised above any Undo toast. Gold, Platinum and secret badges get a dialog with the large medal. Each one is marked seen (`POST /me/badges/seen`) when it is shown. The achievement ideas are in [badges-ideas.md](../badges-ideas.md) and the medals are in the style guide (`/style-guide`, "Badge medals" and "Badges page").
 
 - **Summary card:** "20 of 73 earned" and the earned count for each tier (Bronze, Silver, Gold, Platinum). The total counts only badges the user can see, so it grows when a secret badge is found.
 - **Hide locked:** a toggle that drops the locked badges. Earned and in-progress badges always show.

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/auth/useAuth"
+import { useBadgeNotifier } from "@/components/BadgeNotifier"
 import { ApiError } from "@/lib/api"
 import { formatDate } from "@/lib/goal"
 import { habitKeys } from "@/lib/habits"
@@ -39,6 +40,7 @@ function adjustDays(days: { date: string; count: number }[], date: string, by: 1
 export function useHabitLogging(habitId: string, today: string | undefined, shared = false) {
   const { user } = useAuth()
   const client = useQueryClient()
+  const badges = useBadgeNotifier()
   const writing = useRef(false)
   const [busy, setBusy] = useState(false)
   const [noticeId, setNoticeId] = useState(0)
@@ -106,6 +108,7 @@ export function useHabitLogging(habitId: string, today: string | undefined, shar
       const result = await addActivity(habitId, date)
       log = { id: result.log.id, occurred_on: result.log.occurred_on }
       refresh(null, { added: log })
+      badges.push(result.new_badges)
     }
     setNoticeId((id) => id + 1)
     setNotice({

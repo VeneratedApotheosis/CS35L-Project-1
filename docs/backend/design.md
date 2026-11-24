@@ -127,6 +127,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `DELETE /habits/:id/logs/:logId` | Delete a log | Built (#197) |
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | `DELETE /me` calls `delete_my_account` | Built (#257) |
+| `GET /me/badges`, `GET /me/badges/unseen`, `POST /me/badges/seen` | Achievement badges, see section 6.7 | Built (#250) |
 | Shared habit routes | Create/list/detail, preview/join, logging and management built; see section 6.6 | Built (#268–#272) |
 
 Routes have no version prefix. There is no route to edit a personal habit, because personal habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
@@ -335,6 +336,29 @@ The database policies enforce ownership and membership for inserts, but do not e
 
 **Stats.** The list gives each shared habit the short block from 6.4 with the group values. The detail adds the group `stats` block, a `members` list with each member's summary (`display_name`, `is_owner`, overall progress, current period count, streak and health) and the caller's own full stats. Other members' exact log dates are excluded from Express responses; see the direct-RPC privacy limitation above.
 
+### 6.7 Achievement badges
+
+The account-wide badges from [badges-ideas.md](../badges-ideas.md). The rules are in [8.12](#812-achievement-badges), and the full plan is in [badges-plan.md](../badges-plan.md).
+
+| Route | Purpose |
+| --- | --- |
+| `GET /me/badges` | The whole badge book. Runs a check first, so badges earned by time passing (a habit expiring) are stored before they are shown |
+| `GET /me/badges/unseen` | Runs a check and returns `{ badges }`: earned badges whose "Badge earned" moment has not been shown. The app calls it once on load |
+| `POST /me/badges/seen` | Body `{ ids }`, 1 to 100 badge ids. Sets `seen_at` on those that are still unseen. Returns 204 |
+
+`GET /me/badges` returns `earned_count`, `visible_count`, `chapters` and `unseen` (ids). Each chapter has an `id`, a `title` and its `badges` in list order. Each badge has:
+
+| Field | Meaning |
+| --- | --- |
+| `id`, `name`, `description`, `tier`, `secret` | From the catalog. `tier` is `bronze`, `silver`, `gold` or `platinum` |
+| `state` | `earned` (stored in `user_badges`), `in_progress` (a count badge with some progress) or `locked` |
+| `progress` | `{ count, target }`, with the count capped at the target. `null` for a badge whose rule is not built yet |
+| `earned_at` | When it was stored, or `null` |
+
+`POST /habits/:id/logs`, `POST /habits` and `PATCH /me` also return `new_badges`: the badges that request earned, in the same shape with `state: "earned"`. The app shows them right away.
+
+Secret badges are left out until earned, and the `secret` chapter is missing until then. So `visible_count` never gives away how many exist. Icons are not sent: the frontend maps each id to an icon.
+
 ---
 
 ## 7. Validation, errors and logging
@@ -450,6 +474,20 @@ The rules for the group numbers. Each member's own numbers use sections 8.2 to 8
 - **Leaving.** A member who leaves drops out of the averages and their past logs are kept, so the stage can rise or fall when someone leaves.
 - **Completion.** The habit expires when the group's `today` reaches the end date. Each member gets their own badge from their own progress and consistency (8.9). Group badges are not decided yet.
 - **Visibility.** Members see names and progress summaries. The exact log dates of other members are used for the calculation and never returned by Express. Direct RPC access currently violates the stronger intended privacy guarantee; see section 6.6.
+
+### 8.12 Achievement badges
+
+Account-wide badges on top of the per-habit results in 8.9. The list is [badges-ideas.md](../badges-ideas.md), and the plan is [badges-plan.md](../badges-plan.md).
+
+- **Rules in code, earned facts in the database.** The catalog and rules are in `domain/achievements/`. Only the fact that a badge was earned is stored, in `user_badges` ([database design 2.4](../database/design.md#24-user_badges)).
+- **Permanent.** A stored badge is never removed, even if the habit or log behind it is deleted. In-progress counts use the data that exists now, so they can go down.
+- **Whole history.** Rules use what ever happened, such as the best streak a habit ever had, not only its current state. A check that runs late still awards the badge.
+- **"Finish a habit"** means it expired with a Bronze or better. Hall of Fame counts every expired habit.
+- **"At once"** means active on the same day: `start_date <= day < end date`, up to today.
+- **Only personal habits count.** Shared habits and their logs are left out for now.
+- **Badge collector badges** count earned badges, so the engine repeats them until nothing new is earned. A fifth badge earns Trophy Case in the same check.
+- **When badges are checked.** On `GET /me/badges`, `GET /me/badges/unseen`, `POST /habits/:id/logs`, `POST /habits` and `PATCH /me`. The three writes add `new_badges` (badges this request stored) to their usual response. `PATCH /me` with a `display_name` also earns Personal Touch. A failed check is logged and gives `new_badges: []`, and never fails the write. The check reads every habit and log the user owns.
+- **Storing.** New ids go to `award_badges`, which returns only the rows it inserted. A badge another request stored at the same moment is earned but not new for this request. The rows are read again, so it still counts as unseen until the app has shown it.
 
 ---
 

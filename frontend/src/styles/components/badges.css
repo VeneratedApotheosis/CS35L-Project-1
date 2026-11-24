@@ -147,6 +147,7 @@
   text-align: left;
   pointer-events: none;
 }
+.badge-slot[data-tip="above"] .badge-slot__tip { top: auto; bottom: calc(100% + var(--space-1)); }
 .badge-slot__tip-row { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 .badge-slot:focus-visible .badge-slot__tip { display: flex; }
 @media (hover: hover) {
@@ -163,6 +164,7 @@
 .badge-details__bar > span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--color-primary); }
 .badge-details__actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); }
 .badge-spotlight { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; }
+.badge-spotlight__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
 
 
 @media (prefers-reduced-motion: reduce) {

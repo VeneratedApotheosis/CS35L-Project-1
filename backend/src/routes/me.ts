@@ -3,6 +3,7 @@ import { IANAZone } from "luxon";
 import { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
+import { awardNewBadges } from "../services/achievements.js";
 import {
   deleteAccount,
   getProfile,
@@ -54,7 +55,12 @@ meRouter.patch(
     const { user, supabase, valid } = res.locals;
     const patch = valid.body as z.infer<typeof updateMeBody>;
     const profile = await updateProfile(supabase, user.id, patch);
-    res.status(200).json(meResponse(user, profile));
+    // Personal Touch is earned by setting the name, which stored data cannot
+    // show later, so this request says so. Never fails the update.
+    const new_badges = await awardNewBadges(supabase, user.id, {
+      displayNameSet: patch.display_name !== undefined,
+    });
+    res.status(200).json({ ...meResponse(user, profile), new_badges });
   },
 );
 

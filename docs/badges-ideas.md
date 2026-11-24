@@ -1,6 +1,6 @@
 # Habit Garden: Badge Ideas
 
-A working list, not a spec. **Decided:** earned badges are permanent, badges that need new tracking are dropped, and only self-earned badges are in scope for now. Nothing here is built yet.
+A working list, not a spec. **Decided:** earned badges are permanent, badges that need new tracking are dropped, and only self-earned badges are in scope for now. Most of it is built: see the status in [badges-plan.md](badges-plan.md#11-build-order-and-tickets).
 
 The badges the app has today are the per-habit **Bronze, Silver and Gold** results (see [backend design 8.9](backend/design.md#89-completion-and-badges)). This list is a second layer on top of them: **achievements** for the whole account, modelled on video game trophies. Some are easy and pop up in the first minutes, some take weeks, and some stay hidden until you earn them.
 

@@ -51,6 +51,12 @@
   animation: feedback-appear 160ms ease-out;
 }
 
+/* A second toast that sits one toast-height above the first, such as a badge
+   earned by the same log that shows the Undo toast. */
+.toast--raised {
+  translate: -50% calc(-100% - var(--space-3));
+}
+
 .toast__message {
   flex: 1 1 10rem;
   overflow-wrap: anywhere;

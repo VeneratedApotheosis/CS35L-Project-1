@@ -21,7 +21,7 @@ What the database stores, who can read and change it, and how changes are record
 
 - **Supabase Postgres**, with Supabase Auth for sign-in (Google).
 - **Three tables** for personal habits: `profiles`, `habits`, `activity_logs`. Shared habits add three more tables, which are planned and described in [section 8](#8-shared-habits-planned).
-- **Store facts, compute stats.** Progress, streaks, health, growth and badges are not stored. The backend calculates them from habits and logs.
+- **Store facts, compute stats.** Progress, streaks, health, growth and the per-habit Bronze, Silver and Gold results are not stored. The backend calculates them from habits and logs. The one exception is achievement badges: `user_badges` records which ones a user has earned, because earned badges are permanent ([section 2.4](#24-user_badges)).
 - **Row Level Security (RLS) is on for every table.** The backend uses the signed-in user's token, so RLS applies to it as well. It is a safety net behind the backend's own checks.
 
 ```mermaid
@@ -29,6 +29,7 @@ erDiagram
     AUTH_USERS ||--|| PROFILES : "id"
     PROFILES ||--o{ HABITS : "owns"
     HABITS ||--o{ ACTIVITY_LOGS : "has"
+    PROFILES ||--o{ USER_BADGES : "earned"
 ```
 
 Deleting a user cascades: the profile, their habits and those habits' logs all go.
@@ -90,6 +91,21 @@ One row per logged activity. Rows are added or deleted, never updated.
 - Several logs on the same day are allowed.
 - `occurred_on` has no constraint tying it to the habit's dates. A log for a habit that has not started has an `occurred_on` before `start_date`, and the backend counts it toward the first period.
 
+### 2.4 user_badges
+
+One row per achievement badge a user has earned. Added by `20261124_01_user_badges.sql`. The badge list and the rules are in backend code (`backend/src/domain/achievements/`), so only the fact "this user earned this badge" is stored. See [badges-plan.md](../badges-plan.md).
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `user_id` | uuid | References `profiles(id)`, on delete cascade. Defaults to the signed-in user |
+| `badge_id` | text | The badge's id from the backend catalog, such as `ten-taps`. Lowercase letters, digits and dashes, up to 64 characters |
+| `earned_at` | timestamptz | Defaults to now. When the backend noticed the badge was earned |
+| `seen_at` | timestamptz | Null until the app has shown the "Badge earned" moment |
+
+- The primary key is `(user_id, badge_id)`, so a badge is earned at most once.
+- **Permanent.** There is no delete policy, and only `seen_at` can be updated. A badge stays even after the habit or log behind it is deleted.
+- Rows are added through `award_badges` ([section 4](#4-functions-and-triggers)).
+
 ---
 
 ## 3. Access control
@@ -101,6 +117,9 @@ One row per logged activity. Rows are added or deleted, never updated.
 | `profiles` | Your own row | Trigger only | Your own row | Through account deletion only |
 | `habits` | Your own | As yourself (`owner_id` is you) | Your own | Your own |
 | `activity_logs` | Logs of your habits | Logs of your habits | No one | Logs of your habits |
+| `user_badges` | Your own | As yourself | Your own, `seen_at` only | No one |
+
+The badge rules are not in the database either. The insert policy only checks that the row is yours, so a user could award themselves a badge with a direct insert. Badges are personal with no leaderboard, so this is accepted. Stopping it would need an admin key in the backend or the rules written in SQL.
 
 The logging rules are **not** in the database: only the current period, nothing in the future, today only before the start, and nothing after the end (see [the backend design](../backend/design.md#81-periods-and-logging)). The policies only check that the habit is yours, so a direct insert with your token could add a log for any date. The backend enforces the rules. The policies for the planned shared habit tables are in [section 8.3](#83-row-level-security).
 
@@ -113,6 +132,7 @@ RLS can't restrict which columns change, so column-level grants do it. A grant i
 | `profiles` | `display_name`, `avatar_url`, `timezone` | Live |
 | `habits` | Nothing. A habit cannot be edited, only created and deleted | Planned (`20261111_01_lock_all_habit_columns.sql`). #104 had allowed `name`, `description` and `plant_type` |
 | `activity_logs` | Nothing. Revoke `update`, but never revoke `delete` | Planned (#104) |
+| `user_badges` | `seen_at` only. `delete` is revoked | `20261124_01_user_badges.sql` |
 
 Re-run the revokes whenever a new table is added.
 
@@ -125,6 +145,7 @@ Re-run the revokes whenever a new table is added.
 | `handle_new_user()` and trigger `on_auth_user_created` | Creates the profile row when a user signs up. `security definer`, because `profiles` has no insert policy. Name falls back from full name, to name, to the email prefix, to `user` |
 | `delete_my_account()` | Deletes the calling user from `auth.users`, which cascades to everything they own. Takes no id, so it can only delete the caller. Only `authenticated` can run it |
 | `validate_profile_timezone()` and trigger `validate_profile_timezone_trigger` | Rejects a timezone that is not in `pg_timezone_names` |
+| `award_badges(text[])` | Inserts the given badges for the caller and returns only the rows that were new (`on conflict do nothing ... returning`). Two requests at the same time never both report the same badge as new. `security invoker`, so RLS applies. Only `authenticated` can run it |
 
 `security definer` means a function runs with its owner's permissions, so it can do what the caller cannot. Always pair it with a fixed `search_path`.
 
@@ -153,7 +174,8 @@ The planned functions for shared habits are in [section 8.4](#84-functions-and-t
 | Table is `profiles`, not `users` | Avoids confusion with `auth.users` |
 | Profile row is created by a trigger, not an insert policy | Works for every sign-in method with no frontend code |
 | No `habits` column can be updated, enforced with column grants | Accountability comes before flexibility: a habit is a commitment. RLS can't restrict columns, and a grant is an allow-list |
-| Habits are hard deleted, with a confirmation | Badges and streaks are computed, so nothing stored is lost |
+| Habits are hard deleted, with a confirmation | Streaks and habit results are computed, and earned achievement badges are kept in `user_badges`, so nothing stored is lost |
+| Achievement badges store only the earned fact, not the rules | The rules build on the period, streak and health rules in backend code. A second copy in SQL would drift apart |
 | Logging date rules and the not-started rule are in the backend, not the database | They depend on the user's timezone and on dates computed from the habit, which are awkward to express in a policy. A log is a plain fact (a date), and the backend works out which period it counts toward when it is shown |
 | Logs are never updated, and stats are never stored | A fix is a delete and a new log. Progress, streaks, health, growth, badges and the dashboard are calculated from habits and logs each time, so they cannot go out of sync |
 | Email is not copied to `profiles` | A copy goes stale and could leak |

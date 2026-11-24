@@ -1,4 +1,5 @@
 import { api } from "./api"
+import type { ApiBadge } from "./badges"
 import type { HabitStats } from "./habits"
 
 export interface ActivityLog {
@@ -10,6 +11,8 @@ export interface ActivityLog {
 export interface AddLogResult {
   log: ActivityLog
   stats: HabitStats
+  /** Achievement badges this log earned, for the "Badge earned" moment. */
+  new_badges?: ApiBadge[]
 }
 
 export function addActivity(habitId: string, occurredOn: string): Promise<AddLogResult> {
