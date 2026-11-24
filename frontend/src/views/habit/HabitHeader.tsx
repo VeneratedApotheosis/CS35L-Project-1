@@ -5,8 +5,9 @@ import type { HabitDetail } from "@/lib/habits"
 
 /**
  * The top of the page: a way back, the name as the title, the description if there is one, and Delete.
+ * Without `onDelete` there is no Delete button: members of a shared habit cannot delete it.
  */
-export function HabitHeader({ habit, onDelete }: { habit: HabitDetail; onDelete: () => void }) {
+export function HabitHeader({ habit, onDelete }: { habit: Pick<HabitDetail, "name" | "description">; onDelete?: () => void }) {
   return (
     <header className="habit-head">
       <Link href="/" className="habit-head__back" aria-label="Back to Garden">
@@ -18,9 +19,11 @@ export function HabitHeader({ habit, onDelete }: { habit: HabitDetail; onDelete:
           <h1 id="habit-name" className="habit-head__name">{habit.name}</h1>
           {habit.description && <p className="habit-head__desc">{habit.description}</p>}
         </div>
-        <Button variant="secondary" icon={Trash2} className="habit-head__delete" aria-label="Delete habit" onClick={onDelete}>
-          Delete
-        </Button>
+        {onDelete && (
+          <Button variant="secondary" icon={Trash2} className="habit-head__delete" aria-label="Delete habit" onClick={onDelete}>
+            Delete
+          </Button>
+        )}
       </div>
     </header>
   )

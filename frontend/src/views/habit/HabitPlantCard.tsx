@@ -1,16 +1,22 @@
 "use client"
 
-import type { HabitDetail } from "@/lib/habits"
+import type { HabitStats } from "@/lib/habits"
 import { habitSeed } from "@/pottedPlant/habitSeed"
 import { plantTypeById } from "@/pottedPlant/plants/plantTypes"
 import { wiltForHealth } from "@/pottedPlant/plants/staged/wilt"
 
 const healthLabels = { healthy: "Healthy", slightly_wilted: "Slightly wilted", wilted: "Wilted" } as const
 
+export interface HabitPlantCardProps {
+  habit: { id: string; plant_type: string }
+  /** The plant's growth stage and health: the habit's own, or the group's for a shared habit. */
+  stats: Pick<HabitStats, "stage" | "health">
+}
+
 /** The plant on its own, at its real stage and health, with a pill under it: its kind, its level and its health. */
-export function HabitPlantCard({ habit }: { habit: HabitDetail }) {
+export function HabitPlantCard({ habit, stats }: HabitPlantCardProps) {
   const plant = plantTypeById(habit.plant_type)
-  const { stage, health } = habit.stats
+  const { stage, health } = stats
   return (
     <figure className="habit-card habit-plant-card" data-health={health}>
       <div className="habit-plant-card__art" aria-hidden="true">

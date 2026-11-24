@@ -62,6 +62,32 @@
 }
 .habit-head__delete { flex-shrink: 0; color: var(--color-danger-text); }
 
+/* The shared habit page has Members and Invite below the grid. */
+.habit-below { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 52rem) {
+  .habit-below { grid-template-columns: minmax(0, 8fr) minmax(0, 5fr); }
+}
+.habit-members, .habit-invite { --card-pad: 1.5rem; display: grid; gap: var(--space-3); align-content: start; }
+.habit-members__title, .habit-invite__title { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); }
+.habit-members__scroll { max-width: 100%; overflow-x: auto; }
+.habit-members__table { width: 100%; border-collapse: collapse; text-align: start; font-size: var(--font-size-md); }
+.habit-members__table th, .habit-members__table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); text-align: start; overflow-wrap: anywhere; }
+.habit-members__table thead th { color: var(--color-text-secondary); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
+.habit-members__table tbody tr:last-child > * { border-bottom: 0; }
+.habit-members__tag { color: var(--color-text-secondary); font-weight: var(--font-weight-regular); }
+.habit-members__list { display: none; margin: 0; padding: 0; list-style: none; }
+.habit-members__list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding-block: var(--space-3); border-bottom: 1px solid var(--color-border); }
+.habit-members__list li:last-child { border-bottom: 0; }
+.habit-members__name { font-weight: var(--font-weight-bold); overflow-wrap: anywhere; }
+.habit-members__health { color: var(--color-link); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
+.habit-members__stats { grid-column: 1 / -1; margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.habit-invite__deadline { margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-md); }
+.habit-invite__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+@media (max-width: 43.999rem) {
+  .habit-members__scroll { display: none; }
+  .habit-members__list { display: block; }
+}
+
 /* The cards. The plant is narrower than the period beside it. */
 .habit-grid { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: stretch; }
 @media (min-width: 52rem) {
@@ -98,6 +124,10 @@
 .habit-period .habit-progress__track { --progress-height: 0.75rem; }
 .habit-period .habit-progress__caption { font-size: var(--font-size-base); font-weight: var(--font-weight-bold); }
 .habit-period .habit-progress__count { color: var(--color-link); font-size: var(--font-size-xl); }
+.habit-period__own { gap: var(--space-1); }
+.habit-period__own .habit-progress__track { --progress-height: 0.5rem; }
+.habit-period .habit-period__own .habit-progress__caption { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
+.habit-period .habit-period__own .habit-progress__count { font-size: var(--font-size-md); }
 .habit-period__sub { margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
 
 /* Overall progress, consistency and the streak: three columns in one row, each a label over its figure. */
@@ -208,6 +238,8 @@ button.habit-day:focus-visible { outline: 2px solid var(--color-link); outline-o
 .habit-overall__figures dd { display: grid; gap: 0.125rem; margin: 0; }
 .habit-overall__value { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; line-height: 1.1; }
 .habit-overall__note { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.habit-overall__members { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
+.habit-overall__members strong { color: var(--color-text); font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
 .habit-log { --card-pad: 1.5rem; display: grid; gap: var(--space-3); align-content: start; }
 .habit-log__title { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); }
 .habit-log__list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
@@ -229,7 +261,9 @@ button.habit-day:focus-visible { outline: 2px solid var(--color-link); outline-o
 }
 
 @media (max-width: 43.999rem) {
-  .habit-period, .habit-calendar, .habit-overall, .habit-log { --card-pad: 1.25rem; }
+  .habit-period, .habit-calendar, .habit-overall, .habit-overall__members { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
+.habit-overall__members strong { color: var(--color-text); font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
+.habit-log { --card-pad: 1.25rem; }
   .habit-plant-card__art > svg { width: min(90%, 20rem); }
   .habit-head__delete { align-self: flex-start; }
 }

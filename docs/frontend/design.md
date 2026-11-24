@@ -161,6 +161,8 @@ Under 44rem every measure is the full screen. The top bar is a bottom bar there,
 
 **Habit Details.** A header and five soft cards: the plant, how this period is going (with the logging buttons), the activity calendar, and, beside it, the overall run with the activity log under it. Numbers carry the hierarchy and the labels are small.
 
+**Shared Habit.** The same header and cards as Habit Details, with no Delete button. The "This week" card shows the group's average as its bar, with the member's own count under it and their own three figures. Overall adds the member count, and the Members and Invite cards sit below the grid (the members are a table on a wide screen and a list on a phone).
+
 ```
 +--------------------------------------------------+
 | <- Garden                                        |

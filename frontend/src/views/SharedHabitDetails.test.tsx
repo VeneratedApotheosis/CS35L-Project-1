@@ -53,26 +53,43 @@ beforeEach(() => {
 })
 afterEach(() => { cleanup(); client.clear(); vi.unstubAllGlobals(); vi.clearAllMocks() })
 
-describe("shared habit details (#276)", () => {
-  it("requests authenticated detail data and displays real info, group stats, and separate own progress", async () => {
+describe("shared habit details (#276, #337)", () => {
+  it("requests authenticated detail data and shows the group's bar beside the member's own figures", async () => {
     setup()
     await screen.findByRole("heading", { name: "Read together" })
     expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/shared-habits/shared-a")
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer member-a-token")
-    expect(screen.getByText("Read together 3 times every week for 4 weeks.")).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Back to Garden" }).getAttribute("href")).toBe("/")
     expect(screen.getByText("A chapter with friends.")).toBeTruthy()
-    expect(screen.getByText("Nov 8, 2026")).toBeTruthy()
-    expect(screen.getByText("Dec 6, 2026")).toBeTruthy()
-    expect(screen.getByText("17 days")).toBeTruthy() // Backend group today, not browser today.
-    expect(screen.getByText("2 of 5")).toBeTruthy()
-    expect(screen.getByText("Pothos · Stage 2 · Slightly wilted")).toBeTruthy()
-    expect(screen.getByRole("progressbar", { name: "Group average this period" }).getAttribute("aria-valuenow")).toBe("1.5")
-    expect(screen.getByText("1.5/3")).toBeTruthy()
-    expect(screen.getByRole("progressbar", { name: "Group overall progress" }).getAttribute("aria-valuenow")).toBe("38")
-    const own = screen.getByRole("region", { name: "Your progress" })
-    expect(within(own).getByRole("progressbar", { name: "Current period" }).getAttribute("aria-valuenow")).toBe("2")
-    expect(within(own).getByRole("progressbar", { name: "Overall progress" }).getAttribute("aria-valuenow")).toBe("50")
-    expect((screen.getByRole("button", { name: "Log activity" }) as HTMLButtonElement).disabled).toBe(false)
+    // Plant card: the group's stage and health.
+    const plant = document.querySelector(".habit-plant-card")!
+    expect(plant.textContent).toContain("Pothos · Lv. 2")
+    expect(plant.textContent).toContain("Slightly wilted")
+    // "This week": the group's average as the bar, the member's own figures beside it.
+    const week = screen.getByRole("region", { name: "This week" })
+    const group = within(week).getByRole("progressbar", { name: "Group average this period" })
+    expect(group.getAttribute("aria-valuenow")).toBe("1.5")
+    expect(within(week).getByText("1.5/3")).toBeTruthy()
+    expect(within(week).getByRole("progressbar", { name: "Your progress this period" }).getAttribute("aria-valuenow")).toBe("2")
+    expect(within(week).getByRole("progressbar", { name: "Your overall progress" }).getAttribute("aria-valuenow")).toBe("50")
+    expect(within(week).getByText("100%")).toBeTruthy()
+    expect((within(week).getByRole("button", { name: "Log today" }) as HTMLButtonElement).disabled).toBe(false)
+    expect((within(week).getByRole("button", { name: "Log date" }) as HTMLButtonElement).disabled).toBe(false)
+    // Overall: goal, period and days left from the member's own dates (not the group's), and the members.
+    const overall = screen.getByRole("region", { name: "Overall" })
+    expect(within(overall).getByText("3×")).toBeTruthy()
+    expect(within(overall).getByText("2 of 4")).toBeTruthy()
+    expect(within(overall).getByText("3 days")).toBeTruthy()
+    expect(within(overall).getByText("Habit ends Dec 5")).toBeTruthy()
+    expect(within(overall).getByText("2 of 5")).toBeTruthy()
+    expect(screen.getByRole("region", { name: "Activity" })).toBeTruthy()
+    expect(screen.getByRole("region", { name: "Activity log" })).toBeTruthy()
+  })
+
+  it("has no Delete button for a member, even the owner", async () => {
+    setup()
+    await screen.findByRole("heading", { name: "Read together" })
+    expect(screen.queryByRole("button", { name: /Delete/ })).toBeNull()
   })
 
   it("shows every member's returned name, progress, count, streak and health without their log dates", async () => {
@@ -84,10 +101,20 @@ describe("shared habit details (#276)", () => {
     const sam = within(table).getByRole("row", { name: /Sam/ })
     for (const value of ["25%", "1/3", "0 periods", "Wilted"]) expect(within(sam).getByText(value)).toBeTruthy()
     expect(table.textContent).not.toContain("2026-11-15")
-    expect(screen.queryByRole("button", { name: /Delete/ })).toBeNull()
   })
 
-  it("shows Starts on and who has joined before the start, with zero progress and no logging", async () => {
+  it("lists the same members as a list for a phone", async () => {
+    setup()
+    const list = await screen.findByRole("list", { name: "Member progress summaries" })
+    const items = within(list).getAllByRole("listitem")
+    expect(items).toHaveLength(2)
+    expect(items[0].textContent).toContain("Ella (owner) (you)")
+    expect(items[0].textContent).toContain("50% overall · 2/3 this period · 1 period streak")
+    expect(items[1].textContent).toContain("Sam")
+    expect(items[1].textContent).toContain("Wilted")
+  })
+
+  it("shows the start date, who has joined, zero progress and no logging before the start", async () => {
     const habit = fixture()
     habit.start_date = "2026-11-25"
     habit.stats = { ...habit.stats, state: "not_started", overall_progress: 0, stage: 1, health: "healthy", end_date: "2026-12-23",
@@ -97,14 +124,16 @@ describe("shared habit details (#276)", () => {
     habit.members = habit.members.map((member) => ({ ...member, overall_progress: 0, current_period_count: 0, streak: 0, health: "healthy" }))
     fetchMock.mockResolvedValueOnce(json(habit))
     setup()
-    await screen.findByText("Starts on Nov 25, 2026.")
+    await screen.findByText("This habit starts on Nov 25, 2026. You can log from then.")
     expect(screen.getByRole("heading", { name: "Who has joined" })).toBeTruthy()
     expect(screen.getByRole("row", { name: /Ella/ })).toBeTruthy()
     expect(screen.getByRole("row", { name: /Sam/ })).toBeTruthy()
-    expect(screen.getByText("Pothos · Stage 1 · Healthy")).toBeTruthy()
-    expect(screen.getByRole("progressbar", { name: "Group overall progress" }).getAttribute("aria-valuenow")).toBe("0")
+    expect(document.querySelector(".habit-plant-card")!.textContent).toContain("Pothos · Lv. 1")
+    expect(screen.getByRole("progressbar", { name: "Your overall progress" }).getAttribute("aria-valuenow")).toBe("0")
     expect(screen.getByText("Available after your first completed period.")).toBeTruthy()
-    expect((screen.getByRole("button", { name: "Log activity" }) as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByText("until it starts", { exact: false })).toBeTruthy()
+    expect((screen.getByRole("button", { name: "Log today" }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole("button", { name: "Log date" }) as HTMLButtonElement).disabled).toBe(true)
   })
 
   it("uses backend stage and health even when they differ from personal progress", async () => {
@@ -113,7 +142,10 @@ describe("shared habit details (#276)", () => {
     habit.stats.health = "wilted"
     fetchMock.mockResolvedValueOnce(json(habit))
     setup()
-    await screen.findByText("Pothos · Stage 4 · Wilted")
+    await screen.findByRole("heading", { name: "Read together" })
+    const plant = document.querySelector(".habit-plant-card")!
+    expect(plant.textContent).toContain("Pothos · Lv. 4")
+    expect(plant.textContent).toContain("Wilted")
     expect(screen.getByTestId("plant-art").getAttribute("data-stage")).toBe("4")
   })
 
@@ -124,8 +156,7 @@ describe("shared habit details (#276)", () => {
     setup()
     const bar = await screen.findByRole("progressbar", { name: "Group average this period" })
     expect(bar.getAttribute("aria-valuenow")).toBe("3")
-    expect(bar.getAttribute("aria-valuetext")).toBe("4.5 of 3 activities per member")
-    expect((bar.firstChild as HTMLElement).style.width).toBe("100%")
+    expect(bar.getAttribute("aria-valuetext")).toBe("4.5 of 3 activities, goal met")
     expect(screen.getByText("4.5/3")).toBeTruthy()
   })
 
@@ -135,20 +166,21 @@ describe("shared habit details (#276)", () => {
     habit.stats.state = "not_started"
     fetchMock.mockResolvedValueOnce(json(habit))
     setup()
-    await screen.findByText("Starts on Nov 20, 2026.")
-    expect(within(screen.getByRole("region", { name: "Your progress" })).getByRole("progressbar", { name: "Current period" })).toBeTruthy()
+    await screen.findByRole("progressbar", { name: "Group average this period" })
+    expect(screen.getByRole("progressbar", { name: "Your progress this period" })).toBeTruthy()
+    expect((screen.getByRole("button", { name: "Log today" }) as HTMLButtonElement).disabled).toBe(false)
   })
 
-  it("handles an expired habit using server status and zero remaining days", async () => {
+  it("handles an expired habit using the member's status: done, and logging locked", async () => {
     const habit = fixture()
     habit.stats.state = "expired"
     habit.stats.today = "2026-12-08"
     habit.own_stats.state = "expired"
     fetchMock.mockResolvedValueOnce(json(habit))
     setup()
-    await screen.findByText("Finished")
-    expect(screen.getByText("0 days")).toBeTruthy()
-    expect(screen.getByRole("progressbar", { name: "Final period" })).toBeTruthy()
+    await screen.findByText("Done")
+    expect(screen.getByText("This habit has finished, so its activity is locked.")).toBeTruthy()
+    expect((screen.getByRole("button", { name: "Log today" }) as HTMLButtonElement).disabled).toBe(true)
   })
 
   it("loads without revealing member names while a request is pending", async () => {

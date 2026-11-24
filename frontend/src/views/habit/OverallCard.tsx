@@ -44,8 +44,15 @@ export function runFigures(habit: HabitDetail, today: string | undefined): { goa
   }
 }
 
-/** The goal, which period the habit is in, and the days left in it, in one row. */
-export function OverallCard({ habit, today }: { habit: HabitDetail; today: string | undefined }) {
+export interface OverallCardProps {
+  habit: HabitDetail
+  today: string | undefined
+  /** Set for a shared habit: how many members it has, out of the most it allows. */
+  members?: { count: number; max: number }
+}
+
+/** The goal, which period the habit is in, and the days left in it, in one row. A shared habit adds its member count under them. */
+export function OverallCard({ habit, today, members }: OverallCardProps) {
   const figures = runFigures(habit, today)
   const items = [
     ["Goal", figures.goal],
@@ -66,6 +73,12 @@ export function OverallCard({ habit, today }: { habit: HabitDetail; today: strin
           </div>
         ))}
       </dl>
+      {members && (
+        <p className="habit-overall__members">
+          <span>Members</span>
+          <strong>{members.count} of {members.max}</strong>
+        </p>
+      )}
     </section>
   )
 }
