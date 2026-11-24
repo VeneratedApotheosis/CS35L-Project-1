@@ -78,7 +78,6 @@ export function ActivityCalendar({ habit, today, busy, onRemove }: ActivityCalen
         </div>
       </div>
 
-      <div className="habit-calendar__scroll" role="region" aria-label="Activity calendar, scroll horizontally if needed" tabIndex={0}>
       <table className="habit-calendar__grid" aria-label={`Activity calendar for ${label}`}>
         <thead><tr>{WEEKDAYS.map((day) => <th scope="col" key={day} abbr={day}><span aria-hidden="true">{day[0]}</span><span className="sr-only">{day}</span></th>)}</tr></thead>
         <tbody>{Array.from({ length: cells.length / 7 }, (_, week) => (
@@ -110,7 +109,6 @@ export function ActivityCalendar({ habit, today, busy, onRemove }: ActivityCalen
           })}</tr>
         ))}</tbody>
       </table>
-      </div>
 
       <Modal open={openDate !== null && openLogs.length > 0} onClose={() => setOpenDate(null)}
         title={openDate ? formatDate(openDate) : "Activity"} description="Remove an activity logged on this day.">

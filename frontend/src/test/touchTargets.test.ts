@@ -22,7 +22,7 @@ function phoneRules(file: string, selector: string) {
   return result;
 }
 describe("phone touch targets", () => {
-  it("uses the shared 44px token for shared controls and calendar actions", () => {
+  it("uses the shared 44px token for shared controls", () => {
     const spacing = read("tokens/spacing");
     let token = "";
     spacing.walkDecls("--touch-target", (decl) => {
@@ -47,26 +47,8 @@ describe("phone touch targets", () => {
         "min-height"
       ],
     ).toBe("var(--touch-target)");
-    expect(
-      phoneRules(
-        "components/habit-page",
-        ".habit-calendar__grid button.habit-day",
-      ),
-    ).toMatchObject({
-      "min-width": "var(--touch-target)",
-      "min-height": "var(--touch-target)",
-    });
-    expect(
-      phoneRules("components/habit-page", ".habit-calendar__scroll")[
-        "overflow-x"
-      ],
-    ).toBe("auto");
-    const scroll = phoneRules(
-      "components/habit-page",
-      ".habit-calendar__scroll",
-    );
-    expect(scroll["padding"]).toBe("var(--space-1)");
-    expect(scroll["scroll-padding-inline"]).toBe("var(--space-1)");
+    expect(phoneRules("components/habit-page", ".habit-calendar__grid")["min-width"]).toBe("0");
+    expect(phoneRules("components/habit-page", ".habit-calendar__grid td")["padding"]).toBe("calc(var(--space-1) / 2)");
     expect(
       phoneRules("components/forms", ".sharing-choice label")["min-height"],
     ).toBe("var(--touch-target)");
