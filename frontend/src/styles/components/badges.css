@@ -117,3 +117,55 @@
 .badge-spotlight { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; }
 .badge-lineup { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-6); }
 .badge-lineup figure { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); margin: 0; }
+
+/* ---- Badges page (#253) --------------------------------------------------- */
+.badge-grid { list-style: none; margin: 0; padding: 0; }
+.badge-grid__item { display: flex; min-width: 0; }
+.badge-grid__item > * { flex: 1; }
+.badge-summary__tier-text { gap: 0; }
+.badge-next { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--color-surface-secondary); }
+.badge-next .badge-medal { --medal-size: 2.75rem; }
+
+.badge-tabs { display: flex; gap: var(--space-2); border-bottom: 1px solid var(--color-border-strong); }
+.badge-tab {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-4);
+  border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent; color: var(--color-text-secondary);
+  font-weight: var(--font-weight-bold);
+}
+.badge-tab:hover { background: var(--color-surface-hover); }
+.badge-tab[aria-selected="true"] { color: var(--color-text); border-bottom-color: var(--color-primary); }
+.badge-tab:focus-visible, .badge-panel:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.badge-tab__count { padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--color-surface-secondary); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
+
+/* A finished habit's badge: its plant, a small level medal, its name and end date. */
+.habit-badge {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
+  width: 100%; min-width: 0;
+  padding: var(--space-4) var(--space-4) var(--space-4);
+  text-align: center; font: inherit; color: inherit; cursor: pointer;
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+}
+.habit-badge:hover { box-shadow: var(--shadow-popover); }
+.habit-badge:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+.habit-badge__medal { position: absolute; top: var(--space-3); right: var(--space-3); }
+.habit-badge__plant { width: min(100%, 11rem); }
+.habit-badge__plant > svg { display: block; width: 100%; height: auto; }
+.habit-badge__text { display: flex; flex-direction: column; gap: var(--space-1); }
+.habit-badge__name { overflow-wrap: anywhere; }
+.habit-badge-empty { align-items: flex-start; }
+
+.habit-badge-detail__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-6); }
+.habit-badge-detail__plant { width: 9rem; }
+.habit-badge-detail__plant > svg { display: block; width: 100%; height: auto; }
+.habit-badge-detail__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-4); margin: 0; }
+.habit-badge-detail__facts dd { margin: 0; font-weight: var(--font-weight-bold); }
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-badge { transition: none; }
+}
+.habit-badge-detail__facts > div:first-child { grid-column: 1 / -1; }

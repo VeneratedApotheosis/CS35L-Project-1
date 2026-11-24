@@ -129,7 +129,7 @@ Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant
 | Measure | Max width | Side padding | Routes | Why |
 | --- | --- | --- | --- | --- |
 | Medium (default) | `--content-width-medium`, 72rem | `--page-padding` | Create Habit, Dashboard, Settings, join page | Forms and reading. Lines of text and inputs stay a comfortable length at 1920px. |
-| Wide | `--content-width-wide`, 90rem | 0.5 to 1rem, and less above and below | Habit details, shared habit | Grids of cards that must fit a laptop screen. |
+| Wide | `--content-width-wide`, 90rem | 0.5 to 1rem, and less above and below | Habit details, shared habit, Badges | Grids of cards that must fit a laptop screen. Badges is a grid of badge cards. Badges is a grid of badge cards. |
 | Full | none | 0.75 to 2rem, then more on a phone | Garden | The shelves are fixed size and the boards run into the space left on both sides. |
 
 Under 44rem every measure is the full screen. The top bar is a bottom bar there, and the bar's content only follows the measure from 52rem, where it moves to the top.

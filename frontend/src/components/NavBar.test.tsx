@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { NavBar } from "./NavBar"
 
 describe("NavBar", () => {
-  it("links only to existing screens and disables future destinations", () => {
+  it("links to every screen", () => {
     const markup = renderToStaticMarkup(<NavBar currentPath="/" />)
     expect(markup).toContain('aria-label="Main navigation"')
     expect(markup.match(/<a[^>]*>/g)?.find((tag) => tag.includes('aria-current="page"')))
@@ -11,8 +11,8 @@ describe("NavBar", () => {
     expect(markup).toContain('href="/create"')
     expect(markup).toContain('href="/dashboard"')
     expect(markup).toContain('href="/settings"')
-    expect(markup).not.toContain('href="/badges"')
-    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(1)
+    expect(markup).toContain('href="/badges"')
+    expect(markup).not.toContain('aria-disabled="true"')
   })
 
   it("marks only Add Habit as current on the creation route", () => {
