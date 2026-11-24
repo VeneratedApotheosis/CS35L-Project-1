@@ -147,6 +147,7 @@
   text-align: left;
   pointer-events: none;
 }
+.badge-slot[data-tip="above"] .badge-slot__tip { top: auto; bottom: calc(100% + var(--space-1)); }
 .badge-slot__tip-row { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 .badge-slot:focus-visible .badge-slot__tip { display: flex; }
 @media (hover: hover) {
