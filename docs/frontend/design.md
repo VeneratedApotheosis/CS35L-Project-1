@@ -123,7 +123,17 @@ Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant
 
 `AppShell` is shared by routes in `app/(signed-in)/`, behind the layout's auth guard. It supplies centered content, a skip link and space for the mobile bar and safe area. `NavBar` marks the current route with `aria-current`, a selected background without an outline or underline. Hover gently lifts available links; reduced-motion settings disable the animation. Keyboard focus has a separate visible outline. My Garden (`/`), the basic Dashboard (`/dashboard`), Settings (`/settings`), and Add Habit (`/create`) are available; Badges is disabled until its page exists. Navigation switches to a top bar at 52rem; compact labels (Garden and Add) give the mobile items more room, with full accessible names. The style guide includes contained desktop and phone previews.
 
-**Alignment.** Page content is left aligned in a centered column with a maximum width. Only empty states are center aligned, because they hold a single message. The login screen is the exception to the column: its words are left aligned in the left third, beside a picture (see [login-wall.md](login-wall.md)).
+**Page width.** A page's width is one of three measures, and the top bar uses the same one, so the bar's content always lines up with the page content below it. `pageWidth()` in `components/AppShell.tsx` picks the measure from the route and puts it on the shell as a class. The shell sets `--page-max-width` and `--page-gutter`, and both `.app-shell__content` and `.navbar__inner` read them (`styles/components/navigation.css`). The two measure tokens are in `styles/tokens/spacing.css`. A new route is medium unless it is listed in `pageWidth()`. Pages do not set their own `max-width` or page padding.
+
+| Measure | Max width | Side padding | Routes | Why |
+| --- | --- | --- | --- | --- |
+| Medium (default) | `--content-width-medium`, 72rem | `--page-padding` | Create Habit, Dashboard, Settings, join page | Forms and reading. Lines of text and inputs stay a comfortable length at 1920px. |
+| Wide | `--content-width-wide`, 90rem | 0.5 to 1rem, and less above and below | Habit details, shared habit | Grids of cards that must fit a laptop screen. |
+| Full | none | 0.75 to 2rem, then more on a phone | Garden | The shelves are fixed size and the boards run into the space left on both sides. |
+
+Under 44rem every measure is the full screen. The top bar is a bottom bar there, and the bar's content only follows the measure from 52rem, where it moves to the top.
+
+**Alignment.** Page content is left aligned in a centered column with a maximum width (see Page width). Only empty states are center aligned, because they hold a single message. The login screen is the exception to the column: its words are left aligned in the left third, beside a picture (see [login-wall.md](login-wall.md)).
 
 **Garden.** Plants on shelves, like the login wall but 1.5 times as big and with no card behind them: a pot and its plant per habit with nothing else showing, a see-through card with the name, streak and progress pills on hover, a peek panel beside the plant on click, and hold to log. The progress bar is rounded pills everywhere (one per activity for a goal of ten or fewer, one smooth bar for more). Finished habits are on shelves beneath. The behavior is in [screens.md](screens.md#2-garden-home). The sketch below is the old card grid.
 

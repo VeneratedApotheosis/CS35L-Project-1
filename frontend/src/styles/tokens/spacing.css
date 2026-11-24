@@ -18,7 +18,9 @@
   --plant-card-touch-target: 2.75rem;
   --plant-card-art-width: 12rem;
   --plant-card-min-width: 14rem;
-  --content-max-width: 64rem;
+  /* Page width measures; the full measure is no maximum. See docs/frontend/design.md, Page width. */
+  --content-width-medium: 72rem;
+  --content-width-wide: 90rem;
   --touch-target: 2.75rem;
   --mobile-nav-height: 5rem;
 

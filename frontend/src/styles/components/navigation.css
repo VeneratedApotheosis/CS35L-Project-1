@@ -1,12 +1,30 @@
+/*
+ * Page width. A page picks one measure through AppShell (see pageWidth there), and the page content
+ * and the top bar both read the same two variables, so they always line up.
+ * medium (default): reading and forms.  wide: card grids.  full: the Garden's shelves.
+ */
 .app-shell {
+  --page-max-width: var(--content-width-medium);
+  --page-gutter: var(--page-padding);
   min-height: 100vh;
   padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
+.app-shell--wide {
+  --page-max-width: var(--content-width-wide);
+  --page-gutter: clamp(var(--space-2), 1vw, var(--space-4));
+}
+
+.app-shell--full {
+  --page-max-width: none;
+  --page-gutter: clamp(var(--space-3), 2vw, var(--space-8));
+}
+
 .app-shell__content {
-  max-width: var(--content-max-width);
+  max-width: var(--page-max-width);
   margin-inline: auto;
   padding: var(--page-padding);
+  padding-inline: var(--page-gutter);
   overflow-wrap: anywhere;
 }
 
@@ -41,7 +59,7 @@
 }
 
 .navbar__inner {
-  max-width: var(--content-max-width);
+  max-width: var(--page-max-width, var(--content-width-medium));
   margin-inline: auto;
   min-height: var(--space-16);
   align-content: center;
@@ -164,10 +182,12 @@
     position: static;
     border-top: 0;
     border-bottom: 1px solid var(--color-border);
-    padding: var(--space-4) var(--page-padding);
+    padding-block: var(--space-4);
+    padding-inline: 0;
   }
 
   .navbar__inner {
+    padding-inline: var(--page-gutter, var(--page-padding));
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -222,32 +242,28 @@
   }
 }
 
-/* The Garden's shelves use the whole width of the screen, with half the side padding it had. Other screens retain their measure. */
-.app-shell__content--garden {
-  max-width: none;
-  padding-inline: clamp(var(--space-3), 2vw, var(--space-8));
+/* Wide pages have less padding all round, so the cards fit one laptop screen. */
+.app-shell--wide .app-shell__content {
+  padding-block: clamp(var(--space-3), 1.5vw, var(--space-5));
 }
 
-/* Habit details sit in a wider measure with less padding all round, so the cards fit one laptop screen. */
-.app-shell__content--habit {
-  max-width: 90rem;
-  padding: clamp(var(--space-3), 1.5vw, var(--space-5));
-  padding-inline: clamp(var(--space-2), 1vw, var(--space-4));
-}
-
+/* On a phone a page keeps the notch clear above it and has room below. */
 @media (max-width: 43.999rem) {
-  .app-shell__content--garden {
-    padding-top: calc(clamp(var(--space-12), 8vw, var(--space-16)) + env(safe-area-inset-top, 0px));
-    padding-bottom: var(--space-16);
-    padding-inline: clamp(var(--space-8), 6vw, var(--space-12));
+  .app-shell--wide {
+    --page-gutter: var(--space-3);
   }
-}
 
-/* On a phone the page keeps the notch clear above it and has room below. */
-@media (max-width: 43.999rem) {
-  .app-shell__content--habit {
+  .app-shell--wide .app-shell__content {
     padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
     padding-bottom: var(--space-12);
-    padding-inline: var(--space-3);
+  }
+
+  .app-shell--full {
+    --page-gutter: clamp(var(--space-8), 6vw, var(--space-12));
+  }
+
+  .app-shell--full .app-shell__content {
+    padding-top: calc(clamp(var(--space-12), 8vw, var(--space-16)) + env(safe-area-inset-top, 0px));
+    padding-bottom: var(--space-16);
   }
 }
