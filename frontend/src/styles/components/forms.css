@@ -198,3 +198,9 @@
   gap: var(--space-3);
   flex-wrap: wrap;
 }
+
+@media (--phone) {
+  /* The label is the radio's press target; keep the native control and focus. */
+  .sharing-choice label { min-height: var(--touch-target); }
+  .sharing-choice label + label { margin-top: var(--space-1); }
+}

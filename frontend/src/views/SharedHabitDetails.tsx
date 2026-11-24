@@ -147,7 +147,7 @@ function SharedInvite({ habit }: { habit: SharedHabitDetail }) {
       <p className="habit-invite__deadline">Join by {formatDate(habit.join_by)}.</p>
       <div className="habit-invite__actions">
         <Button onClick={() => void copyInvite()}>Copy invite link</Button>
-        <Link href={`/join?code=${encodeURIComponent(habit.join_code)}`}>Open invite link</Link>
+        <Link className="habit-invite__link" href={`/join?code=${encodeURIComponent(habit.join_code)}`}>Open invite link</Link>
       </div>
       {message && <p role="status" className="text-body-sm">{message}</p>}
     </> : <p className="habit-invite__deadline">Joining is closed.</p>}

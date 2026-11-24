@@ -86,3 +86,8 @@
 .button--full {
   width: 100%;
 }
+
+/* Preserve desktop sizes; make compact controls easy to press on phones. */
+@media (--phone) {
+  .button { min-width: var(--touch-target); min-height: var(--touch-target); }
+}

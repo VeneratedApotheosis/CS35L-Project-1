@@ -267,3 +267,13 @@ button.habit-day:focus-visible { outline: 2px solid var(--color-link); outline-o
   .habit-plant-card__art > svg { width: min(90%, 20rem); }
   .habit-head__delete { align-self: flex-start; }
 }
+
+@media (--phone) {
+  .habit-invite__link { display: inline-flex; align-items: center; min-width: var(--touch-target); min-height: var(--touch-target); }
+  .habit-head__back { min-width: var(--touch-target); min-height: var(--touch-target); }
+  .habit-period__actions .button { min-height: var(--touch-target); }
+  /* Keep the seven columns within the card and leave room for day focus outlines. */
+  .habit-calendar { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .habit-calendar__grid { min-width: 0; }
+  .habit-calendar__grid td { padding: calc(var(--space-1) / 2); }
+}

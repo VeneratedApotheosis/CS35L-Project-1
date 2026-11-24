@@ -68,6 +68,17 @@ describe("create shared habit (#274)", () => {
     expect(JSON.parse(request.body)).not.toHaveProperty("start_date")
   })
 
+  it("allows selecting the native radio by clicking its full label", () => {
+    setup(false)
+    const radio = screen.getByRole("radio", { name: "With friends" }) as HTMLInputElement
+    const label = radio.closest("label")!
+    fireEvent.click(label)
+    expect(radio.checked).toBe(true)
+    expect(screen.getByLabelText("Join by")).toBeTruthy()
+    fireEvent.click(screen.getByRole("radio", { name: "Just me" }).closest("label")!)
+    expect(radio.checked).toBe(false)
+  })
+
   it("defaults shared starts to the next profile-local date and joining to today", () => {
     setup()
     expect(field("Start date").value).toBe("2026-11-21")
