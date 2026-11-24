@@ -40,6 +40,13 @@ describe("NavBar", () => {
     expect(markup.match(/<a[^>]*>/g)?.find((tag) => tag.includes('aria-current="page"')))
       .toContain('href="/settings"')
   })
+
+  it("keeps Badges current on the History tab", () => {
+    const markup = renderToStaticMarkup(<NavBar currentPath="/history" />)
+    expect(markup.match(/aria-current="page"/g)).toHaveLength(1)
+    expect(markup.match(/<a[^>]*>/g)?.find((tag) => tag.includes('aria-current="page"')))
+      .toContain('href="/badges"')
+  })
 })
 
 describe("NavBar route boundaries", () => {

@@ -23,6 +23,7 @@
 @import "./components/garden.css";
 @import "./components/dashboard.css";
 @import "./components/badges.css";
+@import "./components/history.css";
 @import "./components/login.css";
 
 * {

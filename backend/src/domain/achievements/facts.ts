@@ -3,11 +3,15 @@ import { habitResult, type HabitResult } from "../badges.js";
 import { growthStage, type GrowthStage } from "../growth.js";
 import { endDate, habitState, type HabitState } from "../periods.js";
 import {
+  bestStreak,
   overallProgress,
   periodSummaries,
   type PeriodSummary,
 } from "../progress.js";
 import type { BadgeDef, BadgeHabit, BadgeInput, Progress } from "./types.js";
+
+// Shared with the history (domain/progress.ts), and re-exported for the rules.
+export { bestStreak };
 
 // Numbers worked out once per check and shared by every rule, so each rule
 // stays short. Pure: nothing here reads the clock or the database.
@@ -82,25 +86,6 @@ export function localDate(timestamp: string, zone: string | null): string {
 // 1 is Monday, 7 is Sunday.
 export function weekday(date: string): number {
   return DateTime.fromISO(date, { zone: "utc" }).weekday;
-}
-
-// The longest run of periods whose target was met. A completed miss ends a
-// run. The current period counts once met, like the current streak (8.6).
-// This is the best streak ever, not the current one, so a check that runs
-// late still sees a streak that has since been broken.
-export function bestStreak(periods: readonly PeriodSummary[]): number {
-  let best = 0;
-  let run = 0;
-  for (const period of periods) {
-    if (period.status === "upcoming") break;
-    if (period.met) {
-      run += 1;
-      best = Math.max(best, run);
-    } else {
-      run = 0;
-    }
-  }
-  return best;
 }
 
 // The longest run of consecutive calendar dates in a sorted list.

@@ -6,8 +6,8 @@ import { NavBar } from "./NavBar"
 
 export type PageWidth = "medium" | "wide" | "full"
 
-/** Habit details, and the shared habit page that reuses its layout, are grids of cards, and so are the badges. */
-const WIDE_PATHS = ["/habit", "/shared-habit", "/badges"]
+/** Habit details, and the shared habit page that reuses its layout, are grids of cards. */
+const WIDE_PATHS = ["/habit", "/shared-habit"]
 
 /** The width of a route's content and top bar. Routes not listed here are medium. See "Page width" in docs/frontend/design.md. */
 export function pageWidth(pathname: string | null): PageWidth {

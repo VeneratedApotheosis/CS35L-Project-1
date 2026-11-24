@@ -13,7 +13,7 @@ afterEach(cleanup)
 describe("pageWidth", () => {
   it.each([
     ["/", "full"],
-    ["/habit", "wide"], ["/habit/", "wide"], ["/shared-habit", "wide"], ["/badges", "wide"],
+    ["/habit", "wide"], ["/habit/", "wide"], ["/shared-habit", "wide"], ["/badges", "medium"], ["/history", "medium"],
     ["/create", "medium"], ["/dashboard", "medium"], ["/settings", "medium"], ["/join", "medium"],
     [null, "medium"],
   ])("gives %s the %s width", (path, width) => {

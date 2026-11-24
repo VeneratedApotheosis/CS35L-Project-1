@@ -128,8 +128,8 @@ Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant
 
 | Measure | Max width | Side padding | Routes | Why |
 | --- | --- | --- | --- | --- |
-| Medium (default) | `--content-width-medium`, 72rem | `--page-padding` | Create Habit, Dashboard, Settings, join page | Forms and reading. Lines of text and inputs stay a comfortable length at 1920px. |
-| Wide | `--content-width-wide`, 90rem | 0.5 to 1rem, and less above and below | Habit details, shared habit, Badges | Grids of cards that must fit a laptop screen. Badges is a grid of badge cards. Badges is a grid of badge cards. |
+| Medium (default) | `--content-width-medium`, 72rem | `--page-padding` | Create Habit, Dashboard, Badges, History, Settings, join page | Forms and reading. Lines of text and inputs stay a comfortable length at 1920px. |
+| Wide | `--content-width-wide`, 90rem | 0.5 to 1rem, and less above and below | Habit details, shared habit | Grids of cards that must fit a laptop screen. |
 | Full | none | 0.75 to 2rem, then more on a phone | Garden | The shelves are fixed size and the boards run into the space left on both sides. |
 
 **Phone breakpoint.** The primary phone layout is below **52rem** (832 CSS pixels with the standard 16px initial font size); at 52rem and above the laptop layout applies. This aligns with the existing navigation, form and habit-grid transition, and keeps phone navigation and content in the same mode. Intermediate widths formerly between the separate thresholds now use the phone layouts.

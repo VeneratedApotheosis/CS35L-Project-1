@@ -159,3 +159,22 @@ export function averageConsistency(
   if (present.length === 0) return null;
   return present.reduce((sum, rate) => sum + rate, 0) / present.length;
 }
+
+// The longest run of periods whose target was met. A completed miss ends a
+// run. The current period counts once met, like the current streak (8.6).
+// This is the best streak ever, not the current one, so a check that runs
+// late still sees a streak that has since been broken.
+export function bestStreak(periods: readonly PeriodSummary[]): number {
+  let best = 0;
+  let run = 0;
+  for (const period of periods) {
+    if (period.status === "upcoming") break;
+    if (period.met) {
+      run += 1;
+      best = Math.max(best, run);
+    } else {
+      run = 0;
+    }
+  }
+  return best;
+}

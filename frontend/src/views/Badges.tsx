@@ -8,6 +8,7 @@ import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { badgeKeys, getBadgeBook } from "@/lib/badges"
 import { BadgeCollection } from "./badges/BadgeCollection"
+import { LookBackTabs } from "./badges/LookBackTabs"
 import { buildGroups } from "./badges/groups"
 
 /**
@@ -32,6 +33,7 @@ export default function Badges() {
         <h1 className="text-h1">Badges</h1>
         <p className="text-body text-secondary">Everything you have earned by showing up for your habits.</p>
       </header>
+      <LookBackTabs current="/badges" />
 
       {query.isError && (
         <Card className="stack-md">
