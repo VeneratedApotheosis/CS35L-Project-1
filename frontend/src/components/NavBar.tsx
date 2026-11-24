@@ -5,7 +5,7 @@ import { Icon } from "./Icon"
 const destinations = [
   { label: "My Garden", href: "/", icon: Sprout, available: true },
   { label: "Dashboard", href: "/dashboard", icon: ChartNoAxesCombined, available: true },
-  { label: "Badges", href: "/badges", icon: Flower2, available: false },
+  { label: "Badges", href: "/badges", icon: Flower2, available: true },
   { label: "Settings", href: "/settings", icon: Settings, available: true },
 ] as const
 

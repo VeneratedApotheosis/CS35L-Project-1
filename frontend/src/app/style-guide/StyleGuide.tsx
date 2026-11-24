@@ -23,7 +23,7 @@ import { ProgressRing } from "@/components/ProgressRing"
 import { ProgressBar } from "@/components/ProgressBar"
 import { useTheme } from "@/styles/ThemeProvider"
 import { PlantCardExamples } from "./PlantCardExamples"
-import { BadgeMedalExamples, BadgesPageExample, BadgeMomentExamples } from "./BadgeExamples"
+import { BadgeMedalExamples, BadgeCollectionExample, BadgeMomentExamples } from "./BadgeExamples"
 
 /* ------------------------------------------------------------------ */
 /* Showcase data                                                       */
@@ -489,9 +489,9 @@ export default function StyleGuide() {
           index="11"
           eyebrow="Achievements"
           title="Badges page"
-          description="A summary of what is earned, filters, and a grid of badge cards. Cards state the name, rule, tier and status in words. In-progress badges show a count and bar, locked ones use a dashed, recessed card, and secret badges are not listed at all until they are earned, when they appear with their own starburst medal. The filters and every badge here are demo data."
+          description="A count and groups of compact badge grids, laid out the way osu! lays out its medals. Slots hold only the badge, with no text. Hover or focus one for a small card with its name, tier, rule and status, or click it for the details, with buttons to step to the next badge. Hide locked drops the locked badges, and the Secret group only appears once a secret badge is earned. All the badges here are demo data."
         >
-          <BadgesPageExample />
+          <BadgeCollectionExample />
         </Section>
 
         <Section

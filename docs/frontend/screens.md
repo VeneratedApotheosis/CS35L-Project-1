@@ -154,10 +154,15 @@ The page uses the medium measure ([Page width](design.md#7-layout)); the page sh
 
 ### 6 Badges and Habit History
 
-- **Badge grid:** at most one badge per habit. Each shows the habit name, plant illustration, level (Bronze/Silver/Gold), and completion date.
-- **Badge details:** goal and duration, final overall progress and consistency, total activities, final plant stage and health, level, completion date.
+The Badges page (`/badges`, `views/Badges.tsx`) is laid out the way osu! lays out its medals: a count, then groups of compact medal grids with no text. **It is a mock for now:** it reads placeholder data from `views/badges/placeholderBadges.ts` because the badges backend is not built. Add `?demo=empty` to the address to see the new-user state. The achievement ideas are in [badges-ideas.md](../badges-ideas.md) and the medals are in the style guide (`/style-guide`, "Badge medals" and "Badges page").
+
+- **Summary card:** "20 of 73 earned" and the earned count for each tier (Bronze, Silver, Gold, Platinum). The total counts only badges the user can see, so it grows when a secret badge is found.
+- **Hide locked:** a toggle that drops the locked badges. Earned and in-progress badges always show.
+- **Groups:** Getting started, Logging milestones, Finishing habits, Streaks, Garden and plants, Comebacks, Hard challenges, Badge collector, and Secret badges. Each has a rule above it, a small heading with its earned count ("5/8"), and a compact grid.
+- **Slots:** only the badge, with no text. Earned badges are solid medals, in-progress badges are a ring that fills with the tier color, and locked badges are muted with a lock. Hover or keyboard focus shows a small card with the name, tier, rule and status. Click or tap opens a dialog with the large medal, the rule, the date or progress, and **Previous badge** and **Next badge** buttons. Touch screens have no hover card, so a tap opens the dialog.
+- **Secret badges:** never shown as locked or in progress, and never counted ahead of time. The Secret group only exists once one is earned, and has pink starburst medals. Earned badges are permanent.
 - **Habit history:** all expired habits, including those without badges, with final stats and activity history.
-- **Empty state:** encouragement to keep growing habits.
+- **Empty state:** every achievement is listed as locked.
 - **Nav:** Overall Dashboard, My Garden, Settings.
 
 ### 7 Settings
