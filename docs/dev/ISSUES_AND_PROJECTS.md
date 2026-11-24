@@ -126,7 +126,7 @@ Epic        "Epic: Week 1 - Setup"
 
 | Level | What it is | Size | Closed when |
 |---|---|---|---|
-| **Epic** | One per week or phase. Everything for that phase hangs under it | Large | All its tasks are closed |
+| **Epic** | One per week or phase, plus the standing Stretch goals epic. Everything for that phase hangs under it | Large | All its tasks are closed (Stretch goals is never closed) |
 | **Task** | A deliverable for one area, e.g. "Frontend foundation" | Medium | All its sub-tasks are closed |
 | **Sub-task** | A concrete step small enough for **one PR** | Small | Its PR merges |
 
@@ -139,6 +139,12 @@ Epic        "Epic: Week 1 - Setup"
 - The **Hierarchy** view on the board groups issues by parent (see 1.6).
 - Open a parent issue to see its children as a nested list with a progress bar.
 - Search with the parent filter (see section 3).
+
+**Stretch goals.** Epic #386 "Epic: Stretch goals" is the one epic outside the weekly cycle. It holds work that is parked on purpose or waits on a design decision nobody has made, such as the spider plant and calathea (#286).
+- It has no week and no due date. It sits in the milestone `Stretch goals (no date)` (see 1.5) and its board Status is Backlog.
+- Its children keep the usual three levels (epic, task, sub-task) and use the normal `type:` and `area:` labels.
+- Don't schedule its issues in a weekly cycle. To start one, first move it out: give it a real week, milestone and parent, then assign it.
+- When you move an issue in, comment why. The epic is never closed.
 
 **Right now:** epic #39 "Epic: Week 1 - Setup" has six tasks: Repo and team workflow (#40), Frontend foundation (#46), Backend foundation (#50), Supabase and authentication (#53), Database and edge functions (#60) and Design and planning (#64). Each has its sub-tasks. Setup work for GitHub itself goes under "Repo and team workflow".
 
@@ -153,10 +159,11 @@ Milestones answer: **which phase of the timeline is this for?** They match the s
 - `Milestone 2 (Nov 14-20)`
 - `Social Features (Nov 21-27)`
 - `Testing (Nov 28-Dec 4)`
+- `Stretch goals (no date)`: permanent, no due date, never closed. Only for the Stretch goals epic and its children (see 1.4)
 
 **Rules**
 - Every issue gets **exactly one** milestone.
-- Create each milestone when its phase starts, not months ahead. Close it when all its issues are closed.
+- Create each milestone when its phase starts, not months ahead. Close it when all its issues are closed. The one exception is `Stretch goals (no date)`, which is permanent and stays open.
 - On the board, the **By milestone** view groups issues by it.
 
 **Putting it together:** status says *where it is*, type says *what kind*, area says *which part*, milestone says *when*, and the hierarchy says *what it belongs to*.
@@ -232,7 +239,7 @@ The issue templates (Task and Bug report) pre-fill the headings. They don't set 
 
 1. Find an issue on the board (section 1) or the Issues tab (filter by label or milestone).
 2. Pick a **sub-task**. Epics and tasks are containers.
-3. Check it's unassigned and that anything it depends on is done.
+3. Check it's unassigned and that anything it depends on is done. Issues under the Stretch goals epic are not for picking up: move one out of the epic first (see 1.4).
 4. **Assign yourself** before you start so nobody duplicates it.
 
 
@@ -295,6 +302,7 @@ Paste these into the search box on the Issues tab.
 | Only epics | `is:issue label:"type: epic"` |
 | Only one type | `label:"type: feature"` |
 | Only one area | `label:"area: frontend"` |
+| Stretch goals | `is:issue milestone:"Stretch goals (no date)"` |
 | Blocked issues | `is:issue is:open is:blocked` |
 | Top-level issues (no parent) | `is:issue no:parent-issue` |
 | Tasks only (children of the epic) | `is:issue parent-issue:VeneratedApotheosis/CS35L-Project-1#39` |
