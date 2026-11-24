@@ -261,9 +261,7 @@ button.habit-day:focus-visible { outline: 2px solid var(--color-link); outline-o
 }
 
 @media (--phone) {
-  .habit-period, .habit-calendar, .habit-overall, .habit-overall__members { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
-.habit-overall__members strong { color: var(--color-text); font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
-.habit-log { --card-pad: 1.25rem; }
+  .habit-period, .habit-calendar, .habit-overall, .habit-log { --card-pad: 1.25rem; }
   .habit-plant-card__art > svg { width: min(90%, 20rem); }
   .habit-head__delete { align-self: flex-start; }
 }
