@@ -350,7 +350,7 @@
 }
 
 /* On a phone there is no room beside a plant: the panel is a card at the bottom of the screen. */
-@media (max-width: 40rem), (hover: none), (pointer: coarse) {
+@media (--phone), (hover: none), (pointer: coarse) {
   .garden-card, .garden-card__surface { display: none; }
   .garden-plant[data-menu="true"] { z-index: var(--z-modal); }
   .garden-pop {
@@ -369,7 +369,7 @@
   }
 }
 
-@media (min-width: 52rem) and ((hover: none) or (pointer: coarse)) {
+@media (--not-phone) and ((hover: none) or (pointer: coarse)) {
   .garden-pop {
     bottom: var(--space-4);
     max-height: calc(100dvh - var(--space-8));

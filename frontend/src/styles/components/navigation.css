@@ -177,7 +177,7 @@
   padding: var(--card-padding);
 }
 
-@container navigation (min-width: 52rem) {
+@container navigation (--not-phone) {
   .navbar__bar {
     position: static;
     border-top: 0;
@@ -223,7 +223,7 @@
   }
 }
 
-@media (min-width: 52rem) {
+@media (--not-phone) {
   .app-shell {
     padding-bottom: 0;
   }
@@ -248,7 +248,7 @@
 }
 
 /* On a phone a page keeps the notch clear above it and has room below. */
-@media (max-width: 43.999rem) {
+@media (--phone) {
   .app-shell--wide {
     --page-gutter: var(--space-3);
   }
