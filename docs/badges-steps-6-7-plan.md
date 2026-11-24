@@ -28,7 +28,7 @@ Steps 6 and 7 of [badges-plan.md](badges-plan.md) section 11. Step 6 builds the 
 
 So step 6 needs one new piece of machinery, the timeline. Step 7 is mostly rules plus icons.
 
-**Status (Nov 24).** Step 6a is built: `rules/comebacks.ts` and `rules/challenges.ts` replace `rules/later.ts`, with tests in `comebacks.test.ts` and `challenges.test.ts`, and the test builders moved to `src/test/badgeHabits.ts`. Next: 6b (the timeline) and 7 (secret badges).
+**Status (Nov 24).** Step 6 is built. 6a (#403): `rules/comebacks.ts` and `rules/challenges.ts` replace `rules/later.ts`, and the test builders moved to `src/test/badgeHabits.ts`. 6b: `timeline.ts` with `timeline.test.ts`, and the 9 replay badges with `replay.test.ts`. Next: 7 (secret badges).
 
 ## 2. The timeline (replay)
 
@@ -73,7 +73,7 @@ export function longestRun(timelines, test: (states) => boolean): number;
 ```
 
 - **Built once per check.** Add `timelines` to `BadgeFacts`, so every replay rule shares one copy (badges-plan 4.2).
-- **First version.** At each checkpoint, call the existing `overallProgress`, `healthRate` and `currentStreak` with `today = checkpoint` and the dates up to it. That is O(checkpoints × periods) per habit. A one-year daily habit has about 730 checkpoints × 365 periods, which is fine. If the speed test (section 5) is slow, make the per-habit pass incremental: running period counts, plus a 4-wide window for health.
+- **One pass per habit.** Calling `overallProgress`, `healthRate` and `currentStreak` at every checkpoint would redo the luxon date maths for every log each time, which is far too slow for a year of daily logs. So `habitTimeline` walks the checkpoints once, keeping running period counts, the 4-period health window and the streak. `timeline.test.ts` checks it against those functions on every day of several habits.
 - **Backdated logs change the past.** The replay uses `occurred_on`, so a log entered late counts as if logged on time. This is the same reading Daily Devotion and Clean Sweep already use. Accept it.
 - **Deleted habits are gone.** Same as `mostActiveAtOnce`. Earned badges stay.
 
@@ -108,7 +108,7 @@ These go in `rules/comebacks.ts` and `rules/challenges.ts`, which replace `rules
 | Unbroken | 4 | Some stretch where 3 habits each have `streak ≥ 4` | most at once, of 3 |
 | Triple Threat Streak | 4 | Same, with `streak ≥ 8` | most at once, of 3 |
 | Greenhouse | 5 | Some stretch where 6 active habits are at stage 4 | most at once, of 6 |
-| Prize Winner | 5 | One habit at stage 4 and Healthy across 4 period boundaries in a row (4 periods completing while both held) | best run, of 4 |
+| Prize Winner | 5 | One habit with 4 completed periods in a row spent wholly at stage 4 and Healthy. Health only changes at a boundary and stage never drops, so the state on each period's first day decides it | best run, of 4 |
 | Wilted but Not Dead | 6 | A habit's health is `wilted` and later `healthy` | yes/no |
 | Phoenix Plant | 6 | Wilted but Not Dead on a habit that finished Silver or Gold | yes/no |
 | Resurrection | 6 | A habit with result Gold that was `wilted` at some point | yes/no |
@@ -165,7 +165,7 @@ All in the existing pattern (`engine.test.ts`, fixed `today`, the `habit().logs(
 - **Meta.**
   - Earning the last secret can earn 100% in the same check.
   - Secret Keeper counts 100%.
-- **Speed.** 20 habits, each daily for a year with a log every day, must check in under ~200 ms on a laptop (one `it` with a timer). Make it incremental only if this fails.
+- **Speed.** The replay of 20 habits, each daily for a year with a log every day, takes about 15 ms (the test allows 100 ms). The per-habit stats built before it (`buildFacts`, unchanged here) take about 400 ms for that same extreme account, because `periodIndexOf` calls luxon for every log. Worth trimming under #348.
 - **Catalog test.** "Covers badges-ideas.md" now checks secret names too, except Fashionably Late.
 
 ## 6. Build order

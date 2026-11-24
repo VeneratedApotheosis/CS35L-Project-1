@@ -10,11 +10,11 @@ import {
   type HabitFacts,
 } from "../facts.js";
 import type { PeriodSummary } from "../../progress.js";
+import { momentsOf } from "../timeline.js";
 
 // Section 6 of docs/badges-ideas.md. Plans: docs/badges-steps-6-7-plan.md.
-// Wilted but Not Dead, Phoenix Plant and Resurrection need each plant's health
-// on past days, so they wait for the timeline (step 6b). A badge with no
-// `evaluate` shows as locked and is never awarded.
+// Wilted but Not Dead, Phoenix Plant and Resurrection read each plant's past
+// health from the replay (timeline.ts).
 
 // Periods that are over, plus the current one once it is met. A current
 // period that is not met yet has not failed, so it is left out.
@@ -81,6 +81,20 @@ function wonOnLastDay(habit: HabitFacts): boolean {
   return before < total && finalBefore < final.target;
 }
 
+function wasWilted(facts: BadgeFacts, habit: HabitFacts): boolean {
+  return momentsOf(facts, habit).some((moment) => moment.health === "wilted");
+}
+
+// Wilted at some point, and Healthy again later.
+function recovered(facts: BadgeFacts, habit: HabitFacts): boolean {
+  const moments = momentsOf(facts, habit);
+  const wilted = moments.findIndex((moment) => moment.health === "wilted");
+  return (
+    wilted >= 0 &&
+    moments.slice(wilted + 1).some((moment) => moment.health === "healthy")
+  );
+}
+
 const base = { chapter: "comebacks", secret: false } as const;
 
 export const comebackBadges: Badge[] = [
@@ -90,6 +104,8 @@ export const comebackBadges: Badge[] = [
     name: "Wilted but Not Dead",
     description: "Have a plant reach Wilted health and recover to Healthy.",
     tier: "bronze",
+    evaluate: (facts) =>
+      yesNo(facts.habits.some((habit) => recovered(facts, habit))),
   },
   {
     ...base,
@@ -106,6 +122,16 @@ export const comebackBadges: Badge[] = [
     description:
       "Recover a Wilted plant to Healthy and finish the habit with a Silver or Gold.",
     tier: "silver",
+    evaluate: (facts) =>
+      yesNo(
+        facts.habits.some(
+          (habit) =>
+            habit.finished &&
+            (habit.result.badge === "silver" ||
+              habit.result.badge === "gold") &&
+            recovered(facts, habit),
+        ),
+      ),
   },
   {
     ...base,
@@ -146,5 +172,14 @@ export const comebackBadges: Badge[] = [
     name: "Resurrection",
     description: "Reach Gold on a habit that was Wilted at some point.",
     tier: "gold",
+    evaluate: (facts) =>
+      yesNo(
+        facts.habits.some(
+          (habit) =>
+            habit.finished &&
+            habit.result.badge === "gold" &&
+            wasWilted(facts, habit),
+        ),
+      ),
   },
 ];

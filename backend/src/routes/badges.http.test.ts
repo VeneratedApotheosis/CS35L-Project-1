@@ -170,7 +170,7 @@ describe("GET /me/badges", () => {
     expect(res.body.earned_count).toBe(1);
   });
 
-  it("shows unbuilt badges as locked with no progress", async () => {
+  it("shows a badge with no progress yet as locked with its target", async () => {
     given({});
 
     const res = await request(app).get("/me/badges").set("Authorization", auth);
@@ -181,7 +181,10 @@ describe("GET /me/badges", () => {
     const unbroken = streaks.badges.find(
       (badge: { id: string }) => badge.id === "unbroken",
     );
-    expect(unbroken).toMatchObject({ state: "locked", progress: null });
+    expect(unbroken).toMatchObject({
+      state: "locked",
+      progress: { count: 0, target: 3 },
+    });
   });
 
   it("reads only personal habits and logs with their save time", async () => {

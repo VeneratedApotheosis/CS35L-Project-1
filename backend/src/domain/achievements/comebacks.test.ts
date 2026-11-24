@@ -152,15 +152,3 @@ describe("Down to the Wire", () => {
     expect(result.earned.has("down-to-the-wire")).toBe(false);
   });
 });
-
-describe("comebacks that need the timeline", () => {
-  it("are listed but not built yet", () => {
-    const result = check({
-      today: after,
-      habits: [habit({ logs: fullMonth })],
-    });
-    for (const id of ["wilted-not-dead", "phoenix-plant", "resurrection"]) {
-      expect(result.progress.has(id)).toBe(false);
-    }
-  });
-});

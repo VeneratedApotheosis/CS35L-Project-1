@@ -4,10 +4,13 @@ import {
   mostActiveAtOnce,
   type Badge,
   type BadgeFacts,
+  type HabitFacts,
 } from "../facts.js";
+import { momentsOf, mostAtOnce } from "../timeline.js";
 
 // Section 5 of docs/badges-ideas.md. "At once" means active on the same day
-// (started and not expired).
+// (started and not expired). Greenhouse and Prize Winner read each plant's
+// past stage and health from the replay (timeline.ts).
 
 function plantTypes(facts: BadgeFacts): Set<string> {
   return new Set(facts.habits.map((habit) => habit.habit.plant_type));
@@ -29,6 +32,28 @@ function activeAtOnce(facts: BadgeFacts, plant?: string): number {
       ? undefined
       : (habit) => habit.habit.plant_type === plant,
   );
+}
+
+// The longest run of completed periods a plant spent wholly at stage 4 and
+// Healthy. Health only changes when a period ends and stage never goes down,
+// so the state on a period's first day holds for the whole period.
+function prizeRun(facts: BadgeFacts, habit: HabitFacts): number {
+  const byDay = new Map(
+    momentsOf(facts, habit).map((moment) => [moment.from, moment]),
+  );
+  let best = 0;
+  let run = 0;
+  for (const period of habit.periods) {
+    if (period.status !== "completed") break;
+    const moment = byDay.get(period.start);
+    if (moment?.stage === 4 && moment.health === "healthy") {
+      run += 1;
+      best = Math.max(best, run);
+    } else {
+      run = 0;
+    }
+  }
+  return best;
 }
 
 const base = { chapter: "garden", secret: false } as const;
@@ -87,20 +112,28 @@ export const gardenBadges: Badge[] = [
     evaluate: (facts) => countTo(activeAtOnce(facts), 10),
   },
   {
-    // Needs stages on a past day. Built with the replay (step 6).
     ...base,
     id: "greenhouse",
     name: "Greenhouse",
     description: "Have 6 plants at stage 4 at once.",
     tier: "gold",
+    evaluate: (facts) =>
+      countTo(
+        mostAtOnce(facts, (moment) => moment.stage === 4),
+        6,
+      ),
   },
   {
-    // Needs health on past days. Built with the replay (step 6).
     ...base,
     id: "prize-winner",
     name: "Prize Winner",
     description: "Have a plant at stage 4 and Healthy for 4 periods straight.",
     tier: "silver",
+    evaluate: (facts) =>
+      countTo(
+        Math.max(0, ...facts.habits.map((habit) => prizeRun(facts, habit))),
+        4,
+      ),
   },
   {
     ...base,

@@ -8,11 +8,11 @@ import {
   type BadgeFacts,
   type HabitFacts,
 } from "../facts.js";
+import { longestRun } from "../timeline.js";
 
 // Section 8 of docs/badges-ideas.md. Plans: docs/badges-steps-6-7-plan.md.
-// Everything Everywhere and Untouchable need each plant's health on past
-// days, so they wait for the timeline (step 6b). A badge with no `evaluate`
-// shows as locked and is never awarded.
+// Everything Everywhere and Untouchable read each plant's past health from
+// the replay (timeline.ts).
 
 function finished(facts: BadgeFacts): HabitFacts[] {
   return facts.habits.filter((habit) => habit.finished);
@@ -107,6 +107,18 @@ export const challengeBadges: Badge[] = [
     name: "Everything Everywhere",
     description: "Keep 5 active habits all Healthy for 8 weeks.",
     tier: "gold",
+    // At least 5 active and every active plant Healthy, for 56 days in a row.
+    // They need not be the same 5 habits.
+    evaluate: (facts) =>
+      countTo(
+        longestRun(
+          facts,
+          (habits) =>
+            habits.length >= 5 &&
+            habits.every((moment) => moment.health === "healthy"),
+        ),
+        56,
+      ),
   },
   {
     ...base,
@@ -138,6 +150,18 @@ export const challengeBadges: Badge[] = [
     name: "Untouchable",
     description: "Go a full year with no Wilted plants.",
     tier: "platinum",
+    // At least one active plant and none Wilted, for 365 days in a row.
+    // Slightly Wilted is allowed.
+    evaluate: (facts) =>
+      countTo(
+        longestRun(
+          facts,
+          (habits) =>
+            habits.length >= 1 &&
+            habits.every((moment) => moment.health !== "wilted"),
+        ),
+        365,
+      ),
   },
   {
     ...base,

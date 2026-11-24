@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BADGES, BADGES_BY_ID, CHAPTERS } from "./catalog.js";
+import { evaluateBadges } from "./engine.js";
 import {
   bestStreak,
   buildFacts,
@@ -382,9 +383,16 @@ describe("meta badges and the engine", () => {
     expect(check({ earned }).earned.has("trophy-case")).toBe(false);
   });
 
+  it("has a rule for every non-secret badge", () => {
+    const missing = BADGES.filter((badge) => !badge.secret && !badge.evaluate);
+    expect(missing.map((badge) => badge.id)).toEqual([]);
+  });
+
   it("never awards a badge whose rule is not built", () => {
-    expect(BADGES_BY_ID.get("unbroken")?.evaluate).toBeUndefined();
-    expect(check().progress.has("unbroken")).toBe(false);
+    const unbuilt = { ...BADGES_BY_ID.get("unbroken")!, evaluate: undefined };
+    const result = evaluateBadges(input(), [unbuilt]);
+    expect(result.progress.has("unbroken")).toBe(false);
+    expect(result.newlyEarned).toEqual([]);
   });
 
   it("reports progress for Completionist over every other non-secret badge", () => {
