@@ -30,6 +30,7 @@ How the Node backend is built: what it does, how a request flows, the routes it 
 | `POST /habits` | Built (#129) |
 | `GET /habits` and `GET /habits/:id`, with `stats` | Built (#130, #199, #200) |
 | Calculations in `domain/` (periods, progress, streak, growth, health, badges) | Built (#191 to #194) |
+| Logging rules in `domain/logging.ts`, and the stats and dashboard shapes in `domain/stats.ts` and `domain/dashboard.ts` | Built, see sections 6.3 to 6.5 |
 | `POST` and `DELETE` for logs | Built (#196, #197) |
 | `GET /dashboard` | Built (#201) |
 | Shared habits: create, list and detail | Built (#268), using group calculations (#267) |
@@ -89,7 +90,7 @@ backend/src/
   middleware/          requireAuth, validate, errorHandler
   routes/              one file per resource: habits, me, logs, dashboard
   services/            the logic for each route, talks to Supabase
-  domain/              pure calculation functions: periods, streaks, growth
+  domain/              pure rules: periods, logging, streaks, growth, stats, dashboard
 ```
 
 - `domain/` has no Express or Supabase imports. Plain input, plain output, so it is easy to test.
@@ -161,7 +162,7 @@ or expiry state. The request uses the user's token and the existing delete polic
 
 ### 6.3 Logs
 
-`POST /habits/:id/logs` takes an optional body `{ "occurred_on": "2026-11-05" }`. With no body, or no date, the log is for today in the user's timezone.
+`POST /habits/:id/logs` takes an optional body `{ "occurred_on": "2026-11-05" }`. The date must be a real calendar date written `YYYY-MM-DD`, and no other field is accepted. With no body, or no date, the log is for today in the user's timezone. The rules are in section 8.1 and live in `domain/logging.ts`.
 
 | Case | Result |
 | --- | --- |
@@ -175,13 +176,23 @@ or expiry state. The request uses the user's token and the existing delete polic
 
 The response is `{ "log": { id, habit_id, occurred_on }, "stats": <short stats> }`. The stats come with it so the app can move the bar and grow the plant from one response.
 
-`DELETE /habits/:id/logs/:logId` deletes a log in the current period and returns `{ "stats": <short stats> }`. A log in an earlier period, or on an expired habit, gets 400, because those periods are locked. A missing log, or a log on another user's habit, gets 404.
+`DELETE /habits/:id/logs/:logId` deletes a log in the current period and returns `{ "stats": <short stats> }` with 200. Before the start, the current period is the first one, so a log added early can be deleted. A log in an earlier period, or on an expired habit, gets 400, because those periods are locked. A missing log, or a log on another user's habit, gets 404.
+
+The checks are in the backend only. The database does not check the date window, so a direct database call could add a log for any date (see [the database design](../database/design.md#31-row-policies)). The check and the write are separate requests, so a log added right at a period boundary can be accepted for the period that has just ended.
 
 ### 6.4 Stats
 
-Stats are calculated by the rules in section 8 whenever they are asked for, and nothing is stored. Dates are `YYYY-MM-DD`, and rates are numbers from 0 to 1 (or `null` when there is nothing to calculate yet).
+Stats are calculated by the rules in section 8 whenever they are asked for, and nothing is stored. Dates are `YYYY-MM-DD`, and rates are numbers from 0 to 1 (or `null` when there is nothing to calculate yet). There are three shapes, one for each screen that needs numbers:
 
-`GET /habits` adds a short `stats` block to every habit, for the Garden:
+| Shape | Returned by | For |
+| --- | --- | --- |
+| Short `stats` | `GET /habits`, and after a log is added or deleted | The Garden's plants |
+| Full `stats` | `GET /habits/:id` | The Details page |
+| Dashboard | `GET /dashboard` (section 6.5) | The Dashboard |
+
+The list reads the logs of the whole page in one query, not one per habit.
+
+**Short `stats`.** `GET /habits` adds it to every habit:
 
 | Field | Meaning |
 | --- | --- |
@@ -190,8 +201,10 @@ Stats are calculated by the rules in section 8 whenever they are asked for, and 
 | `overall_progress` | Rule 8.3, or `null` for a habit with no end |
 | `stage` | Growth stage, 1 to 4 (rule 8.7) |
 | `health` | `healthy`, `slightly_wilted` or `wilted` (rule 8.8) |
+| `badge` | `gold`, `silver`, `bronze` or `none` once the habit has expired, otherwise `null` (rule 8.9) |
+| `final_progress`, `final_consistency` | The final rates (#251). `null` until the habit expires |
 
-`GET /habits/:id` adds a full `stats` block, for the Details page. It has everything above plus:
+**Full `stats`.** `GET /habits/:id` adds it, for the Details page. It has everything above plus:
 
 | Field | Meaning |
 | --- | --- |
@@ -202,13 +215,6 @@ Stats are calculated by the rules in section 8 whenever they are asked for, and 
 | `log_days` | One entry per day that has logs, oldest first, as `{ date, count }`, for the calendar |
 | `current_period_logs` | The logs that can still be deleted, as `{ id, occurred_on }`. Empty once the habit has expired |
 
-The list reads the logs of the whole page in one query, not one per habit.
-
-The short and full stats also include `badge` (`gold`, `silver`,
-`bronze`, or `none`), `final_progress`, and `final_consistency` for expired
-habits (#251). All three fields are null until expiry. Final rates are 0–1,
-calculated using `habitResult`.
-
 `GET /habits?status=active|finished|both` filters by the caller's local date;
 the default is `both`. Active includes not-yet-started and indefinite habits.
 Filtering happens before offset/limit pagination, and `total` counts matches.
@@ -217,16 +223,16 @@ metadata in batches, then loads logs only for the requested page.
 
 ### 6.5 Dashboard
 
-`GET /dashboard` returns the overall view across all of the user's habits:
+`GET /dashboard` returns the overall view across all of the user's personal habits, calculated with the user's profile timezone. It reads every habit and all their logs in one go, with no paging. Shared habits are not included.
 
 | Field | Meaning |
 | --- | --- |
 | `active_count` | Habits that have not expired, including ones not started yet |
 | `overall_consistency` | Rule 8.5, or `null` until a habit has finished a period |
 | `best_streak` | `{ id, name, streak }` for the active habit with the longest streak, or `null` when every streak is 0 |
-| `habits` | Every active habit with its `streak`, `consistency`, `health` and `state`, longest streak first |
-| `needs_attention` | Active habits whose plant is not healthy, wilted first. A missed last period always makes the plant at least slightly wilted, so this covers both |
-| `finished` | Expired habits with `end_date`, `progress`, `consistency` and `badge`, most recently ended first. A badge of `none` means the habit failed |
+| `habits` | Every active habit with `id`, `name`, `plant_type`, `state`, `streak`, `consistency` and `health`, longest streak first (ties by name) |
+| `needs_attention` | The same entries for active habits whose plant is not healthy, wilted first (ties by name). A missed last period always makes the plant at least slightly wilted, so this covers both |
+| `finished` | Expired habits with `id`, `name`, `plant_type`, `end_date`, `progress`, `consistency` and `badge`, most recently ended first. A badge of `none` means the habit failed |
 
 ### 6.6 Shared habits
 
@@ -352,11 +358,12 @@ All calculations live in the backend, in `domain/`. Dates use Luxon, which handl
 - Period *k* covers **[start + k × interval, start + (k+1) × interval)**. Boundaries fall at midnight in the user's timezone. Month periods always count from the original start date, and the day is clamped to the end of a shorter month.
 - Each log stores the **date the activity happened** (`occurred_on`, a local date) and the time it was logged.
 - Users can log any date in the **current period**, up to and including today. Future dates are not allowed.
-- A habit that **has not started yet** can be logged for today only. That log counts toward the first period, as does any date before the start.
+- A habit that **has not started yet** can be logged for today only. That log is dated before the start date, and it counts toward the first period. The same goes for deleting it. Any other date gets 400.
 - The first period is the one shown as "this period" before the start, and the last one is shown after the end.
 - Several logs on the same day are allowed, with no cap.
 - Users can delete logs in the current period. Logs are never edited. To fix one, delete it and add it again.
-- A period **locks when it ends**. Locked periods are final.
+- A period **locks when it ends**. Locked periods are final. Logs in them can be neither added nor deleted.
+- Only the backend enforces these rules. The database does not check dates.
 
 ### 8.2 Current period progress
 
