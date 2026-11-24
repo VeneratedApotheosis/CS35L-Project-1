@@ -25,7 +25,7 @@ Finished plants, the ten types the app offers (`PLANT_TYPES` in `plantTypes.tsx`
 | Philodendron 'Sun Red' / Rojo Congo (`philodendron`) | Stage engine (leaf-only, broad paddles, red stems, burgundy newest leaves) | Final |
 | Lotus (`lotus`) | Its own drawing (a water plant), not the stage engine | Final |
 
-Also drawn on the stage engine but not offered by the app, only shown on `/plants`:
+Also drawn on the stage engine but not offered by the app, only shown on `/plants`. They are permanent stretch goals, parked on purpose and not scheduled in any week (epic #386, issue #286):
 
 | Plant | Engine | State |
 | --- | --- | --- |

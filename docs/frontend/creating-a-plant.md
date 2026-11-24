@@ -235,6 +235,10 @@ so all four must agree or the file won't compile):
 Open `/plants`, pick your plant, and click **Grow another** to eyeball many
 seeds at every stage, in light and dark mode.
 
+A plant that is only registered in the lab is not offered in the app: it is not in
+the create-habit picker or the backend's plant list. The spider plant and calathea
+are in this state on purpose. They are permanent stretch goals (issue #286).
+
 ## Step 8 — The tests (`foo.test.tsx`)
 
 Copy `snakePlant/snakePlant.test.tsx` (leaf-only) and rename the imports to your
