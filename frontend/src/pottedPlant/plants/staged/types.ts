@@ -235,12 +235,6 @@ export interface LeafShapeModel<Spec> {
   outline(spec: Spec, length: number, perSegment: number, fan?: number, angle?: number): Pt[]
   /** Where the leaf's middle sits along its length, as a share measured from the stalk end. */
   middle: number
-  /**
-   * Whether a wilting plant turns and curves this leaf toward the ground. Defaults
-   * to true. A leaf that already hangs (a strand) sets false: wilting then only
-   * browns it and tilts its stem.
-   */
-  droops?: boolean
 }
 
 /** A plant species: its numbers and its leaf shape. */

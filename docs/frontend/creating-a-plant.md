@@ -294,8 +294,7 @@ so a bad config fails here with a list of exactly what doesn't fit.
   opt-in `hang: { depth }` to the config and set `limits.floor` to the soil line
   plus `depth`. Leaves may then fall past the soil, over the pot, as far as
   `depth` (scaled by stage). If the leaf's shape depends on the way it points,
-  read the `angle` argument of `outline()`; set `droops: false` on the leaf model
-  if wilting should only brown it. Copy `spiderPlant/`.
+  read the `angle` argument of `outline()`. Copy `spiderPlant/`.
 - **Planted straight in the soil** (no visible stems, buried bases — like the
   snake plant). Pass `planting={{ bury, soilY: SOIL.y }}` to `StemmedPlant` and
   collapse `stems.lengthRange` to ~0 in the config. The stems are hidden and the
