@@ -23,7 +23,7 @@ import { ProgressRing } from "@/components/ProgressRing"
 import { ProgressBar } from "@/components/ProgressBar"
 import { useTheme } from "@/styles/ThemeProvider"
 import { PlantCardExamples } from "./PlantCardExamples"
-import { BadgeMedalExamples, BadgeBookExample, BadgeMomentExamples } from "./BadgeExamples"
+import { BadgeMedalExamples, BadgeCollectionExample, BadgeMomentExamples } from "./BadgeExamples"
 
 /* ------------------------------------------------------------------ */
 /* Showcase data                                                       */
@@ -488,10 +488,10 @@ export default function StyleGuide() {
         <Section
           index="11"
           eyebrow="Achievements"
-          title="Badge book"
-          description="The Badges page is a book. It opens on a cover with the earned count and the latest badges, then chapters of slots that you turn through: two pages at a time on wide screens and one on phones. Slots hold only the badge. Hover or focus one for a small card, or click it for the details, with buttons to step to the next badge. The ribbon tabs jump to a chapter and the arrow keys turn pages. The Secret chapter only appears once a secret badge is earned. All the badges here are demo data."
+          title="Badges page"
+          description="A count, a Latest strip and groups of compact badge grids, laid out the way osu! lays out its medals. Slots hold only the badge, with no text. Hover or focus one for a small card with its name, tier, rule and status, or click it for the details, with buttons to step to the next badge. Hide locked drops the locked badges. Finished habits show the plant in a frame with the level medal in the corner, and the Secret group only appears once a secret badge is earned. All the badges here are demo data."
         >
-          <BadgeBookExample />
+          <BadgeCollectionExample />
         </Section>
 
         <Section

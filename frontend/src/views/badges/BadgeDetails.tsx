@@ -8,7 +8,7 @@ import { durationPhrase, formatDate, periodPhrase } from "@/lib/goal"
 import { habitSeed } from "@/pottedPlant/habitSeed"
 import { plantTypeById } from "@/pottedPlant/plants/plantTypes"
 import { wiltForHealth } from "@/pottedPlant/plants/staged/wilt"
-import type { BookItem } from "./bookPages"
+import type { BadgeItem } from "./groups"
 import type { PlaceholderHabitBadge } from "./placeholderBadges"
 
 const healthLabels = { healthy: "Healthy", slightly_wilted: "Slightly wilted", wilted: "Wilted" } as const
@@ -24,7 +24,7 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
 
 /** The details of one badge, with buttons to step to the next or previous badge in the book. */
 export function BadgeDetails({ items, index, open, onClose, onStep }: {
-  items: BookItem[]
+  items: BadgeItem[]
   /** The badge shown. Kept while the dialog closes so its content does not vanish mid-close. */
   index: number
   open: boolean

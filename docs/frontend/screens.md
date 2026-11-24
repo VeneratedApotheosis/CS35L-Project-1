@@ -153,16 +153,17 @@ The page uses the medium measure ([Page width](design.md#7-layout)); the page sh
 
 ### 6 Badges and Habit History
 
-The Badges page (`/badges`, `views/Badges.tsx`) is a **book**. The design and the open decisions are in [badges-book.md](badges-book.md). **It is a mock for now:** it reads placeholder data from `views/badges/placeholderBadges.ts` because the badges backend is not built. Add `?demo=empty` to the address to see the new-user state and `?page=3` to open the book at a page. The achievement ideas are in [badges-ideas.md](../badges-ideas.md) and the medals are in the style guide (`/style-guide`, "Badge medals" and "Badge book").
+The Badges page (`/badges`, `views/Badges.tsx`) is laid out the way osu! lays out its medals: a count, a Latest strip, then groups of compact medal grids with no text. **It is a mock for now:** it reads placeholder data from `views/badges/placeholderBadges.ts` because the badges backend is not built. Add `?demo=empty` to the address to see the new-user state. The achievement ideas are in [badges-ideas.md](../badges-ideas.md) and the medals are in the style guide (`/style-guide`, "Badge medals" and "Badges page").
 
-- **Cover:** the earned count ("20 of 73 earned"), the count for each tier, the five latest badges, **Open the book** and **Jump to newest**. A new user sees one line, "Your first badge is one log away."
-- **Pages:** each chapter starts on a new page, with up to 12 slots a page. Two pages show side by side from 44rem wide, and one page below that. Chapters: Getting started, Logging milestones, Finishing habits, Streaks, Garden and plants, Comebacks, Hard challenges, Badge collector, Finished habits, and Secret badges.
+- **Summary card:** "20 of 73 earned" and the earned count for each tier (Bronze, Silver, Gold, Platinum). The total counts only badges the user can see, so it grows when a secret badge is found.
+- **Latest:** the eight most recently earned badges in a lifted band, a little larger than the rest. A new user sees one line instead: "Your first badge is one log away."
+- **Hide locked:** a toggle that drops the locked badges. Earned and in-progress badges always show.
+- **Groups:** Getting started, Logging milestones, Finishing habits, Streaks, Garden and plants, Comebacks, Hard challenges, Badge collector, Finished habits, and Secret badges. Each has a rule above it, a small heading with its earned count ("5/8"), and a compact grid.
 - **Slots:** only the badge, with no text. Earned badges are solid medals, in-progress badges are a ring that fills with the tier color, and locked badges are muted with a lock. Hover or keyboard focus shows a small card with the name, tier, rule and status. Click or tap opens a dialog with the large medal, the rule, the date or progress, and **Previous badge** and **Next badge** buttons. Touch screens have no hover card, so a tap opens the dialog.
-- **Turning:** the arrow buttons, the left and right arrow keys, and the ribbon tabs, one per chapter with its earned count. On wide screens, turning to the next or previous spread flips a page; with reduced motion it switches at once. The page is kept in the address (`?page=`).
-- **Secret badges:** never shown as locked or in progress, and never counted ahead of time. The Secret chapter only exists once one is earned, and has pink starburst medals. Earned badges are permanent.
-- **Finished habits chapter:** at most one badge per habit. Each slot shows the habit's plant at its final stage and health in a soft frame, with its Bronze, Silver or Gold medal in the corner. The dialog shows the goal and duration, final overall progress and consistency, total activities, final plant stage and health, and the level. When there are none, the page explains when a habit earns a badge.
+- **Secret badges:** never shown as locked or in progress, and never counted ahead of time. The Secret group only exists once one is earned, and has pink starburst medals. Earned badges are permanent.
+- **Finished habits group:** at most one badge per habit. Each slot shows the habit's plant at its final stage and health in a soft frame, with its Bronze, Silver or Gold medal in the corner. The dialog shows the goal and duration, final overall progress and consistency, total activities, final plant stage and health, and the level. When there are none, the group explains when a habit earns a badge.
 - **Habit history:** all expired habits, including those without badges, with final stats and activity history.
-- **Empty state:** every achievement is listed as locked, and the Finished habits chapter explains when a habit earns a badge.
+- **Empty state:** every achievement is listed as locked, and the Finished habits group explains when a habit earns a badge.
 - **Nav:** Overall Dashboard, My Garden, Settings.
 
 ### 7 Settings
