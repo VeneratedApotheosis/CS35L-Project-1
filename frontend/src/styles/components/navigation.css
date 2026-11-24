@@ -249,7 +249,13 @@
 
 /* On a phone a page keeps the notch clear above it and has room below. */
 @media (--phone) {
-  .navbar__link, .navbar__add { min-width: var(--touch-target); }
+  .navbar__link, .navbar__add {
+    min-width: var(--touch-target);
+    margin-inline: 0;
+    border-radius: var(--space-3);
+    transition-property: background, color;
+  }
+  .navbar__link:hover:not([aria-disabled]), .navbar__add:hover:not(:disabled) { transform: none; }
   .app-shell { min-height: 100dvh; }
   .app-shell__content {
     padding-top: calc(var(--page-padding) + env(safe-area-inset-top, 0px));

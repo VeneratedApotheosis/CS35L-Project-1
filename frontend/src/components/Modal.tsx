@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react"
 import { X } from "lucide-react"
 import { Button } from "./Button"
+import { trackModal } from "./modalState"
 
 export interface ModalProps {
   open: boolean
@@ -24,9 +25,11 @@ export function Modal({ open, onClose, title, description, children }: ModalProp
     const trigger = document.activeElement
     const previousOverflow = document.body.style.overflow
     dialog.showModal()
+    const untrack = trackModal(dialog)
     document.body.style.overflow = "hidden"
     return () => {
       dialog.close()
+      untrack()
       document.body.style.overflow = previousOverflow
       if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus()
     }
