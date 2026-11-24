@@ -9,6 +9,7 @@ const auth = vi.hoisted(() => {
   return { user: { id: "caller" }, signOut: vi.fn(), getSession: vi.fn() }
 })
 vi.mock("@/auth/useAuth", () => ({ useAuth: () => auth }))
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }))
 vi.mock("@/lib/supabase", () => ({ supabase: { auth: { getSession: auth.getSession } } }))
 vi.mock("@/pottedPlant/plants/plantTypes", () => ({ plantTypeById: () => ({ label: "Pothos", Preview: () => <svg /> }) }))
 HTMLDialogElement.prototype.showModal = function showModal() { this.setAttribute("open", "") }
