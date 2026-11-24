@@ -37,7 +37,7 @@
 
   .create-grid__plant {
     position: sticky;
-    top: var(--space-6);
+    top: calc(var(--desktop-nav-height, 0px) + var(--space-6));
   }
 }
 
