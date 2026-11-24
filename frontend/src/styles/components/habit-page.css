@@ -267,3 +267,17 @@ button.habit-day:focus-visible { outline: 2px solid var(--color-link); outline-o
   .habit-plant-card__art > svg { width: min(90%, 20rem); }
   .habit-head__delete { align-self: flex-start; }
 }
+
+@media (--phone) {
+  .habit-invite__link { display: inline-flex; align-items: center; min-width: var(--touch-target); min-height: var(--touch-target); }
+  .habit-head__back { min-width: var(--touch-target); min-height: var(--touch-target); }
+  .habit-period__actions .button { min-height: var(--touch-target); }
+  /* Stack the header above the scrollable calendar on phones. */
+  .habit-calendar { display: grid; grid-template-columns: minmax(0, 1fr); }
+  /* Keep seven 44px cells accessible on narrow cards without page overflow. */
+  .habit-calendar__scroll { min-width: 0; max-width: 100%; padding: var(--space-1); scroll-padding-inline: var(--space-1); overflow-x: auto; overscroll-behavior-x: contain; }
+  .habit-calendar__scroll:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .habit-calendar__grid { min-width: calc(7 * (var(--touch-target) + var(--space-1))); }
+  .habit-calendar__grid td { padding: calc(var(--space-1) / 2); }
+  .habit-calendar__grid button.habit-day { min-width: var(--touch-target); min-height: var(--touch-target); }
+}

@@ -65,3 +65,10 @@
   gap: var(--space-4) var(--space-8);
   margin: 0;
 }
+
+@media (--phone) {
+  /* Dashboard links are standalone row targets, not links within prose. */
+  .dashboard-result .garden-link, .dashboard-habit .garden-link, .dashboard-summary .garden-link {
+    display: inline-flex; align-items: center; min-width: var(--touch-target); min-height: var(--touch-target);
+  }
+}
