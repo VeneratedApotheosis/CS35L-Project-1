@@ -115,7 +115,7 @@ The plant is the main visual. Style reference: the icons in Animal Crossing: New
 - **Containment.** Leaves stay above the soil line and within the pot's width (8px overhang allowed), so plants never overlap neighbors in the grid.
 - **The pot is drawn separately** (`PottedPlant`): the seed also picks the pot's look — palette, band and finish — so any pot can go with any plant.
 
-Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant**, **Kimberly Queen**, **lily**, **rose**, **monstera**, **philodendron** and **lotus** — ids `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`. The create-habit picker, the previews and the backend's `plant_type` validation all read the same list (`frontend/src/pottedPlant/plants/plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`). Every plant except the lotus is built on the shared stage engine; the lotus is a water plant with its own drawing.
+Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant**, **Kimberly Queen**, **lily**, **rose**, **monstera**, **philodendron**, **lotus**, **spider plant** and **calathea** — ids `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`, `spider_plant`, `calathea`. The create-habit picker, the previews and the backend's `plant_type` validation all read the same list (`frontend/src/pottedPlant/plants/plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`). Every plant except the lotus is built on the shared stage engine; the lotus is a water plant with its own drawing.
 
 ## 7. Layout
 
@@ -251,7 +251,7 @@ frontend/src/
 **Done**
 - Design tokens, light and dark themes, base components (`Button`, `Card`, `Icon`) and the style guide page.
 - Supabase auth with protected routes.
-- Procedural plants and pots (ten plant types on the shared stage engine, plus the water lotus), and the `/plants` prototype page.
+- Procedural plants and pots (eleven plant types on the shared stage engine, plus the water lotus), and the `/plants` prototype page.
 - Create-habit form with the full plant picker and a live, seeded preview.
 - Wilted look for every plant on the stage engine, and the stage-up animation (see [plant-generation.md](plant-generation.md#39-health-the-wilted-look)). Both can be tried on `/plants`.
 - Plants checked on the dark theme; the pot's shadow is a theme token.

@@ -11,6 +11,8 @@ import { Rose } from "./rose"
 import { Monstera } from "./monstera"
 import { Philodendron } from "./philodendron"
 import { Lotus } from "./lotus"
+import { SpiderPlant } from "./spiderPlant"
+import { Calathea } from "./calathea"
 import { WiltProvider } from "./staged/WiltContext"
 import type { PotLook } from "../pots"
 
@@ -104,6 +106,18 @@ export const PLANT_TYPES = [
     label: "Lotus",
     blurb: "Floating pads and pink flowers on water.",
     Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0, pot }) => <WiltProvider wilt={wilt}><Lotus seed={seed} stage={stage} pot={pot} /></WiltProvider>,
+  },
+  {
+    id: "spider_plant",
+    label: "Spider plant",
+    blurb: "Long, striped blades arching over the pot rim.",
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0, pot }) => <WiltProvider wilt={wilt}><SpiderPlant seed={seed} stage={stage} stages={4} pot={pot} /></WiltProvider>,
+  },
+  {
+    id: "calathea",
+    label: "Calathea",
+    blurb: "Broad oval leaves with herringbone stripes.",
+    Preview: ({ seed = PREVIEW_SEED, stage = 4, wilt = 0, pot }) => <WiltProvider wilt={wilt}><Calathea seed={seed} stage={stage} stages={4} pot={pot} /></WiltProvider>,
   },
 ] as const satisfies readonly PlantType[]
 

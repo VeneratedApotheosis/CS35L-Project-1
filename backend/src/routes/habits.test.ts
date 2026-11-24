@@ -96,6 +96,8 @@ describe("PLANT_TYPES", () => {
       "monstera",
       "philodendron",
       "lotus",
+      "spider_plant",
+      "calathea",
     ]);
   });
 });

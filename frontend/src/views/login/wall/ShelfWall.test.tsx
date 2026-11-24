@@ -12,6 +12,7 @@ const advance = (ms: number) => act(() => void vi.advanceTimersByTime(ms))
 beforeEach(() => vi.useFakeTimers())
 afterEach(() => {
   cleanup()
+  vi.restoreAllMocks()
   vi.useRealTimers()
 })
 
@@ -44,6 +45,19 @@ describe("replanting a plant by touching it with the pointer", () => {
 
     advance(3000)
     expect(plant.dataset.changing).toBe("false")
+  })
+
+  it.each([
+    ["spider plant", 0.85, "Spider plant in a pot"],
+    ["calathea", 0.99, "Calathea plant in a pot"],
+  ])("can swap in the %s, which does not start on the wall", (_name, random, title) => {
+    const { container } = render(<ShelfWall />)
+    const plant = plants(container)[0]
+    advance(5000)
+    vi.spyOn(Math, "random").mockReturnValue(random)
+    fireEvent.pointerEnter(plant)
+    advance(SHRINK_MS + 1000)
+    expect(plant.querySelector(`[aria-label="${title}"]`)).not.toBeNull()
   })
 
   it("leaves the pot bare between the old plant and the new one, so the swap is never seen", () => {

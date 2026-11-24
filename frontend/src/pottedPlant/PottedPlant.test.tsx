@@ -127,7 +127,7 @@ describe("the shared frame", () => {
       id: plant.id,
       markup: renderToStaticMarkup(<plant.Preview seed={42} />),
     }))
-    expect(markups).toHaveLength(10)
+    expect(markups).toHaveLength(12)
     const viewBox = (markup: string) => markup.match(/viewBox="([^"]*)"/)![1]
     const pot = (markup: string) => markup.slice(markup.indexOf("<g>"), markup.indexOf(END_OF_POT))
     for (const { id, markup } of markups) {

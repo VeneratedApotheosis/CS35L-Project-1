@@ -9,6 +9,8 @@ import { Pilea } from "@/pottedPlant/plants/pilea"
 import { Pothos } from "@/pottedPlant/plants/pothos"
 import { Rose } from "@/pottedPlant/plants/rose"
 import { SnakePlant } from "@/pottedPlant/plants/snakePlant"
+import { SpiderPlant } from "@/pottedPlant/plants/spiderPlant"
+import { Calathea } from "@/pottedPlant/plants/calathea"
 import { EmergeProvider } from "@/pottedPlant/plants/staged/EmergeContext"
 import { ShrinkProvider } from "@/pottedPlant/plants/staged/ShrinkContext"
 import { ShelfBoard } from "@/components/shelf/ShelfBoard"
@@ -64,6 +66,10 @@ function Species({ type, seed, stage, pot }: { type: WallPlant["type"]; seed: nu
       return <Monstera seed={seed} stage={stage} stages={4} pot={pot} />
     case "philodendron":
       return <Philodendron seed={seed} stage={stage} stages={4} pot={pot} />
+    case "spider_plant":
+      return <SpiderPlant seed={seed} stage={stage} stages={4} pot={pot} />
+    case "calathea":
+      return <Calathea seed={seed} stage={stage} stages={4} pot={pot} />
     default:
       return null
   }
@@ -154,8 +160,11 @@ function measureLeaves(frame: SVGSVGElement | null): HitBox | null {
 
 const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
 
-/** The species a replanted plant can be: the ones on the wall. */
-const SPECIES = WALL_PLANTS.map((plant) => plant.type)
+/**
+ * The species a replanted plant can be: the ones that start on the wall, and the
+ * spider plant and calathea, which only ever arrive as a replacement.
+ */
+const SPECIES: readonly WallPlant["type"][] = [...WALL_PLANTS.map((plant) => plant.type), "spider_plant", "calathea"]
 
 /**
  * One plant on its shelf.

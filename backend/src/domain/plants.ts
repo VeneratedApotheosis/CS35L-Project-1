@@ -13,6 +13,8 @@ export const PLANT_TYPES = [
   "monstera",
   "philodendron",
   "lotus",
+  "spider_plant",
+  "calathea",
 ] as const;
 
 export type PlantType = (typeof PLANT_TYPES)[number];

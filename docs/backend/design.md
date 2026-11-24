@@ -138,7 +138,7 @@ Routes have no version prefix. There is no route to edit a personal habit, becau
 | --- | --- |
 | `name` | Required, 1 to 100 characters |
 | `description` | Optional, up to 500 characters |
-| `plant_type` | One of `pothos`, `peace_lily`, `pilea` (the plants the app draws; issue #155). Only the backend checks it, and the list must match the frontend's |
+| `plant_type` | One of `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus`, `spider_plant`, `calathea` (the plants the app draws; issues #155, #287). Only the backend checks it on create, and the list must match the frontend's. Edits to a shared habit are also checked by the `guard_shared_habit_edit` trigger, whose list must change with it (`20261120_02_shared_habit_spider_plant_calathea.sql`) |
 | `target_count` | 1 to 50 |
 | `interval_count` | 1 to 365 |
 | `interval_unit` | `day`, `week` or `month` |
