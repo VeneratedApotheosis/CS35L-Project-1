@@ -132,7 +132,11 @@ Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant
 | Wide | `--content-width-wide`, 90rem | 0.5 to 1rem, and less above and below | Habit details, shared habit | Grids of cards that must fit a laptop screen. |
 | Full | none | 0.75 to 2rem, then more on a phone | Garden | The shelves are fixed size and the boards run into the space left on both sides. |
 
-Under 44rem every measure is the full screen. The top bar is a bottom bar there, and the bar's content only follows the measure from 52rem, where it moves to the top.
+**Phone breakpoint.** The primary phone layout is below **52rem** (832 CSS pixels with the standard 16px initial font size); at 52rem and above the laptop layout applies. This aligns with the existing navigation, form and habit-grid transition, and keeps phone navigation and content in the same mode. Intermediate widths formerly between the separate thresholds now use the phone layouts.
+
+The single value lives in `frontend/src/styles/breakpoints.json`. In authored styles use `(--phone)` or `(--not-phone)` in a media or container query. The local PostCSS plugin in `frontend/phone-breakpoint.mjs` expands these to `(width < 52rem)` and `(min-width: 52rem)` at build time; CSS custom properties cannot be used as media-query values. JavaScript imports the same JSON for `matchMedia`. Keep the tokens inside an `@media` or `@container` condition; do not use them directly in browser-side styles without the build step.
+
+The phone boundary does not replace queries for a card's own container width, multi-column plant-card sizing (44rem and 72rem), the larger hold track (62rem), pointer/hover capabilities, reduced motion, or accessibility modes. The Garden retains its touch-specific behavior on wider devices.
 
 **Alignment.** Page content is left aligned in a centered column with a maximum width (see Page width). Only empty states are center aligned, because they hold a single message. The login screen is the exception to the column: its words are left aligned in the left third, beside a picture (see [login-wall.md](login-wall.md)).
 

@@ -46,6 +46,13 @@ describe("test viewport", () => {
       true,
     );
   });
+  it("matches width comparison operators at their boundary", () => {
+    setTestViewport({ width: 832 });
+    expect(matchMedia("(width < 52rem)").matches).toBe(false);
+    expect(matchMedia("(width <= 52rem)").matches).toBe(true);
+    expect(matchMedia("(width > 52rem)").matches).toBe(false);
+    expect(matchMedia("(width >= 52rem)").matches).toBe(true);
+  });
   it("updates existing query lists, delivers change events only on transitions, and emits resize", () => {
     setTestViewport({ width: 360 });
     const query = matchMedia("(min-width: 40rem)");

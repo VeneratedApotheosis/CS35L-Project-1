@@ -1,3 +1,4 @@
+import breakpoints from "@/styles/breakpoints.json"
 import { BOARD, type Shelf } from "@/components/shelf/geometry"
 import type { PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 
@@ -71,11 +72,10 @@ export const MAX_COLS = 4
 export const MAX_ROWS = 4
 
 /**
- * The width, in rem, below which the wall is not a column beside the words: not even one pot fits
- * there. It is one shelf above the words on the page's own background. Keep it in step with
- * login.css, whose words column is at least 22rem wide.
+ * Below the shared phone boundary the wall is one shelf above the words.
+ * The value comes from the same source as the styles in login.css.
  */
-export const STACKED_QUERY = "(max-width: 38.99rem)"
+export const STACKED_QUERY = `(width < ${breakpoints.phoneRem}rem)`
 
 /** How many pots across and how many shelves fit in a wall of this size, in pixels. Never less than one. */
 export interface WallFit {

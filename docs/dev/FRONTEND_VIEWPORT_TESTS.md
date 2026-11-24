@@ -37,7 +37,7 @@ made after rendering in React Testing Library's `act()` when it updates React
 state. Remove your own window event listeners in test cleanup.
 
 The helper supports `screen`/`all`, comma-separated alternatives, `and`,
-`min-width`, `max-width`, and exact `width` in `px`, `rem` or `em` (using
+`min-width`, `max-width`, exact `width`, and width comparisons (`<`, `<=`, `>`, `>=`) in `px`, `rem` or `em` (using
 16px for relative units), plus `hover`, `pointer`, `prefers-color-scheme` and
 `prefers-reduced-motion`. Unsupported features throw rather than silently
 returning a misleading result. It does not choose a phone breakpoint: tests

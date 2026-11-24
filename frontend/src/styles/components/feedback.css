@@ -90,7 +90,7 @@
   outline-color: currentColor;
 }
 
-@media (min-width: 52rem) {
+@media (--not-phone) {
   .toast { bottom: var(--space-6); }
 }
 

@@ -26,7 +26,7 @@ describe("garden touch panel styles", () => {
       })
       if (!fixedPanel) return
       checked = true
-      expect(media.params).toContain("(max-width: 40rem)")
+      expect(media.params).toContain("(--phone)")
       expect(media.params).toContain("(hover: none)")
       expect(media.params).toContain("(pointer: coarse)")
       expect(hiddenCard && hiddenSurface).toBe(true)

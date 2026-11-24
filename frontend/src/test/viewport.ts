@@ -40,6 +40,16 @@ function matches(query: string, viewport: Settings): boolean {
             if (width[1] === "max-") return viewport.width <= pixels;
             return viewport.width === pixels;
           }
+          const range = value.match(
+            /^\(width\s*(<=|<|>=|>)\s*(\d+(?:\.\d+)?)\s*(px|rem|em)\)$/,
+          );
+          if (range) {
+            const pixels = Number(range[2]) * (range[3] === "px" ? 1 : 16);
+            if (range[1] === "<") return viewport.width < pixels;
+            if (range[1] === "<=") return viewport.width <= pixels;
+            if (range[1] === ">") return viewport.width > pixels;
+            return viewport.width >= pixels;
+          }
           const feature = value.match(
             /^\((hover|pointer|prefers-color-scheme|prefers-reduced-motion)\s*:\s*([\w-]+)\)$/,
           );
