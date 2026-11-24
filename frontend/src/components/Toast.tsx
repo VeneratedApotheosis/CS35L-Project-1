@@ -10,10 +10,12 @@ export interface ToastProps {
   variant?: "success" | "error"
   duration?: number
   action?: { label: string; onClick: () => void }
+  /** Extra class, such as `toast--raised` to sit above another toast. */
+  className?: string
 }
 
 /** Mount a fresh Toast (or change its key) for each new notification. */
-export function Toast({ message, onDismiss, variant = "success", duration = 5000, action }: ToastProps) {
+export function Toast({ message, onDismiss, variant = "success", duration = 5000, action, className }: ToastProps) {
   const dismissRef = useRef(onDismiss)
   useEffect(() => { dismissRef.current = onDismiss }, [onDismiss])
   useEffect(() => {
@@ -22,7 +24,7 @@ export function Toast({ message, onDismiss, variant = "success", duration = 5000
   }, [duration])
 
   return (
-    <div className={`toast toast--${variant}`}>
+    <div className={["toast", `toast--${variant}`, className].filter(Boolean).join(" ")}>
       <p className="toast__message" role={variant === "error" ? "alert" : "status"} aria-atomic="true">
         {variant === "error" && <strong>Error: </strong>}{message}
       </p>

@@ -239,9 +239,39 @@ describe("GET /me/badges/unseen", () => {
     });
   });
 
-  it("does not report a badge another request stored at the same time", async () => {
-    // The rule says Seed Money is new, but award_badges inserted nothing.
+  it("still returns a badge another request stored a moment ago, while unseen", async () => {
+    // The rule says Seed Money is new, but award_badges inserted nothing:
+    // the page's request stored it first. Reading again finds it unseen.
     given({ habits: [gym], added: [] });
+    fakeSupabase.queueResult("user_badges", "select", {
+      data: [],
+      error: null,
+    });
+    fakeSupabase.queueResult("user_badges", "select", {
+      data: [earned("seed-money", null)],
+      error: null,
+    });
+
+    const res = await request(app)
+      .get("/me/badges/unseen")
+      .set("Authorization", auth);
+
+    expect(fakeSupabase.callsFor("user_badges", "select")).toHaveLength(2);
+    expect(res.body.badges).toEqual([
+      expect.objectContaining({ id: "seed-money" }),
+    ]);
+  });
+
+  it("does not return a badge another request stored and already showed", async () => {
+    given({ habits: [gym], added: [] });
+    fakeSupabase.queueResult("user_badges", "select", {
+      data: [],
+      error: null,
+    });
+    fakeSupabase.queueResult("user_badges", "select", {
+      data: [earned("seed-money")],
+      error: null,
+    });
 
     const res = await request(app)
       .get("/me/badges/unseen")
@@ -325,5 +355,74 @@ describe("awardNewBadges", () => {
     await expect(
       awardNewBadges(fakeSupabase.client, TEST_USER.id),
     ).resolves.toEqual([]);
+  });
+});
+
+describe("badges from write endpoints", () => {
+  it("returns the badges a new log earned", async () => {
+    given({ added: [earned("first-drop", null)] });
+    // getHabit reads one habit, then the badge check reads the list.
+    fakeSupabase.queueResult("habits", "select", { data: gym, error: null });
+    fakeSupabase.queueResult("habits", "select", { data: [gym], error: null });
+    fakeSupabase.setResult("activity_logs", "insert", {
+      data: {
+        id: "5a1c2e3f-4b5d-4e6f-8a7b-9c0d1e2f3a4b",
+        habit_id: habitId,
+        occurred_on: "2026-11-24",
+      },
+      error: null,
+    });
+    fakeSupabase.setResult("activity_logs", "select", {
+      data: [log("2026-11-24")],
+      error: null,
+    });
+
+    const res = await request(app)
+      .post(`/habits/${habitId}/logs`)
+      .set("Authorization", auth)
+      .send({ occurred_on: "2026-11-24" });
+
+    expect(res.status).toBe(201);
+    expect(res.body.log.occurred_on).toBe("2026-11-24");
+    expect(res.body.new_badges).toEqual([
+      expect.objectContaining({ id: "first-drop", state: "earned" }),
+    ]);
+  });
+
+  it("awards Personal Touch when PATCH /me sets the display name", async () => {
+    given({ added: [earned("personal-touch", null)] });
+    fakeSupabase.setResult("profiles", "update", {
+      data: profile,
+      error: null,
+    });
+
+    const res = await request(app)
+      .patch("/me")
+      .set("Authorization", auth)
+      .send({ display_name: "Sam" });
+
+    expect(res.status).toBe(200);
+    expect(fakeSupabase.callsFor("award_badges", "select")[0]?.payload).toEqual(
+      { p_badge_ids: ["personal-touch"] },
+    );
+    expect(res.body.new_badges).toEqual([
+      expect.objectContaining({ id: "personal-touch" }),
+    ]);
+  });
+
+  it("does not award Personal Touch for a timezone change", async () => {
+    given({});
+    fakeSupabase.setResult("profiles", "update", {
+      data: profile,
+      error: null,
+    });
+
+    const res = await request(app)
+      .patch("/me")
+      .set("Authorization", auth)
+      .send({ timezone: "America/Los_Angeles" });
+
+    expect(res.body.new_badges).toEqual([]);
+    expect(fakeSupabase.callsFor("award_badges", "select")).toHaveLength(0);
   });
 });

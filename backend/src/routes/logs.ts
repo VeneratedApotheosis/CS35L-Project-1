@@ -3,6 +3,7 @@ import { DateTime } from "luxon";
 import { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
+import { awardNewBadges } from "../services/achievements.js";
 import { addLog, deleteLog } from "../services/habitLogs.js";
 
 export const logsRouter = Router();
@@ -35,7 +36,10 @@ logsRouter.post(
     const { id } = valid.params as z.infer<typeof habitLogsParams>;
     const body = valid.body as z.infer<typeof addLogBody>;
     const result = await addLog(supabase, user.id, id, body?.occurred_on);
-    res.status(201).json(result);
+    // Badges earned by this log, for the "Badge earned" moment. Never fails
+    // the log (see awardNewBadges).
+    const new_badges = await awardNewBadges(supabase, user.id);
+    res.status(201).json({ ...result, new_badges });
   },
 );
 

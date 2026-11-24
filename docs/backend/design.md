@@ -355,6 +355,8 @@ The account-wide badges from [badges-ideas.md](../badges-ideas.md). The rules ar
 | `progress` | `{ count, target }`, with the count capped at the target. `null` for a badge whose rule is not built yet |
 | `earned_at` | When it was stored, or `null` |
 
+`POST /habits/:id/logs`, `POST /habits` and `PATCH /me` also return `new_badges`: the badges that request earned, in the same shape with `state: "earned"`. The app shows them right away.
+
 Secret badges are left out until earned, and the `secret` chapter is missing until then. So `visible_count` never gives away how many exist. Icons are not sent: the frontend maps each id to an icon.
 
 ---
@@ -484,8 +486,8 @@ Account-wide badges on top of the per-habit results in 8.9. The list is [badges-
 - **"At once"** means active on the same day: `start_date <= day < end date`, up to today.
 - **Only personal habits count.** Shared habits and their logs are left out for now.
 - **Badge collector badges** count earned badges, so the engine repeats them until nothing new is earned. A fifth badge earns Trophy Case in the same check.
-- **When badges are checked.** On `GET /me/badges` and `GET /me/badges/unseen` so far. Checks on adding a log, creating a habit and changing the display name are planned (badges-plan step 5). The check reads every habit and log the user owns.
-- **Storing.** New ids go to `award_badges`, which returns only the rows it inserted. A badge another request stored at the same moment is treated as earned but not new.
+- **When badges are checked.** On `GET /me/badges`, `GET /me/badges/unseen`, `POST /habits/:id/logs`, `POST /habits` and `PATCH /me`. The three writes add `new_badges` (badges this request stored) to their usual response. `PATCH /me` with a `display_name` also earns Personal Touch. A failed check is logged and gives `new_badges: []`, and never fails the write. The check reads every habit and log the user owns.
+- **Storing.** New ids go to `award_badges`, which returns only the rows it inserted. A badge another request stored at the same moment is earned but not new for this request. The rows are read again, so it still counts as unseen until the app has shown it.
 
 ---
 

@@ -1,4 +1,5 @@
 import { api } from "./api"
+import type { ApiBadge } from "./badges"
 
 export interface Profile {
   id: string
@@ -20,8 +21,11 @@ export function updateTimezone(timezone: string): Promise<Profile> {
   return api.patch<Profile>("/me", { timezone })
 }
 
-export function updateDisplayName(displayName: string): Promise<Profile> {
-  return api.patch<Profile>("/me", { display_name: displayName })
+/** PATCH /me also answers with any achievement badges the change earned (Personal Touch). */
+export type UpdatedProfile = Profile & { new_badges?: ApiBadge[] }
+
+export function updateDisplayName(displayName: string): Promise<UpdatedProfile> {
+  return api.patch<UpdatedProfile>("/me", { display_name: displayName })
 }
 
 /** Deletes the signed-in user's account and everything they own. The server answers 204 with no body. */

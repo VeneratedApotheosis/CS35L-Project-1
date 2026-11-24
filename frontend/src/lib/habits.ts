@@ -1,5 +1,6 @@
 import type { PlantTypeId } from "@/pottedPlant/plants/plantTypes"
 import { api } from "./api"
+import type { ApiBadge } from "./badges"
 
 export type IntervalUnit = "day" | "week" | "month"
 
@@ -86,8 +87,11 @@ export interface Habit {
   created_at: string
 }
 
-export function createHabit(input: CreateHabitInput): Promise<Habit> {
-  return api.post<Habit>("/habits", input)
+/** POST /habits answers with the habit and the achievement badges creating it earned. */
+export type CreatedHabit = Habit & { new_badges?: ApiBadge[] }
+
+export function createHabit(input: CreateHabitInput): Promise<CreatedHabit> {
+  return api.post<CreatedHabit>("/habits", input)
 }
 
 /** Read-model stats supplied by GET /habits and GET /habits/:id. */

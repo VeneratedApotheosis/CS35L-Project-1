@@ -81,7 +81,9 @@ describe("POST /habits", () => {
     const res = await post(body);
 
     expect(res.status).toBe(201);
-    expect(res.body).toEqual(createdHabit);
+    // The badge check has no fake data here, so it fails quietly and the
+    // habit is still created.
+    expect(res.body).toEqual({ ...createdHabit, new_badges: [] });
     const inserts = fakeSupabase.callsFor("habits", "insert");
     expect(inserts).toHaveLength(1);
     expect(inserts[0]?.payload).toMatchObject({

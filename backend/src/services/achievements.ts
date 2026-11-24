@@ -147,15 +147,15 @@ export async function checkBadges(
   });
   const added = await award(supabase, userId, check.newlyEarned);
 
-  const rows = new Map(earnedRows.map((row) => [row.badge_id, row]));
-  for (const row of added) rows.set(row.badge_id, row);
-  // Stored by another request at the same time, so this one did not get the
-  // row back. It is earned all the same.
-  const now = new Date().toISOString();
-  for (const id of check.newlyEarned) {
-    if (!rows.has(id))
-      rows.set(id, { badge_id: id, earned_at: now, seen_at: now });
-  }
+  // Some new ids were stored by another request at the same moment (the page
+  // and the load check often run together), so this one got no row back. Read
+  // the rows again, so their real seen_at decides whether they are unseen.
+  // This request does not report them as new, so they show once.
+  const stored =
+    added.length < check.newlyEarned.length
+      ? await loadEarned(supabase, userId)
+      : [...earnedRows, ...added];
+  const rows = new Map(stored.map((row) => [row.badge_id, row]));
   return { progress: check.progress, rows, added };
 }
 
