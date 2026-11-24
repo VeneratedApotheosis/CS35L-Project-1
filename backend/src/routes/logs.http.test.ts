@@ -101,6 +101,30 @@ describe("POST /habits/:id/logs", () => {
     expect(res.body.stats.overall_progress).toBeCloseTo(1 / 12);
   });
 
+  it("accepts a log past the period's target and reports it as 4/3", async () => {
+    // Three logs already meet the target of 3; a fourth is still allowed.
+    fakeSupabase.setResult("activity_logs", "select", {
+      data: [
+        row("2026-11-02", "5a1c2e3f-4b5d-4e6f-8a7b-9c0d1e2f3a01"),
+        row("2026-11-03", "5a1c2e3f-4b5d-4e6f-8a7b-9c0d1e2f3a02"),
+        row("2026-11-04", "5a1c2e3f-4b5d-4e6f-8a7b-9c0d1e2f3a03"),
+        row("2026-11-04"),
+      ],
+      error: null,
+    });
+
+    const res = await post();
+
+    expect(res.status).toBe(201);
+    expect(fakeSupabase.callsFor("activity_logs", "insert")).toHaveLength(1);
+    expect(res.body.stats.current_period).toMatchObject({
+      number: 1,
+      count: 4,
+      target: 3,
+    });
+    expect(res.body.stats.overall_progress).toBeCloseTo(4 / 12);
+  });
+
   it("logs an earlier day in the current period", async () => {
     const res = await post({ occurred_on: "2026-11-03" });
 
