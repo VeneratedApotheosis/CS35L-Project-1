@@ -306,7 +306,7 @@ Each step can be merged on its own. Stop after any step and the app still works.
 | 7 | Secret chapter (9) and secret handling in the book | backend + frontend | S |
 | 8 | Docs: backend design new section 8.12 (achievements) and 6.7 (endpoints), update the status line in badges-ideas.md, screens.md | docs | S |
 
-**Status (Nov 24).** Steps 1 and 2 are built on `feat/250-badges-engine`. The migration is written but not yet run on Supabase. Step 2 also built the garden badges that need no replay (everything in section 5 except Greenhouse and Prize Winner). Still unbuilt: Unbroken, Triple Threat Streak, Greenhouse, Prize Winner, all of chapters 6 and 8, and the secret badges.
+**Status (Nov 24).** Steps 1, 2 and 3 are built on `feat/250-badges-engine`. Step 3 also added `awardNewBadges`, the helper the write endpoints will call in step 5. The migration is written but not yet run on Supabase. Step 2 also built the garden badges that need no replay (everything in section 5 except Greenhouse and Prize Winner). Still unbuilt: Unbroken, Triple Threat Streak, Greenhouse, Prize Winner, all of chapters 6 and 8, and the secret badges.
 
 Steps 1 to 5 are the minimum for Dec 1: a real book with live progress and "Badge earned" moments. Steps 6 and 7 fill in the harder chapters. Until they land, their badges show as locked with no progress.
 
