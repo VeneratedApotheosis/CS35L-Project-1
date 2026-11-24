@@ -44,7 +44,7 @@ These carry over from the earlier rounds and from the osu! research. They are no
 | **Secret badges** keep their look | Pink starburst medal. Only ever shown once earned, never as locked or in progress, and never counted ahead of time |
 | **Text goes away** from the grid | Medals sit in compact grids with no name or rule under them. Details move to a hover card and a dialog |
 | **No rarity line** | "Earned by X% of players" is out of scope |
-| Placeholder data | The backend is not built, so the page reads `views/badges/placeholderBadges.ts`. `?demo=empty` shows the new-user state |
+| Data | The page reads `GET /me/badges` ([badges-plan.md](../badges-plan.md)). The style guide and tests use `views/badges/sampleBadgeBook.ts` |
 | Deadline | The project is due Dec 1 |
 
 ## 2. Where the idea comes from

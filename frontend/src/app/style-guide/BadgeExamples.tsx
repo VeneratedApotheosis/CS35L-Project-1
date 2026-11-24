@@ -11,7 +11,7 @@ import { Modal } from "@/components/Modal"
 import { Toast } from "@/components/Toast"
 import { BadgeCollection } from "@/views/badges/BadgeCollection"
 import { buildGroups } from "@/views/badges/groups"
-import { placeholderChapters, placeholderSecretBadges } from "@/views/badges/placeholderBadges"
+import { sampleBadgeBook } from "@/views/badges/sampleBadgeBook"
 
 const tiers: BadgeTier[] = ["bronze", "silver", "gold", "platinum"]
 const states: { state: BadgeState; label: string }[] = [
@@ -69,9 +69,9 @@ export function BadgeMedalExamples() {
   )
 }
 
-/** The whole Badges page body with the placeholder badges. */
+/** The whole Badges page body with a sample badge book. */
 export function BadgeCollectionExample() {
-  const groups = useMemo(() => buildGroups(placeholderChapters, placeholderSecretBadges), [])
+  const groups = useMemo(() => buildGroups(sampleBadgeBook), [])
   return <BadgeCollection groups={groups} />
 }
 

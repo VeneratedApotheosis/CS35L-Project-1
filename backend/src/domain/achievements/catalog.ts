@@ -20,7 +20,7 @@ export const CHAPTERS: readonly { id: ChapterId; title: string }[] = [
   { id: "garden", title: "Garden and plants" },
   { id: "comebacks", title: "Comebacks" },
   { id: "challenges", title: "Hard challenges" },
-  { id: "secret", title: "Secret" },
+  { id: "secret", title: "Secret badges" },
   { id: "meta", title: "Badge collector" },
 ];
 
