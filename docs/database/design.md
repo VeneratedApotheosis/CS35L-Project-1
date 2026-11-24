@@ -88,6 +88,7 @@ One row per logged activity. Rows are added or deleted, never updated.
 - An index on `(habit_id, occurred_on)` speeds up period counts.
 - There is no `user_id`. The owner is the habit's `owner_id`.
 - Several logs on the same day are allowed.
+- `occurred_on` has no constraint tying it to the habit's dates. A log for a habit that has not started has an `occurred_on` before `start_date`, and the backend counts it toward the first period.
 
 ---
 
@@ -101,7 +102,7 @@ One row per logged activity. Rows are added or deleted, never updated.
 | `habits` | Your own | As yourself (`owner_id` is you) | Your own | Your own |
 | `activity_logs` | Logs of your habits | Logs of your habits | No one | Logs of your habits |
 
-The "current period only" rule for logs is **not** in the database. The backend enforces it. The policies for the planned shared habit tables are in [section 8.3](#83-row-level-security).
+The logging rules are **not** in the database: only the current period, nothing in the future, today only before the start, and nothing after the end (see [the backend design](../backend/design.md#81-periods-and-logging)). The policies only check that the habit is yours, so a direct insert with your token could add a log for any date. The backend enforces the rules. The policies for the planned shared habit tables are in [section 8.3](#83-row-level-security).
 
 ### 3.2 Column grants
 
@@ -153,6 +154,8 @@ The planned functions for shared habits are in [section 8.4](#84-functions-and-t
 | Profile row is created by a trigger, not an insert policy | Works for every sign-in method with no frontend code |
 | No `habits` column can be updated, enforced with column grants | Accountability comes before flexibility: a habit is a commitment. RLS can't restrict columns, and a grant is an allow-list |
 | Habits are hard deleted, with a confirmation | Badges and streaks are computed, so nothing stored is lost |
+| Logging date rules and the not-started rule are in the backend, not the database | They depend on the user's timezone and on dates computed from the habit, which are awkward to express in a policy. A log is a plain fact (a date), and the backend works out which period it counts toward when it is shown |
+| Logs are never updated, and stats are never stored | A fix is a delete and a new log. Progress, streaks, health, growth, badges and the dashboard are calculated from habits and logs each time, so they cannot go out of sync |
 | Email is not copied to `profiles` | A copy goes stale and could leak |
 | One timezone per user, on the profile | The server needs it to know what "today" is |
 | Delete account is a database function | No admin key is needed |

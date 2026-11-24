@@ -62,32 +62,37 @@ Every habit is a potted plant on a wall of shelves standing on the page itself, 
 
 ### 3 Overall Dashboard
 
-The current `/dashboard` page uses `GET /dashboard` to show active habit count,
-overall consistency (a dash while unavailable), and current streaks per habit.
-The backend's best streak is highlighted (#213). Streaks are labelled in periods,
-and future habits show "Not started yet". New users see a friendly empty state
-with a create-habit link. Successful creation redirects here and refreshes the
-summary (#170). "A little attention" lists the backend's `needs_attention`
-habits with neutral health labels and links to their details; an empty list
-shows encouragement (#214). This includes missed last periods through the
-backend's existing health rule. "Finished habits" shows expired habits from the
-backend's `finished` list with the final badge, progress and consistency (#215).
-No-badge results (under 60%) have a distinct dashed, muted treatment and an
-explicit label; awarded results have a solid accent and badge-level label.
-An empty history shows encouragement. The full badges page is still planned;
-the remaining planned presentation is described below.
+The Dashboard is a habit list with a summary above it. Everything comes from one call, `GET /dashboard` ([6.5](../backend/design.md#65-dashboard)). It refreshes every 60 seconds. The numbers are calculated by the backend, and the page only formats them.
 
-A summary of activity across all active habits.
+**Summary.** Three cards:
 
-- **Active habits:** count of habits currently tracked.
-- **Overall consistency:** average consistency across active habits ([rule 8.5](../backend/design.md#85-overall-consistency)). Shows "—" if no habit has finished a period yet.
-- **Habit list.** Each row shows:
-  - Habit name
-  - Current period progress (e.g., 2/3 this week)
-  - Streak (e.g., 3 weeks)
-  - Remaining duration
-  - Mini calendar: green on days with logs, gray otherwise. Missed goals are shown per period, not per day.
-- Clicking a habit opens Habit Details.
+| Card | Shows | Rule |
+| --- | --- | --- |
+| Active habits | The count, with a note that habits that have not started yet are included | |
+| Overall consistency | A percentage, or "—" with "Available after your first completed period." until a habit has finished a period | [8.5](../backend/design.md#85-overall-consistency) |
+| Best current streak | The longest streak in periods, with the habit's name as a link. "—" and "Meet a goal to start a streak." when no habit has a streak | [8.6](../backend/design.md#86-streaks) |
+
+**A little attention.** The habits whose plant is not healthy, wilted first, each as a link to its Details page with a neutral label ("Wilted", "Slightly wilted"). A habit whose last period was missed is always here, because a miss makes the plant at least slightly wilted ([8.8](../backend/design.md#88-plant-health)). With none, a message says nothing needs extra attention.
+
+**Current streaks** (the habit list). One row for each active habit, longest streak first. A row has:
+
+- The habit's name, linking to Habit Details.
+- "Not started yet" under the name before the start date.
+- The streak in periods ("3 periods", since the period can be days, weeks or months). The row of the best streak has a highlight and a "Best streak" label.
+
+There is no per-row period progress, remaining time or calendar. Those are on Habit Details.
+
+**Finished habits.** Expired habits, most recently ended first. Each row has the name (a link to Habit Details), the end date, a badge label (Gold, Silver or Bronze badge, or "No badge"), the final progress and the final consistency. A habit under 60% of its target has no badge. It has a dashed, muted look and a short encouraging note, and a badge has a solid accent. With none, a message says final results will appear here.
+
+**States.**
+
+- **New user:** with no active habits, "Current streaks" is replaced by a card with a **Create a habit** link. If there are finished habits it reads "No active habits".
+- **Loading:** "Loading your dashboard…".
+- **Error:** "Couldn't load your dashboard" with **Try again**. A 401 shows "Sign in to see your dashboard" with **Sign in again**.
+- **After creating a personal habit,** Create Habit redirects here and the summary refreshes (#170).
+
+The Badges screen ([6](#6-badges-and-habit-history)) is still planned and will hold the full badge and history view.
+
 - **Nav:** My Garden, Badges, Settings.
 
 ### 4 Habit Details
