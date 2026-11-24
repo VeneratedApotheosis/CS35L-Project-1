@@ -9,6 +9,7 @@ import { badgesRouter } from "./routes/badges.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { habitsRouter } from "./routes/habits.js";
 import { healthRouter } from "./routes/health.js";
+import { historyRouter } from "./routes/history.js";
 import { logsRouter } from "./routes/logs.js";
 import { meRouter } from "./routes/me.js";
 
@@ -27,6 +28,7 @@ app.use(sharedHabitsRouter);
 app.use(logsRouter);
 app.use(dashboardRouter);
 app.use(badgesRouter);
+app.use(historyRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
