@@ -65,25 +65,7 @@
   color: var(--color-text-secondary);
 }
 
-/* ---- Card ---------------------------------------------------------------- */
-.badge-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-6) var(--space-4) var(--space-4);
-  text-align: center;
-}
-.badge-card .badge-medal { --medal-size: 9rem; }
-.badge-card[data-state="locked"] { background: var(--color-surface-secondary); border-style: dashed; border-color: var(--color-border-strong); }
-.badge-card__text { display: flex; flex-direction: column; gap: var(--space-1); }
-.badge-card__name { margin: 0; }
-.badge-card[data-state="locked"] .badge-card__name { color: var(--color-text-secondary); }
-.badge-card__progress { display: flex; align-items: center; gap: var(--space-2); width: 100%; }
-.badge-card[data-state="in_progress"] { border-color: var(--color-border-strong); }
-.badge-card__meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); }
-
+/* ---- Pills ---------------------------------------------------------------- */
 .badge-pill {
   --pill-dot: var(--color-border-strong);
   display: inline-flex;
@@ -96,7 +78,6 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
 }
-.badge-card[data-state="locked"] .badge-pill { background: var(--color-surface); }
 .badge-pill[data-tier="bronze"] { --pill-dot: var(--badge-bronze); }
 .badge-pill[data-tier="silver"] { --pill-dot: var(--badge-silver); }
 .badge-pill[data-tier="gold"] { --pill-dot: var(--badge-gold); }
@@ -104,66 +85,187 @@
 .badge-pill__dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--pill-dot); }
 .badge-pill--secret { padding-left: var(--space-3); color: var(--color-text); }
 .badge-pill--secret .icon { color: var(--badge-secret); }
-.badge-card[data-secret] { border-color: var(--badge-secret); }
 
-/* ---- Page mockup --------------------------------------------------------- */
-.badge-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr)); }
-.badge-summary { display: flex; flex-direction: column; gap: var(--space-5); }
-.badge-summary__top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
-.badge-summary__tiers { display: flex; flex-wrap: wrap; gap: var(--space-6); }
-.badge-summary__tier { display: flex; align-items: center; gap: var(--space-2); }
-.badge-summary__tier strong { font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
-.badge-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.badge-spotlight { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; }
+/* ---- Style guide helpers ---------------------------------------------------- */
 .badge-lineup { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-6); }
 .badge-lineup figure { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); margin: 0; }
 
-/* ---- Badges page (#253) --------------------------------------------------- */
-.badge-grid { list-style: none; margin: 0; padding: 0; }
-.badge-grid__item { display: flex; min-width: 0; }
-.badge-grid__item > * { flex: 1; }
+/*
+ * The badge book (#253, docs/frontend/badges-book.md). A cover, then pages of
+ * slots. Flat fills only: the cover, the paper and the spine are three tokens.
+ */
+.badge-book { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-4); width: 100%; max-width: 64rem; margin-inline: auto; }
+
+/* The cover and the wood behind the pages. */
+.badge-book__board {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--book-cover);
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+.badge-cover { display: grid; place-items: center; padding: clamp(var(--space-4), 5vw, var(--space-12)); }
+.badge-cover__label {
+  width: min(100%, 34rem);
+  padding: clamp(var(--space-5), 4vw, var(--space-10));
+  border-radius: var(--radius-lg);
+  background: var(--book-page);
+  border: 1px solid var(--color-border);
+  text-align: center;
+  align-items: center;
+}
+.badge-cover__heading { align-items: center; }
+.badge-cover__tiers, .badge-cover__latest { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-5); list-style: none; margin: 0; padding: 0; }
+.badge-cover__latest { gap: var(--space-3); }
+.badge-cover__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
+.badge-summary__tier { display: flex; align-items: center; gap: var(--space-2); text-align: left; }
+.badge-summary__tier strong { font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
 .badge-summary__tier-text { gap: 0; }
 
-.badge-tabs { display: flex; gap: var(--space-2); border-bottom: 1px solid var(--color-border-strong); }
-.badge-tab {
+/* Open book: arrows either side of the pages. */
+.badge-book__stage { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); }
+.badge-book__arrow { min-width: var(--touch-target); min-height: var(--touch-target); }
+.badge-book__counter { text-align: center; margin: 0; font-variant-numeric: tabular-nums; }
+
+.badge-book__spread { position: relative; display: grid; grid-template-columns: 1fr 1fr; perspective: 2400px; }
+.badge-book__half { position: relative; min-width: 0; display: grid; }
+/* A flat strip down the middle where the pages are bound. */
+.badge-book__spine { position: absolute; z-index: 4; top: 0; bottom: 0; left: 50%; width: 0.5rem; transform: translateX(-50%); background: var(--book-spine); pointer-events: none; }
+.badge-book__single { display: grid; animation: badge-fade var(--transition-slow) both; }
+
+.badge-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 31rem;
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  background: var(--book-page);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.badge-page--left { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+.badge-page--right { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+.badge-book__single .badge-page { border-radius: var(--radius-md); min-height: 0; }
+.badge-page--blank { background: var(--book-page); }
+.badge-page__title { margin: 0; }
+.badge-page__continued { color: var(--color-text-muted); font-weight: var(--font-weight-regular); }
+.badge-page__note { margin: 0; max-width: 28rem; }
+.badge-page__grid { flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-content: start; gap: var(--space-4) var(--space-1); list-style: none; margin: 0; padding: 0; }
+.badge-page__cell { display: grid; min-width: 0; }
+.badge-page__number { margin: 0; text-align: center; font-variant-numeric: tabular-nums; }
+
+/* The leaf that turns. It hinges on the spine and shows two pages back to back. */
+.badge-leaf { position: absolute; z-index: 3; top: 0; bottom: 0; width: 50%; transform-style: preserve-3d; animation-duration: 450ms; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
+.badge-leaf--next { right: 0; transform-origin: left center; animation-name: badge-turn-next; }
+.badge-leaf--prev { left: 0; transform-origin: right center; animation-name: badge-turn-prev; }
+.badge-leaf__face { position: absolute; inset: 0; display: grid; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.badge-leaf__face--back { transform: rotateY(180deg); }
+@keyframes badge-turn-next { from { transform: rotateY(0deg); } to { transform: rotateY(-180deg); } }
+@keyframes badge-turn-prev { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+@keyframes badge-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- A slot: just the badge, details on hover, focus or click --------------- */
+.badge-slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.badge-slot .badge-medal { --medal-size: min(100%, 6.25rem); }
+.badge-slot:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.badge-slot--small { width: 3.5rem; flex: 0 0 auto; }
+.badge-slot--small .badge-medal { --medal-size: 3.5rem; }
+.badge-slot--empty { border: 2px dashed var(--color-border-strong); opacity: 0.6; }
+.badge-slot--empty > span { display: block; }
+
+/* A finished habit: the plant in a soft frame, with its level medal in the corner. */
+.badge-slot__frame { position: relative; display: block; width: 84%; aspect-ratio: 1; border-radius: var(--radius-md); background: var(--color-surface-secondary); overflow: visible; }
+.badge-slot__frame > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.badge-slot .badge-slot__level { position: absolute; top: -0.5rem; right: -0.5rem; --medal-size: 2.5rem; }
+
+.badge-slot__tip {
+  display: none;
+  position: absolute;
+  z-index: var(--z-tooltip);
+  left: 50%;
+  bottom: calc(100% + var(--space-1));
+  transform: translateX(-50%);
+  width: 15rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover);
+  text-align: left;
+  pointer-events: none;
+}
+.badge-slot[data-row="0"] .badge-slot__tip { bottom: auto; top: calc(100% + var(--space-1)); }
+.badge-slot__tip-row { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.badge-slot:focus-visible .badge-slot__tip { display: flex; }
+@media (hover: hover) {
+  .badge-slot:hover .badge-slot__tip { display: flex; }
+  .badge-slot:not(.badge-slot--habit):hover .badge-medal { transform: translateY(-2px); }
+  .badge-slot .badge-medal { transition: transform var(--transition-fast); }
+}
+
+/* ---- Chapter ribbons ---------------------------------------------------- */
+.badge-ribbons { display: flex; gap: var(--space-2); overflow-x: auto; padding: var(--space-1) var(--space-1) var(--space-2); scrollbar-width: thin; }
+.badge-ribbon {
+  flex: 0 0 auto;
   display: inline-flex; align-items: center; gap: var(--space-2);
   min-height: var(--touch-target);
   padding: var(--space-2) var(--space-4);
-  border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: transparent; color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-border-strong);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   font-weight: var(--font-weight-bold);
 }
-.badge-tab:hover { background: var(--color-surface-hover); }
-.badge-tab[aria-selected="true"] { color: var(--color-text); border-bottom-color: var(--color-primary); }
-.badge-tab:focus-visible, .badge-panel:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
-.badge-tab__count { padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--color-surface-secondary); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
+.badge-ribbon:hover { background: var(--color-surface-hover); }
+.badge-ribbon[aria-current="page"] { border-top-color: var(--color-primary); color: var(--color-text); background: var(--book-page); }
+.badge-ribbon[data-chapter="secret"] { border-top-color: var(--badge-secret); }
+.badge-ribbon:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.badge-ribbon__count { font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
 
-/* A finished habit's badge: its plant, a small level medal, its name and end date. */
-.habit-badge {
-  position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
-  width: 100%; min-width: 0;
-  padding: var(--space-4) var(--space-4) var(--space-4);
-  text-align: center; font: inherit; color: inherit; cursor: pointer;
-  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+/* ---- Details dialog ----------------------------------------------------- */
+.badge-details__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-6); text-align: center; }
+.badge-details__status { align-items: center; min-width: 8rem; }
+.badge-details__pills { display: flex; gap: var(--space-1); justify-content: center; margin: 0; }
+.badge-details__bar { width: 10rem; height: 0.5rem; border-radius: var(--radius-pill); background: var(--color-border); overflow: hidden; }
+.badge-details__bar > span { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--color-primary); }
+.badge-details__plant { width: 9rem; }
+.badge-details__plant > svg { display: block; width: 100%; height: auto; }
+.badge-details__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-4); margin: 0; }
+.badge-details__facts > div:first-child { grid-column: 1 / -1; }
+.badge-details__facts dd { margin: 0; font-weight: var(--font-weight-bold); }
+.badge-details__actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); }
+.badge-spotlight { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; }
+
+/* ---- Phones: one page at a time -------------------------------------------- */
+@media (max-width: 43.999rem) {
+  .badge-book__stage { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "board board board" "prev . next"; }
+  .badge-book__stage > .badge-book__board { grid-area: board; }
+  .badge-book__stage > .badge-book__arrow:first-child { grid-area: prev; justify-self: start; }
+  .badge-book__stage > .badge-book__arrow:last-child { grid-area: next; justify-self: end; }
+  .badge-page { padding: var(--space-4); }
+  .badge-page__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .badge-slot .badge-medal { --medal-size: min(100%, 5.5rem); }
 }
-.habit-badge:hover { box-shadow: var(--shadow-popover); }
-.habit-badge:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
-.habit-badge__medal { position: absolute; top: var(--space-3); right: var(--space-3); }
-.habit-badge__plant { width: min(100%, 11rem); }
-.habit-badge__plant > svg { display: block; width: 100%; height: auto; }
-.habit-badge__text { display: flex; flex-direction: column; gap: var(--space-1); }
-.habit-badge__name { overflow-wrap: anywhere; }
-.habit-badge-empty { align-items: flex-start; }
-
-.habit-badge-detail__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-6); }
-.habit-badge-detail__plant { width: 9rem; }
-.habit-badge-detail__plant > svg { display: block; width: 100%; height: auto; }
-.habit-badge-detail__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-4); margin: 0; }
-.habit-badge-detail__facts dd { margin: 0; font-weight: var(--font-weight-bold); }
 
 @media (prefers-reduced-motion: reduce) {
-  .habit-badge { transition: none; }
+  .badge-book__single { animation: none; }
+  .badge-slot .badge-medal { transition: none; }
 }
-.habit-badge-detail__facts > div:first-child { grid-column: 1 / -1; }

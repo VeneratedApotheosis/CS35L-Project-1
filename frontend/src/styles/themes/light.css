@@ -43,6 +43,11 @@
   --color-shelf-top: var(--birch-top);
   --color-shelf-edge: var(--birch-deep);
 
+  /* The badge book: the cover board, the paper and the strip where the pages are bound. */
+  --book-cover: var(--birch-deep);
+  --book-page: var(--milk-bright);
+  --book-spine: var(--pearl);
+
   --color-focus: var(--teal);
   --color-link: var(--teal-deep);
 }

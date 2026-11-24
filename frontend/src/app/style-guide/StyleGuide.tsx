@@ -23,7 +23,7 @@ import { ProgressRing } from "@/components/ProgressRing"
 import { ProgressBar } from "@/components/ProgressBar"
 import { useTheme } from "@/styles/ThemeProvider"
 import { PlantCardExamples } from "./PlantCardExamples"
-import { BadgeMedalExamples, BadgesPageExample, BadgeMomentExamples } from "./BadgeExamples"
+import { BadgeMedalExamples, BadgeBookExample, BadgeMomentExamples } from "./BadgeExamples"
 
 /* ------------------------------------------------------------------ */
 /* Showcase data                                                       */
@@ -488,10 +488,10 @@ export default function StyleGuide() {
         <Section
           index="11"
           eyebrow="Achievements"
-          title="Badges page"
-          description="A summary of what is earned, filters, and a grid of badge cards. Cards state the name, rule, tier and status in words. In-progress badges show a count and bar, locked ones use a dashed, recessed card, and secret badges are not listed at all until they are earned, when they appear with their own starburst medal. The filters and every badge here are demo data."
+          title="Badge book"
+          description="The Badges page is a book. It opens on a cover with the earned count and the latest badges, then chapters of slots that you turn through: two pages at a time on wide screens and one on phones. Slots hold only the badge. Hover or focus one for a small card, or click it for the details, with buttons to step to the next badge. The ribbon tabs jump to a chapter and the arrow keys turn pages. The Secret chapter only appears once a secret badge is earned. All the badges here are demo data."
         >
-          <BadgesPageExample />
+          <BadgeBookExample />
         </Section>
 
         <Section

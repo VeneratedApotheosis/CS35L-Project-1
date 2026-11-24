@@ -46,6 +46,11 @@
   --color-shelf-top: #d2b58c;
   --color-shelf-edge: #94744b;
 
+  /* The badge book: the cover board, the paper and the strip where the pages are bound. */
+  --book-cover: var(--color-shelf-edge);
+  --book-page: var(--color-surface);
+  --book-spine: var(--color-surface-secondary);
+
   --color-focus: var(--teal);
   --color-link: #7bd7c4;
 }

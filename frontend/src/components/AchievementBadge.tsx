@@ -102,8 +102,10 @@ export function BadgeMedal({ tier, state = "earned", size = "md", secret = false
   )
 }
 
-export interface BadgeCardProps {
+/** Everything the Badges page knows about one achievement badge. */
+export interface BadgeInfo {
   name: string
+  /** The rule: how to earn it. */
   description: string
   tier: BadgeTier
   state: BadgeState
@@ -119,29 +121,24 @@ export interface BadgeCardProps {
   earnedOn?: string
 }
 
-/** One badge in the grid on the Badges page. */
-export function BadgeCard({ name, description, tier, state, art, secret = false, progress, earnedOn }: BadgeCardProps) {
-  const shownState: BadgeState = secret ? "earned" : state
-  const stateLabel = shownState === "earned" ? "Earned" : shownState === "in_progress" ? "In progress" : "Locked"
-  const label = `${name}. ${secret ? "Secret. " : ""}${tierLabels[tier]}. ${stateLabel}`
+/** The state a badge is shown in: secret badges are always earned. */
+export const shownState = (badge: Pick<BadgeInfo, "state" | "secret">): BadgeState => (badge.secret ? "earned" : badge.state)
+
+/** "Ten Taps. Bronze. In progress, 7 of 10." for screen readers and hover cards. */
+export function badgeSummary(badge: BadgeInfo): string {
+  const state = shownState(badge)
+  const status = state === "earned" ? (badge.earnedOn ? `Earned ${badge.earnedOn}` : "Earned")
+    : state === "in_progress" ? (badge.progress ? `In progress, ${badge.progress.count} of ${badge.progress.target}` : "In progress")
+    : "Locked"
+  return `${badge.name}. ${badge.secret ? "Secret. " : ""}${tierLabels[badge.tier]}. ${status}.`
+}
+
+/** The tier (and "Secret") as a small pill. */
+export function BadgePills({ tier, secret = false }: { tier: BadgeTier; secret?: boolean }) {
   return (
-    <article className="card badge-card" data-state={shownState} data-secret={secret || undefined} aria-label={label}>
-      <BadgeMedal tier={tier} state={shownState} secret={secret} art={art} progress={progress ? progress.count / progress.target : 0} />
-      <div className="badge-card__meta">
-        {secret && <span className="badge-pill badge-pill--secret"><Icon icon={Sparkles} size="xs" />Secret</span>}
-        <span className="badge-pill" data-tier={tier}><span className="badge-pill__dot" />{tierLabels[tier]}</span>
-        {shownState === "earned" && earnedOn && <span className="text-caption text-muted badge-card__date">{earnedOn}</span>}
-        {shownState === "in_progress" && progress && (
-          <span className="text-caption text-muted badge-card__date" role="progressbar" aria-label={`${name} progress`} aria-valuemin={0} aria-valuemax={progress.target} aria-valuenow={Math.min(progress.count, progress.target)}>
-            {progress.count} of {progress.target}
-          </span>
-        )}
-        {shownState === "locked" && <span className="text-caption text-muted badge-card__date">Locked</span>}
-      </div>
-      <div className="badge-card__text">
-        <h3 className="text-h3 badge-card__name">{name}</h3>
-        <p className="text-body-sm text-secondary">{description}</p>
-      </div>
-    </article>
+    <>
+      {secret && <span className="badge-pill badge-pill--secret"><Icon icon={Sparkles} size="xs" />Secret</span>}
+      <span className="badge-pill" data-tier={tier}><span className="badge-pill__dot" />{tierLabels[tier]}</span>
+    </>
   )
 }
