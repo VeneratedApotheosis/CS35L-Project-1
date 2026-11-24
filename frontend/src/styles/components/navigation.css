@@ -249,6 +249,16 @@
 
 /* On a phone a page keeps the notch clear above it and has room below. */
 @media (--phone) {
+  .app-shell { min-height: 100dvh; }
+  .app-shell__content {
+    padding-top: calc(var(--page-padding) + env(safe-area-inset-top, 0px));
+    padding-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
+  }
+  .navbar__bar {
+    padding-left: max(var(--space-2), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--space-2), env(safe-area-inset-right, 0px));
+  }
   .app-shell--wide {
     --page-gutter: var(--space-3);
   }

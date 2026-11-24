@@ -44,6 +44,10 @@ body {
   color: var(--color-text);
 }
 
+@media (--phone) {
+  body { min-height: 100dvh; }
+}
+
 button,
 input,
 textarea,
