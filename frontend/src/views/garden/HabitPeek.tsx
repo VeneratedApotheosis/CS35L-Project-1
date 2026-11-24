@@ -9,13 +9,14 @@ import { ProgressBar } from "@/components/ProgressBar"
 import { durationPhrase, periodPhrase } from "@/lib/goal"
 import { getHabit, habitKeys, type HabitWithStats } from "@/lib/habits"
 import { habitHref } from "@/lib/paths"
-import { encouragement, progressTitle, shortDate, unitWord } from "./HabitCard"
+import { encouragement, progressTitle, remainingLine, shortDate, unitWord } from "./HabitCard"
 
 const healthLabels = { healthy: "Healthy", slightly_wilted: "Slightly wilted", wilted: "Wilted" } as const
 
 export interface HabitPeekProps {
   habit: HabitWithStats
   userId: string
+  today: string
   canLog: boolean
   loggingDisabled: boolean
   onLogToday: () => void
@@ -33,7 +34,7 @@ export interface HabitPeekProps {
  * button is left to that plant, which opens its panel (or closes this one, if it is the same plant).
  * On a phone it is a card at the bottom of the screen (see garden.css).
  */
-export function HabitPeek({ habit, userId, canLog, loggingDisabled, onLogToday, onLogAnotherDay, onDelete, onClose }: HabitPeekProps) {
+export function HabitPeek({ habit, userId, today, canLog, loggingDisabled, onLogToday, onLogAnotherDay, onDelete, onClose }: HabitPeekProps) {
   const box = useRef<HTMLDivElement>(null)
   const detail = useQuery({
     queryKey: habitKeys.detail(userId, habit.id),
@@ -81,6 +82,7 @@ export function HabitPeek({ habit, userId, canLog, loggingDisabled, onLogToday, 
 
       <div className="garden-peek__progress">
         <ProgressBar label={`${habit.name}: current period`} caption={progressTitle(habit)} count={count} target={target} />
+        <p className="garden-peek__note">{remainingLine(habit, today)}</p>
         <p className="garden-peek__note">{encouragement(habit)}</p>
       </div>
 

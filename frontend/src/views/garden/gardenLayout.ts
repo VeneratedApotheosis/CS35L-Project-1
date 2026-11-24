@@ -6,8 +6,8 @@ export const GARDEN_MAX_COLS = 3
 
 /**
  * The Garden draws the login wall's shelves and pots 1.5 times as big. The layout below is in the
- * login wall's units; the screen sizes are those times GARDEN_SCALE. It is fixed: pots never
- * scale with the screen, only how many fit across changes.
+ * login wall's units. Desktop uses GARDEN_SCALE; a narrow wall scales the single-column
+ * layout uniformly so its shelf and plants fit together.
  */
 export const GARDEN_SCALE = 1.5
 
@@ -47,6 +47,12 @@ export function gardenCols(width: number): number {
   if (width <= 0) return GARDEN_MAX_COLS
   const room = width - GARDEN_SCALE * (2 * SHELF_MARGIN + 2 * STAGGER)
   return Math.min(GARDEN_MAX_COLS, Math.max(1, Math.floor(room / (GARDEN_SCALE * GARDEN_PITCH))))
+}
+
+/** Scale a single-column shelf to fit a narrow measured wall; keep desktop sizes unchanged. */
+export function gardenScale(width: number): number {
+  const oneColumnWidth = GARDEN_PITCH + 2 * SHELF_MARGIN
+  return width > 0 ? Math.min(GARDEN_SCALE, width / oneColumnWidth) : GARDEN_SCALE
 }
 
 /**

@@ -12,10 +12,10 @@ import { potLookFromSeed } from "@/pottedPlant/pots"
 import {
   GARDEN_BRACKET_INSET,
   GARDEN_POT_SIZE,
-  GARDEN_SCALE,
   gardenCols,
   gardenExtra,
   gardenLayout,
+  gardenScale,
   peekSide,
 } from "./gardenLayout"
 import { GardenPlant } from "./GardenPlant"
@@ -61,9 +61,10 @@ const loggable = (habit: HabitWithStats, today: string) => habit.stats.state !==
 /** One group of shelves: the plants in it, and, for the active ones, the empty pot at the end that adds a habit. */
 function ShelfGroup({ habits, withAdd, shared }: { habits: readonly HabitWithStats[]; withAdd: boolean; shared: Shared }) {
   const count = habits.length + (withAdd ? 1 : 0)
+  const scale = gardenScale(shared.width)
   const extra = gardenExtra(shared.width, shared.cols)
   const layout = useMemo(() => gardenLayout(count, shared.cols, extra), [count, shared.cols, extra])
-  const pixelsOf = (units: number) => units * GARDEN_SCALE
+  const pixelsOf = (units: number) => units * scale
   // The canvas is centred in the wall, so a plant's place in the wall is its place in the canvas and the space before it.
   const canvasLeft = Math.max(0, (shared.width - pixelsOf(layout.width)) / 2)
   const addSlot = withAdd ? layout.slots[habits.length] : null
@@ -85,12 +86,12 @@ function ShelfGroup({ habits, withAdd, shared }: { habits: readonly HabitWithSta
           const can = loggable(habit, shared.today)
           return (
             <GardenPlant key={habit.id} habit={habit} userId={shared.userId} today={shared.today}
-              x={slot.x} shelfY={layout.shelves[slot.shelf].y - BOARD.rest} size={GARDEN_POT_SIZE} scale={GARDEN_SCALE}
+              x={slot.x} shelfY={layout.shelves[slot.shelf].y - BOARD.rest} size={GARDEN_POT_SIZE} scale={scale}
               side={peekSide(canvasLeft + pixelsOf(slot.x), shared.width)}
               canLog={can && !shared.loggingDisabled}
               peekOpen={shared.peekId === habit.id}
               peek={
-                <HabitPeek habit={habit} userId={shared.userId}
+                <HabitPeek habit={habit} userId={shared.userId} today={shared.today}
                   canLog={can} loggingDisabled={shared.loggingDisabled}
                   onLogToday={() => shared.logToday(habit)}
                   onLogAnotherDay={() => shared.logAnotherDay(habit)}
@@ -121,7 +122,7 @@ function ShelfGroup({ habits, withAdd, shared }: { habits: readonly HabitWithSta
  * The Garden: every habit's plant on a wall of shelves, with the empty pot at the end of the
  * active ones that adds a habit, and the finished habits on their own shelves beneath. At most
  * three pots stand on a shelf, fewer on a narrow screen, and more habits just add shelves. The
- * pots are the login wall's, 1.5 times as big, and never scale with the screen. Everything else is
+ * pots are the login wall's, 1.5 times as big on desktop, scaled together with their shelves on narrow walls. Everything else is
  * in GardenPlant, the peek panel and the date dialog.
  */
 export function GardenShelves({ habits, userId, today, loggingDisabled, onLogToday, onLogOn }: GardenShelvesProps) {
@@ -165,6 +166,7 @@ export function GardenShelves({ habits, userId, today, loggingDisabled, onLogTod
 
   return (
     <div ref={wall} className="garden-shelves">
+      {active.length > 0 && <p className="garden-touch-hint">Tap a plant for details. Touch and hold to log today.</p>}
       <ShelfGroup habits={active} withAdd shared={shared} />
       {finished.length > 0 && (
         <section aria-labelledby="garden-finished" className="garden-finished">

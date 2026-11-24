@@ -35,17 +35,21 @@
 /* The Garden's shelves, standing on the page itself. The boards use the .wall__* colours from login.css. */
 .garden-shelves {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: var(--space-8);
 }
 
 .garden-finished {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: var(--space-4);
 }
 
 .garden-wall {
   position: relative;
-  overflow-x: clip;
+  min-width: 0;
 }
 
 .garden-wall__canvas {
@@ -92,6 +96,8 @@
 .garden-plant[data-menu="true"] {
   z-index: 5;
 }
+/* The opened panel must paint above the separate hover-card text layer. */
+.garden-plant[data-menu="true"] { z-index: 7; }
 
 .garden-plant__art {
   position: absolute;
@@ -115,7 +121,7 @@
   background: transparent;
   cursor: pointer;
   pointer-events: auto;
-  touch-action: manipulation;
+  touch-action: pan-y;
   -webkit-touch-callout: none;
   user-select: none;
 }
@@ -331,17 +337,45 @@
 .garden-add__hit:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
 .garden-add__hit:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 
+/* Touch users cannot discover a hover-only gesture. */
+.garden-touch-hint { display: none; }
+@media (hover: none), (pointer: coarse) {
+  .garden-touch-hint {
+    display: block;
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    text-align: center;
+  }
+}
+
 /* On a phone there is no room beside a plant: the panel is a card at the bottom of the screen. */
 @media (max-width: 40rem) {
+  .garden-card, .garden-card__surface { display: none; }
+}
+
+@media (max-width: 40rem), (hover: none), (pointer: coarse) {
+  .garden-plant[data-menu="true"] { z-index: var(--z-modal); }
   .garden-pop {
     position: fixed;
     top: auto;
     transform: none;
     right: var(--space-4) !important;
-    bottom: var(--space-4);
+    bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4));
     left: var(--space-4) !important;
     z-index: var(--z-modal);
     width: auto;
+    max-height: max(0px, calc(100dvh - var(--mobile-nav-height) - env(safe-area-inset-bottom, 0px) - var(--space-8)));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: max(var(--card-pad), env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 52rem) and ((hover: none) or (pointer: coarse)) {
+  .garden-pop {
+    bottom: var(--space-4);
+    max-height: calc(100dvh - var(--space-8));
   }
 }
 
