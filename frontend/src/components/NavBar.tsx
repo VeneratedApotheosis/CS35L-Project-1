@@ -31,7 +31,7 @@ export function NavBar({ currentPath, preview = false }: {
               <li key={href} className="navbar__item">
                 {available ? (
                   <Link className="navbar__link" href={href} aria-label={label}
-                    aria-current={path === href ? "page" : undefined}>
+                    aria-current={path === href || (href === "/badges" && path === "/history") ? "page" : undefined}>
                     <Icon icon={icon} size="sm" />
                     {href === "/" ? (
                       <>
