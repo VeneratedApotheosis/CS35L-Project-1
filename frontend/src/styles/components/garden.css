@@ -350,11 +350,8 @@
 }
 
 /* On a phone there is no room beside a plant: the panel is a card at the bottom of the screen. */
-@media (max-width: 40rem) {
-  .garden-card, .garden-card__surface { display: none; }
-}
-
 @media (max-width: 40rem), (hover: none), (pointer: coarse) {
+  .garden-card, .garden-card__surface { display: none; }
   .garden-plant[data-menu="true"] { z-index: var(--z-modal); }
   .garden-pop {
     position: fixed;
