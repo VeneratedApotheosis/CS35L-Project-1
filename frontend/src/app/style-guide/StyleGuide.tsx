@@ -23,6 +23,7 @@ import { ProgressRing } from "@/components/ProgressRing"
 import { ProgressBar } from "@/components/ProgressBar"
 import { useTheme } from "@/styles/ThemeProvider"
 import { PlantCardExamples } from "./PlantCardExamples"
+import { BadgeMedalExamples, BadgesPageExample, BadgeMomentExamples } from "./BadgeExamples"
 
 /* ------------------------------------------------------------------ */
 /* Showcase data                                                       */
@@ -467,7 +468,7 @@ export default function StyleGuide() {
         </Section>
 
         <Section
-          index="08"
+          index="09"
           eyebrow="Garden"
           title="Plant cards"
           description="Each habit has a stable plant, a health label and current-period progress. Try every stage and health state, use the options with the keyboard, and switch themes above. All actions here use local demo data."
@@ -477,6 +478,33 @@ export default function StyleGuide() {
 
         <Section
           index="10"
+          eyebrow="Achievements"
+          title="Badge medals"
+          description="Round medals for the achievement badges. The rim shows the tier (Bronze, Silver, Gold, Platinum) and the edge gets fuller as the tier rises, so the tier never relies on color alone. The middle holds an icon. Earned badges are solid medals with a shine. In-progress badges are not medals yet: a flat disc inside a ring that fills with the tier color as you go. Locked ones are muted with a lock. Secret badges have their own pink starburst medal and only ever appear once earned."
+        >
+          <BadgeMedalExamples />
+        </Section>
+
+        <Section
+          index="11"
+          eyebrow="Achievements"
+          title="Badges page"
+          description="A summary of what is earned, filters, and a grid of badge cards. Cards state the name, rule, tier and status in words. In-progress badges show a count and bar, locked ones use a dashed, recessed card, and secret badges are not listed at all until they are earned, when they appear with their own starburst medal. The filters and every badge here are demo data."
+        >
+          <BadgesPageExample />
+        </Section>
+
+        <Section
+          index="12"
+          eyebrow="Achievements"
+          title="Earning a badge"
+          description="Earning one shows a toast for the common tiers. Rarer and secret badges get a dialog with the large medal."
+        >
+          <BadgeMomentExamples />
+        </Section>
+
+        <Section
+          index="13"
           eyebrow="Feedback"
           title="Modal and toast"
           description="Try the confirmation with Tab and Escape, then log an activity and undo it within five seconds. Both components follow the theme switch and reduced-motion preference."
