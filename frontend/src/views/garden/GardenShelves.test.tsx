@@ -283,6 +283,65 @@ describe("hold", () => {
   })
 })
 
+describe("touch interactions", () => {
+  it("explains tap and hold and shows the hover information in the tapped panel", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ ...read, stats: { ...read.stats, streak: 2 } }), { status: 200, headers: { "Content-Type": "application/json" } }))
+    show([read])
+    expect(screen.getByText("Tap a plant for details. Touch and hold to log today.")).toBeTruthy()
+    const button = plant(/^Read,/)
+    fireEvent.pointerEnter(button, { pointerType: "touch" })
+    fireEvent.pointerDown(button, { pointerType: "touch", button: 0, isPrimary: true })
+    fireEvent.pointerUp(button, { pointerType: "touch" })
+    fireEvent.click(button, { detail: 1 })
+    const panel = screen.getByRole("dialog", { name: "Read" })
+    expect(panel.textContent).toContain("5 days left this week")
+    expect(panel.textContent).toContain("One more to reach your goal!")
+    expect(within(panel).getByRole("progressbar").getAttribute("aria-valuenow")).toBe("2")
+    expect(await within(panel).findByText("2 weeks")).toBeTruthy()
+    fireEvent.click(within(panel).getByRole("button", { name: "Close" }))
+    expect(screen.queryByRole("dialog", { name: "Read" })).toBeNull()
+  })
+
+  it("opens the date action after a tap and lets the user cancel it", () => {
+    show([read])
+    const button = plant(/^Read,/)
+    fireEvent.pointerDown(button, { pointerType: "touch", button: 0, isPrimary: true })
+    fireEvent.pointerUp(button, { pointerType: "touch" })
+    fireEvent.click(button, { detail: 1 })
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Read" })).getByRole("button", { name: "Choose date" }))
+    expect(openDialog()).toBeTruthy()
+    expect(screen.queryByRole("dialog", { name: "Read" })).toBeNull()
+  })
+
+  it("does not log when the browser cancels a touch", () => {
+    vi.useFakeTimers()
+    show([read])
+    const button = plant(/^Read,/)
+    fireEvent.pointerDown(button, { pointerType: "touch", button: 0, isPrimary: true })
+    fireEvent.pointerCancel(button, { pointerType: "touch" })
+    act(() => void vi.advanceTimersByTime(HOLD_MS))
+    expect(onLogToday).not.toHaveBeenCalled()
+    expect(button.closest(".garden-plant")?.getAttribute("data-holding")).toBe("false")
+  })
+
+  it("logs once after a touch hold and cancels a hold when scrolling", () => {
+    vi.useFakeTimers()
+    show([read])
+    const button = plant(/^Read,/)
+    fireEvent.pointerDown(button, { pointerType: "touch", button: 0, isPrimary: true, clientX: 10, clientY: 10 })
+    expect(button.closest(".garden-plant")?.getAttribute("data-holding")).toBe("true")
+    fireEvent.scroll(window)
+    act(() => void vi.advanceTimersByTime(HOLD_MS))
+    expect(onLogToday).not.toHaveBeenCalled()
+    fireEvent.pointerDown(button, { pointerType: "touch", button: 0, isPrimary: true, clientX: 10, clientY: 10 })
+    act(() => void vi.advanceTimersByTime(HOLD_MS))
+    fireEvent.pointerUp(button, { pointerType: "touch" })
+    fireEvent.click(button, { detail: 1 })
+    expect(onLogToday).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole("dialog", { name: "Read" })).toBeNull()
+  })
+})
+
 describe("the panel beside the plant", () => {
   const open = () => {
     fireEvent.click(plant(/^Read,/), { detail: 1 })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { SHELF_MARGIN, STAGGER } from "../login/wall/layouts"
-import { CARD_GAP, GARDEN_MAX_COLS, GARDEN_PITCH, GARDEN_SCALE, HOVER_CARD_WIDTH, gardenCols, gardenExtra, gardenLayout, peekSide } from "./gardenLayout"
+import { CARD_GAP, GARDEN_MAX_COLS, GARDEN_PITCH, GARDEN_SCALE, HOVER_CARD_WIDTH, gardenCols, gardenExtra, gardenLayout, gardenScale, peekSide } from "./gardenLayout"
 
 describe("how many pots fit across", () => {
   it("never scales the pots: a narrower wall just holds fewer", () => {
@@ -28,6 +28,28 @@ describe("how many pots fit across", () => {
 
   it("is the most when the wall has not been measured", () => {
     expect(gardenCols(0)).toBe(3)
+  })
+})
+
+describe("narrow shelves", () => {
+  it("fits and centers every plant and board at mobile wall widths", () => {
+    for (const width of [264, 294, 334, 360, 390, 430]) {
+      const scale = gardenScale(width)
+      const layout = gardenLayout(5, gardenCols(width), gardenExtra(width, gardenCols(width)))
+      expect(layout.width * scale).toBeLessThanOrEqual(width + 1e-8)
+      for (const slot of layout.slots) {
+        const board = layout.shelves[slot.shelf]
+        expect(slot.x).toBeCloseTo((board.from + board.to) / 2)
+        expect(board.from * scale).toBeGreaterThanOrEqual(0)
+        expect(board.to * scale).toBeLessThanOrEqual(width + 1e-8)
+      }
+    }
+  })
+
+  it("keeps desktop sizes and avoids dividing by zero before measurement", () => {
+    expect(gardenScale(0)).toBe(GARDEN_SCALE)
+    expect(gardenScale(1000)).toBe(GARDEN_SCALE)
+    expect(gardenScale(264)).toBeLessThan(GARDEN_SCALE)
   })
 })
 
