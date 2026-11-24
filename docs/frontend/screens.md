@@ -49,7 +49,7 @@ Every main screen links to the others through the navigation bar.
 
 ### 2 Garden (home)
 
-Every habit is a potted plant on a wall of shelves standing on the page itself, with no card around them, in the order the habits were made. The pots and shelves are the login wall's, 1.5 times as big, with the pots a little lower on the board and further apart, and they never scale with the screen. At most three pots stand on a shelf (two or one when the screen is narrower), and more habits just add shelves. The shelves use the whole width of the screen, with half the side padding the other screens have, and each board runs further at both ends so half of the space left beside it is used. The last active slot is an empty pot that opens Create Habit. Finished habits are on their own shelves under a **Completed garden** heading beneath the active ones, for now (#252 will add the badge marker). The shelf drawing is shared with the login wall (`components/shelf/`), and the Garden's code is in `views/garden/`.
+Every habit is a potted plant on a wall of shelves standing on the page itself, with no card around them, in the order the habits were made. The pots and shelves are the login wall's, 1.5 times as big, with the pots a little lower on the board and further apart, and they never scale with the screen. At most three pots stand on a shelf (two or one when the screen is narrower), and more habits just add shelves. The shelves use the full measure ([Page width](design.md#7-layout)): the whole width of the screen, with half the side padding the other screens have, and each board runs further at both ends so half of the space left beside it is used. The last active slot is an empty pot that opens Create Habit. Finished habits are on their own shelves under a **Completed garden** heading beneath the active ones, for now (#252 will add the badge marker). The shelf drawing is shared with the login wall (`components/shelf/`), and the Garden's code is in `views/garden/`.
 
 - **At rest:** only the plant, at its real stage and health. The name is not shown: it is in the plant button's label for screen readers and appears on hover.
 - **Hover or keyboard focus:** a soft, see-through card opens behind the plant, which stands in front of it, with a faint ring round the plant. The card has the name, what is left ("5 days left this week", "Starts Nov 20" before the start, or "Finished"), a streak pill ("1 week streak", when there is a streak), the period's progress ("Weekly progress", "4/5" and the progress pills) and a line on how far the goal is ("One more to reach your goal!"). It takes no clicks. A touch has no hover.
@@ -92,7 +92,7 @@ A summary of activity across all active habits.
 
 ### 4 Habit Details
 
-A header and five soft cards, in a grid that fits one laptop screen (one column on a phone). The page uses a wider measure and less side padding than other screens. On a phone the cards stack (plant, this week, activity, overall, activity log), the calendar's squares and gaps get smaller, and the page keeps clear of the notch above and the bottom bar below. The three figures in a card stack only when the card itself is narrow. Everything comes from `GET /habits/:id`.
+A header and five soft cards, in a grid that fits one laptop screen (one column on a phone). The page uses the wide measure, with less side padding than other screens ([Page width](design.md#7-layout)). On a phone the cards stack (plant, this week, activity, overall, activity log), the calendar's squares and gaps get smaller, and the page keeps clear of the notch above and the bottom bar below. The three figures in a card stack only when the card itself is narrow. Everything comes from `GET /habits/:id`.
 
 **Header:** a "← Garden" pill, the habit's name as the title, its description if it has one (two lines at most) and **Delete**.
 
@@ -129,6 +129,8 @@ The three figures are in one row, and stack only when the card itself is narrow.
 - **Delete habit** (with confirmation). The outlined **Delete** button in the header opens a dialog that names the habit and says it can't be undone. Confirming calls `DELETE /habits/:id`, removes the habit and its logs, and goes back to the Garden. If the habit is already gone it counts as deleted. If deleting fails, the dialog stays open with an error. The code is `components/DeleteHabit.tsx`.
 
 ### 5 Create Habit
+
+The page uses the medium measure ([Page width](design.md#7-layout)); the page shell supplies its padding.
 
 | Field | Details |
 | --- | --- |
