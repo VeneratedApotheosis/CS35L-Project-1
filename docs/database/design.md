@@ -65,10 +65,11 @@ One row per habit.
 | `target_count` | int | 1 to 50 |
 | `interval_count` | int | 1 to 365 |
 | `interval_unit` | text | `day`, `week` or `month` |
-| `num_periods` | int | 1 to 52. Nullable, so indefinite habits can be added later |
+| `num_periods` | int | 1 to 52. Nullable in the schema, but indefinite habits are out of scope and the backend always sets it |
 | `start_date` | date | Required |
 | `created_at` | timestamptz | Defaults to now |
 
+- There is **no seed column** and no generator version. A plant's seed is made by hashing the habit's `id` in the frontend, so the same habit always draws the same plant. Growth stage and health are computed, not stored.
 - There is **no `end_date` column.** The end date is computed from the start date, interval and number of periods.
 - There is **no `timezone` column.** The timezone belongs to the profile.
 - The goal columns (`target_count` to `start_date`) will be locked after creation (#104). See section 3.2.
@@ -155,7 +156,7 @@ The planned functions for shared habits are in [section 8.4](#84-functions-and-t
 | Email is not copied to `profiles` | A copy goes stale and could leak |
 | One timezone per user, on the profile | The server needs it to know what "today" is |
 | Delete account is a database function | No admin key is needed |
-| `num_periods` is nullable | Groundwork for indefinite habits |
+| `num_periods` is nullable | The schema allows a missing value, but indefinite habits are out of scope and the backend requires it |
 
 ---
 

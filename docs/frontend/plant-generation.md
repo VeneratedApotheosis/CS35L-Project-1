@@ -1,30 +1,53 @@
 # Plant generation
 
-Plants are drawn as SVG from a **seed**. The same seed always gives the same plant, so a habit can store one integer (e.g. its id) and the plant is rebuilt on every screen.
+Plants are drawn as SVG from a **seed**. The same seed always gives the same plant, so the plant is rebuilt on every screen from the habit alone. A habit's seed is made by hashing its id (`habitSeed(habit.id)` in `habitSeed.ts`, a stable FNV-1a hash). Nothing stores a seed: the database has no seed column, the backend sends none, and there are no generator versions.
 
 Code lives in `frontend/src/pottedPlant/`, with the plants in `plants/` and the pot in `pots/`. A live prototype is at `/plants`. Run the tests with `npm test` in `frontend/`. For how plants fit into the screens, see [design.md](design.md#6-illustration-plants-and-pots).
 
-Status:
+## Status: final
+
+There is one plant generator, with no versions, and it is **final**. The plant types are agreed and drawn (issue #155), so the generator is not to be changed casually.
+
+**Changing it changes the plant of every habit.** The seed is the habit id and nothing else is stored, so any change to how a seed becomes a plant or a pot (the engine, a plant's config or leaf, the random draw order, the stage ladder, `habitSeed`, `potLookFromSeed`) redraws every existing habit differently. It must be a deliberate decision, made with the team, never a side effect of a fix or a new plant. Adding a new plant type does not change any existing plant, as long as it leaves the shared engine alone.
+
+Finished plants, the ten types the app offers (`PLANT_TYPES` in `plantTypes.tsx`, mirrored in `backend/src/domain/plants.ts`):
+
+| Plant (`plant_type`) | Engine | State |
+| --- | --- | --- |
+| Pothos (`pothos`) | Stage engine | Final |
+| Peace lily (`peace_lily`) | Stage engine, plus its own flowers | Final |
+| Pilea peperomioides (`pilea`) | Stage engine (leaf-only, round coins, with pups) | Final |
+| Snake plant (`snake_plant`) | Stage engine (leaf-only) | Final |
+| Kimberly Queen fern (`kimberly_queen`) | Stage engine (leaf-only, arching feathery fronds) | Final |
+| Lily (`lily`) | Stage engine, reuses the peace lily's flower engine | Final |
+| Rose (`rose`) | Stage engine, reuses the peace lily's flower engine | Final |
+| Monstera deliciosa (`monstera`) | Stage engine (leaf-only, fenestrated leaves) | Final |
+| Philodendron 'Sun Red' / Rojo Congo (`philodendron`) | Stage engine (leaf-only, broad paddles, red stems, burgundy newest leaves) | Final |
+| Lotus (`lotus`) | Its own drawing (a water plant), not the stage engine | Final |
+
+Also drawn on the stage engine but not offered by the app, only shown on `/plants`:
 
 | Plant | Engine | State |
 | --- | --- | --- |
-| Pothos | Stage engine | Current |
-| Peace lily | Stage engine, plus its own flowers | Current |
-| Snake plant | Stage engine (leaf-only) | Current |
-| Kimberly Queen fern | Stage engine (leaf-only, arching feathery fronds) | Current |
-| Dracaena 'Golden Heart' | Stage engine (leaf-only, arching leaves) | Current |
-| Spider plant | Stage engine (leaf-only, many thin arching blades with a cream stripe) | Current |
-| Lily | Stage engine, reuses the peace lily's flower engine | Current |
-| Rose | Stage engine, reuses the peace lily's flower engine | Current |
-| Monstera deliciosa | Stage engine (leaf-only, fenestrated leaves) | Current |
-| Pilea peperomioides | Stage engine (leaf-only, round coins, with pups) | Current |
-| Philodendron 'Sun Red' / Rojo Congo | Stage engine (leaf-only, broad paddles, red stems, burgundy newest leaves) | Current |
-| Calathea (prayer plant) | Stage engine (leaf-only, broad oval leaves with herringbone stripes and a purple rim) | Current |
+| Spider plant | Stage engine (leaf-only, many thin arching blades with a cream stripe) | Not offered |
+| Calathea (prayer plant) | Stage engine (leaf-only, broad oval leaves with herringbone stripes and a purple rim) | Not offered |
+
+The generator also does not draw a Dracaena 'Golden Heart': its `/plants` entry is commented out and no code exists for it.
+
+**Decisions this rests on**
+
+- **Four growth stages.** Every plant has four stages (`stages.default` is 4 in every config, and the backend's growth rule 8.7 has the same four). A plant is a seed plus a stage number from 1 to 4.
+- **The seed is the habit's id, hashed.** No seed column, no stored seed and no generator version.
+- **Three health states, one shared wilt look.** `healthy`, `slightly_wilted` and `wilted` map to a wilt amount of 0, 0.5 and 1 (`WILT.forHealth`), drawn the same way by every stage-engine plant (section 3.9). The lotus does not wilt yet (see [design.md](design.md#13-status-and-open-items)).
+- **Indefinite habits are out of scope.** Every habit has an end date, so the plant's growth is always measured against a known total.
+
+**Seed check test (decision).** Add one small test that pins a few fixed seeds and fails on any accidental change. For each plant in the finished list, at every stage, it builds the plant from each of three fixed seeds and compares a fingerprint (a hash of the generated layout) with the stored value. It also pins `habitSeed` and `potLookFromSeed` for a fixed id. When a change is deliberate, the same pull request updates the stored fingerprints and says that every habit's plant changes. The test is not written yet.
 
 ---
 
 ## Contents
 
+- [Status: final](#status-final)
 - [Code map](#code-map)
 - [Design rules](#design-rules)
 - [1. Style](#1-style-animal-crossing-new-horizons-icons)
@@ -403,7 +426,6 @@ Over 60 seeds unless noted.
 
 ## 8. Open items
 
-- **Stage count.** The backend's growth rules ([8.7](../backend/design.md#87-plant-growth)) have **five** stages (0 to 24%, 25 to 49%, 50 to 74%, 75 to 99%, 100%). The plants default to four. Either map five onto four, or set the default to five and decide when the peace lily blooms.
 - **Flower config** is not covered by `validateConfig`. Only the leaf config is checked; the flower numbers are protected by the tests.
 
 ## 9. History
@@ -418,3 +440,4 @@ Over 60 seeds unless noted.
 - The pot's dotted band was removed. Pots that would have had dots now get the stripe, and the choice keeps every plain pot plain.
 - The pilea was ported from the older continuous-growth engine onto the stage engine. Its spiralling coins became round coins on stems that radiate from the base, within the leaf cap, containment and scale rules; its signature pups were kept as an extra part that grows with the plant. The old `Pilea.tsx` and `pileaGenome.ts`, and the continuous-growth helpers they used, were removed.
 - The pot was split from the plants (issue #175). Plants used to pick their own pot from their random stream. Now a plant draws only itself and the pot has its own look, stream and finish registry, so every existing seed gives a different plant and pot once. Nothing stores a seed yet, so this was accepted.
+- The generator was declared final and the plant and growth decisions were written down (issues #156 and #157): four stages, the seed made by hashing the habit id, three health states with one wilt look, and no indefinite habits.

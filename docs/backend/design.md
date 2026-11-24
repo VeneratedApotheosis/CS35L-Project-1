@@ -138,11 +138,11 @@ Routes have no version prefix. There is no route to edit a personal habit, becau
 | --- | --- |
 | `name` | Required, 1 to 100 characters |
 | `description` | Optional, up to 500 characters |
-| `plant_type` | One of `pothos`, `peace_lily`, `pilea` (the plants the app draws; issue #155). Only the backend checks it, and the list must match the frontend's |
+| `plant_type` | One of `pothos`, `peace_lily`, `pilea`, `snake_plant`, `kimberly_queen`, `lily`, `rose`, `monstera`, `philodendron`, `lotus` (the plants the app draws; issue #155). Only the backend checks it, and the list must match the frontend's |
 | `target_count` | 1 to 50 |
 | `interval_count` | 1 to 365 |
 | `interval_unit` | `day`, `week` or `month` |
-| `num_periods` | 1 to 52, required for now |
+| `num_periods` | 1 to 52, required. Indefinite habits are out of scope |
 | `start_date` | Optional. Today or later. Defaults to today in the user's timezone |
 
 - A start date in the past gets 400.
@@ -210,7 +210,7 @@ habits (#251). All three fields are null until expiry. Final rates are 0–1,
 calculated using `habitResult`.
 
 `GET /habits?status=active|finished|both` filters by the caller's local date;
-the default is `both`. Active includes not-yet-started and indefinite habits.
+the default is `both`. Active includes not-yet-started habits.
 Filtering happens before offset/limit pagination, and `total` counts matches.
 Because end dates are calculated rather than stored, the backend scans habit
 metadata in batches, then loads logs only for the requested page.
@@ -400,7 +400,7 @@ The average of each active habit's consistency, leaving out habits with no compl
 | 3 | 50 to 74% |
 | 4 | 75 to 100% |
 
-There are four stages, the same as the frontend plant engine. Growth never reverses as time passes, and a plant can reach stage 4 before the end date. Deleting a log in the current period lowers progress, so it can lower the stage again.
+There are four stages, the same as the frontend plant engine. The backend sends only the stage number. The plant's look comes from a seed that the frontend makes by hashing the habit id, so the backend stores and sends no seed and has no generator version. Growth never reverses as time passes, and a plant can reach stage 4 before the end date. Deleting a log in the current period lowers progress, so it can lower the stage again.
 
 ### 8.8 Plant health
 
@@ -412,7 +412,7 @@ Health % = successful periods ÷ completed periods, over the **last 4 completed 
 | Slightly wilted | 50 to 79% |
 | Wilted | 0 to 49% |
 
-Plants are healthy by default before the first period ends, and recover as later goals are met. With 4 periods in the window, one miss (3/4 = 75%) makes the plant slightly wilted.
+There are three states, and the frontend draws all three with one shared wilt look. Plants are healthy by default before the first period ends, and recover as later goals are met. With 4 periods in the window, one miss (3/4 = 75%) makes the plant slightly wilted.
 
 ### 8.9 Completion and badges
 
