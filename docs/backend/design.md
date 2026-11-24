@@ -128,6 +128,7 @@ All routes except `/health` need a valid token. The list grows as endpoints are 
 | `GET /dashboard` | Overall view across all habits | Built (#201) |
 | Delete account | `DELETE /me` calls `delete_my_account` | Built (#257) |
 | `GET /me/badges`, `GET /me/badges/unseen`, `POST /me/badges/seen` | Achievement badges, see section 6.7 | Built (#250) |
+| `GET /me/history` | Finished habits for the History tab, see section 6.8 | Built (#254) |
 | Shared habit routes | Create/list/detail, preview/join, logging and management built; see section 6.6 | Built (#268–#272) |
 
 Routes have no version prefix. There is no route to edit a personal habit, because personal habits cannot be edited after creation (see [design.md](../design.md#3-rules-that-cut-across-layers)).
@@ -360,6 +361,24 @@ The account-wide badges from [badges-ideas.md](../badges-ideas.md). The rules ar
 Secret badges are left out until earned, and the `secret` chapter is missing until then. So `visible_count` never gives away how many exist. Icons are not sent: the frontend maps each id to an icon.
 
 ---
+
+### 6.8 Habit history
+
+`GET /me/history` returns the caller's finished personal habits for the History tab ([habit-history-plan.md](../frontend/habit-history-plan.md)). Like the Dashboard it reads every habit and log, because the level filter, the sort and the summary all need each result before a page is cut. Shared habits are not included yet (#342).
+
+Query: `limit` (1 to 100, default 20), `offset`, `level` (`gold`, `silver`, `bronze` or `none`, optional) and `sort` (`newest`, the default, `oldest` or `best`). Newest and oldest order by end date, then name. Best orders by level, then final progress, then newest.
+
+It returns `{ summary, habits, total, limit, offset }`. `total` counts the habits that match the filter. The `summary` always covers every finished habit: `finished`, `by_level` (a count per level), `total_logs`, `average_final_progress` (null with none) and `next_end_date` (the soonest end among running habits, for the empty state). Each habit has its fields plus:
+
+| Field | Meaning |
+| --- | --- |
+| `end_date`, `last_day` | The first day after the last period, and the last day itself |
+| `badge` | The level reached, rule 8.9 |
+| `final_progress`, `final_consistency` | The final rates |
+| `periods_met`, `periods_total` | Met periods out of completed periods |
+| `total_logs` | Every log of the habit |
+| `best_streak` | The longest run of met periods (`bestStreak` in `domain/progress.ts`, shared with the achievements) |
+| `stage`, `health` | The plant as it ended |
 
 ## 7. Validation, errors and logging
 

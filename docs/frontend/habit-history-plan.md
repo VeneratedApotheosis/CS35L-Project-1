@@ -16,6 +16,8 @@ Issues: #254 (history of finished habits), the history part of #253, and #342 la
 - [10. Build order](#10-build-order)
 - [11. Decisions to confirm](#11-decisions-to-confirm)
 
+**Status (Nov 24).** Steps 1 to 5 are built on `feat/254-habit-history`, with two changes from the plan below. The data comes from one endpoint, `GET /me/history` (backend design 6.8), not the list endpoint plus the Dashboard: the level filter, the sort and the summary all need every result before paging, so one read of every habit does it all. And each tab keeps its own title ("Badges", "History") above the shared switch. Still to do: step 6 (Dashboard, Garden and Habit Details links) and the phone check in #381.
+
 ## 1. Summary
 
 The history is a list of every habit that has ended, newest first, including the ones that earned no badge. Each row is a short record: the plant as it ended, the name, the goal, the dates, the level reached, and four final numbers. A row opens Habit Details, which already shows a finished habit in full, read only (calendar, activity log, final figures). So the history is an index of past habits, not a second details page.
