@@ -2,40 +2,37 @@ import type { Shelf } from "@/components/shelf/geometry"
 import { POT_SIZE, SHELF_MARGIN, STAGGER } from "../login/wall/layouts"
 
 /** The most pots across a shelf. Fewer fit on a narrow screen, and more habits just add shelves. */
-export const GARDEN_MAX_COLS = 3
+export const GARDEN_MAX_COLS = 4
 
 /**
- * The Garden draws the login wall's shelves and pots 1.5 times as big. The layout below is in the
+ * The Garden draws the login wall's shelves and pots a little bigger than they are there. The layout below is in the
  * login wall's units. Desktop uses GARDEN_SCALE; a narrow wall scales the single-column
  * layout uniformly so its shelf and plants fit together.
  */
-export const GARDEN_SCALE = 1.5
+export const GARDEN_SCALE = 1.1
 
 /** A pot's size in the login wall's units. On the screen it is GARDEN_SCALE times this. */
 export const GARDEN_POT_SIZE = POT_SIZE
 
 /**
  * The width of the card that opens behind a hovered plant, in pixels. A pot is about 200 wide, so
- * the card reaches about 70 past each side of it.
+ * the card reaches about 30 past each side of it.
  */
-export const HOVER_CARD_WIDTH = 344
-
-/** The space left between two hovered cards if both pots had one open, in pixels: the least the pots can be apart. */
-export const CARD_GAP = 8
+export const HOVER_CARD_WIDTH = 258
 
 /**
- * How far the pots are from each other, in layout units: as close as they can be with a card open
- * behind each (HOVER_CARD_WIDTH, in pixels) and CARD_GAP between the cards.
+ * How far the pots are from each other, in layout units: a little wider than the login wall's pitch (190), so the
+ * leaves of neighbours just touch. The hover card is wider than that and covers the plants beside it:
+ * only one card is ever open.
  */
-export const GARDEN_PITCH = Math.ceil((HOVER_CARD_WIDTH + CARD_GAP) / GARDEN_SCALE)
+export const GARDEN_PITCH = 215
 
-/**
- * The height of one shelf with its plants, in layout units: the login wall's 300 and more, so the
- * card that opens behind a plant (over the plant and under the board) never reaches the next shelf's.
- */
-export const GARDEN_ROW_PITCH = 360
-/** Where the board sits in its band, in layout units: the login wall's 226, and room above for the card. */
-export const GARDEN_BOARD_IN_ROW = 270
+/** The height of one shelf with its plants, in layout units: the login wall's 300, a little less. The hover card may reach over the next shelf. */
+export const GARDEN_ROW_PITCH = 262
+/** Room under the last shelf, in layout units, so a card open on it (it reaches below the board) is not cut off. */
+export const GARDEN_BOTTOM_PAD = 52
+/** Where the board sits in its band, in layout units: room for the tallest plant above it, and the brackets below. */
+export const GARDEN_BOARD_IN_ROW = 196
 /** How far the brackets are from the ends of a board, in layout units: out at the ends, so the bar under a plant never meets one. */
 export const GARDEN_BRACKET_INSET = 24
 
@@ -57,29 +54,30 @@ export function gardenScale(width: number): number {
 
 /**
  * How much longer each board is at each end, in layout units. The shelves are as wide as their pots
- * need; the space left between them and the edge of the screen is halved, by sharing half of it out
- * to the two ends. A width of 0 (not measured), or no space left, gives 0.
+ * need; the space left between them and the edge of the screen is cut to a third, by sharing two thirds
+ * of it out to the two ends. A width of 0 (not measured), or no space left, gives 0.
  */
 export function gardenExtra(width: number, cols: number): number {
   if (width <= 0) return 0
   const used = GARDEN_SCALE * (cols * GARDEN_PITCH + 2 * SHELF_MARGIN + 2 * staggerFor(cols))
-  return Math.max(0, (width - used) / 4 / GARDEN_SCALE)
+  return Math.max(0, (width - used) / 3 / GARDEN_SCALE)
 }
 
 /**
- * How far the peek panel reaches from the plant's middle, in pixels: half the hover card, a gap,
- * and the panel's own width (22rem). It decides which side the panel opens on.
+ * The width of the buttons' column that a click adds to one side of the hover card, in pixels. The
+ * card is that much wider while it is open.
  */
-const PEEK_REACH = HOVER_CARD_WIDTH / 2 + 12 + 352
+export const ACTIONS_WIDTH = 210
 
 /**
- * Which side of a plant its peek panel opens on: out toward the nearer edge of the wall, so it
- * covers the plants beside it as little as it can, or the other side where the near one has no room.
- * The middle of the plant is the first argument, in the wall's pixels.
+ * Which side of a plant its card grows toward on a click: out toward the nearer edge of the wall, so
+ * it covers the plants beside it as little as it can, or the other side where the near one has no
+ * room. The middle of the plant is the first argument, in the wall's pixels.
  */
 export function peekSide(centre: number, wallWidth: number): "left" | "right" {
-  const leftFits = centre - PEEK_REACH >= 0
-  const rightFits = centre + PEEK_REACH <= wallWidth
+  const reach = HOVER_CARD_WIDTH / 2 + ACTIONS_WIDTH
+  const leftFits = centre - reach >= 0
+  const rightFits = centre + reach <= wallWidth
   if (centre < wallWidth / 2) return leftFits || !rightFits ? "left" : "right"
   return rightFits || !leftFits ? "right" : "left"
 }
@@ -126,5 +124,5 @@ export function gardenLayout(count: number, cols: number, extra = 0): GardenLayo
       slots.push({ index: slots.length, shelf, col, x: left + GARDEN_PITCH * (col + 0.5) })
     }
   }
-  return { width, height: rows * GARDEN_ROW_PITCH, shelves, slots }
+  return { width, height: rows * GARDEN_ROW_PITCH + GARDEN_BOTTOM_PAD, shelves, slots }
 }

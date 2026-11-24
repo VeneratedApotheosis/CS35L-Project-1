@@ -1,4 +1,11 @@
 :root {
+  /* Line weights: every border, divider, outline and icon stroke uses one of these. */
+  --line-thin: 1px;      /* borders and dividers */
+  --line-medium: 2px;    /* focus rings, and lines that must be seen */
+  --line-thick: 4px;     /* accents: a status stripe, an input's focus glow */
+  --focus-offset: 2px;   /* the gap between an element and its focus ring */
+  --icon-stroke: 2;      /* the stroke of an icon, in its own 24-unit grid */
+
   --shadow-card: 0 2rem 5rem rgba(79, 64, 47, 0.16);
   --shadow-popover: 0 0.75rem 2rem rgba(52, 47, 41, 0.16);
   --shadow-button: 0 0.25rem 0.75rem rgba(52, 47, 41, 0.12);

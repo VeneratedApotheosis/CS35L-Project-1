@@ -43,14 +43,13 @@ describe("page width styles", () => {
   })
   afterEach(() => stylesheet.remove())
 
-  it("reads the same two variables in the top bar and the content", () => {
+  it("reads the same side space in the top bar and the content", () => {
     const css = stylesheet.textContent!
     const content = css.match(/\.app-shell__content \{[^}]*\}/)![0]
     const bar = css.match(/\.navbar__inner \{[^}]*\}/)![0]
-    expect(content).toContain("max-width: var(--page-max-width)")
-    expect(bar).toContain("max-width: var(--page-max-width,")
-    expect(css).toMatch(/@container navigation[^{]*\{[\s\S]*\.navbar__inner \{[^}]*padding-inline: var\(--page-gutter,/)
-    expect(content).toContain("padding-inline: var(--page-gutter)")
+    expect(content).toContain("padding-inline: var(--page-side)")
+    expect(bar).not.toContain("max-width")
+    expect(css).toMatch(/@container navigation[^{]*\{[\s\S]*\.navbar__inner \{[^}]*padding-inline: var\(--page-side\)/)
   })
 
   it("has no Garden-only or Habit-only content class left", () => {

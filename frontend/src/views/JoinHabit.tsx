@@ -57,7 +57,7 @@ function InviteSignIn({ code }: { code: string }) {
     }
   }
   return (
-    <main className="stack-lg" style={{ maxWidth: "42rem", margin: "0 auto", padding: "var(--page-padding)" }}>
+    <main className="stack-lg" style={{ maxWidth: "42rem", margin: "0 auto", padding: "var(--page-padding) var(--page-margin)" }}>
       <h1 className="text-h1">Join a shared habit</h1>
       <p>Sign in to see your friend&apos;s invite. You&apos;ll return here to review it before joining.</p>
       <Button className="self-start" disabled={pending} onClick={() => void signIn()}>
@@ -98,7 +98,7 @@ function InvitePreview({ code, userId }: { code: string; userId: string }) {
   const failure = error ? inviteError(error) : null
   const habit = preview.data
   return (
-    <main className="stack-lg" style={{ maxWidth: "42rem", margin: "0 auto", padding: "var(--page-padding)" }}>
+    <main className="stack-lg" style={{ maxWidth: "42rem", margin: "0 auto", padding: "var(--page-padding) var(--page-margin)" }}>
       <h1 className="text-h1">Join a shared habit</h1>
       {joinedId ? (
         <Card>

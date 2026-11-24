@@ -252,7 +252,7 @@ export default function PlantLab() {
 
   return (
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
-      <div className="mx-auto flex max-w-5xl flex-col gap-16 px-[var(--page-padding)] py-16">
+      <div className="mx-auto flex max-w-5xl flex-col gap-16 px-[var(--page-margin)] py-16">
         <header className="flex flex-col gap-4">
           <h1 className="text-h1 max-w-2xl">Plants, grown from a seed number.</h1>
           <p className="text-body text-secondary max-w-prose">

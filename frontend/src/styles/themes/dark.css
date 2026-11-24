@@ -45,6 +45,9 @@
   --color-shelf: #c3a073;
   --color-shelf-top: #d2b58c;
   --color-shelf-edge: #94744b;
+  --color-shelf-shared: #94303f;
+  --color-shelf-shared-top: #ab4655;
+  --color-shelf-shared-edge: #661c29;
 
   --color-focus: var(--teal);
   --color-link: #7bd7c4;

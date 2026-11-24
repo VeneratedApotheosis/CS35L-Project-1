@@ -9,7 +9,7 @@ export type PageWidth = "medium" | "wide" | "full"
 /** Habit details, and the shared habit page that reuses its layout, are grids of cards. */
 const WIDE_PATHS = ["/habit", "/shared-habit"]
 
-/** The width of a route's content and top bar. Routes not listed here are medium. See "Page width" in docs/frontend/design.md. */
+/** Which vertical padding a route gets (width and side margins are the same for all). Routes not listed here are medium. See "Page width and margin" in docs/frontend/design.md. */
 export function pageWidth(pathname: string | null): PageWidth {
   const path = pathname && pathname !== "/" ? pathname.replace(/\/$/, "") : pathname
   if (path === "/") return "full"

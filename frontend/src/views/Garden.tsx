@@ -8,7 +8,6 @@ import Link from "next/link"
 import { useAuth } from "@/auth/useAuth"
 import { Button } from "@/components/Button"
 import { GardenShelves } from "./garden/GardenShelves"
-import { SharedHabitCard } from "./garden/SharedHabitCard"
 import { Card } from "@/components/Card"
 import { ApiError } from "@/lib/api"
 import { formatDate } from "@/lib/goal"
@@ -95,6 +94,9 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
   const sharedUnauthorized = sharedError instanceof ApiError && sharedError.status === 401
   const sharedUnavailable = sharedUnauthorized || (sharedError instanceof ApiError && sharedError.status === 403)
   const allEmpty = !error && !pending && !sharedError && !sharedHabits.isPending && !sharedHabits.hasNextPage && rows.length === 0 && sharedRows.length === 0
+  // Shared habits only get a section once there is something to show: habits, or an error to retry.
+  const showPersonal = !pending && rows.length > 0
+  const showShared = Boolean(sharedError) || sharedRows.length > 0 || Boolean(sharedHabits.hasNextPage)
   const today = profile.data?.today ?? ""
 
   function retry() {
@@ -104,9 +106,8 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
 
   return (
     <main className="stack-lg">
-      <header className="stack-sm">
+      <header>
         <h1 className="text-h1">{title}</h1>
-        <p className="text-body text-secondary">Your habits and the goals you’re working toward.</p>
       </header>
 
       {error && (
@@ -142,39 +143,34 @@ export default function Garden({ title = "My Garden" }: { title?: string }) {
         </section>
       )}
 
-      {!pending && rows.length > 0 && user && (
-        <section aria-label="Your habits" className="stack-md">
-          <GardenShelves habits={rows} userId={user.id} today={today} loggingDisabled={busy}
-            onLogToday={(id) => { void logToday(id) }} onLogOn={logOn} />
-          {habits.hasNextPage && (
+      {user && (showPersonal || showShared) && (
+        <GardenShelves showPersonal={showPersonal} habits={rows} userId={user.id} today={today} loggingDisabled={busy}
+          onLogToday={(id) => { void logToday(id) }} onLogOn={logOn}
+          habitsFooter={habits.hasNextPage && (
             <Button variant="secondary" className="self-start" onClick={() => void habits.fetchNextPage()}
               disabled={habits.isFetching}>
               {habits.isFetchingNextPage ? "Loading more…" : "Load more habits"}
             </Button>
           )}
-        </section>
+          sharedHabits={showShared ? {
+            habits: sharedUnavailable ? [] : sharedRows,
+            meta: sharedHabits.hasNextPage ? undefined : `${sharedRows.length}`,
+            footer: <>
+              {sharedError && <Card className="stack-md">
+                <div role="alert" className="stack-sm">
+                  <h3 className="text-h3">{sharedUnauthorized ? "Sign in to see shared habits" : "Couldn't load shared habits"}</h3>
+                  <p>{sharedUnauthorized ? "Your session has expired. Sign in again to continue." : "Check your connection and try again. Your saved habits are still there."}</p>
+                </div>
+                {sharedUnauthorized ? <Button className="self-start" onClick={() => void signOut()}>Sign in again</Button>
+                  : <Button className="self-start" disabled={sharedHabits.isFetching} onClick={() => void sharedHabits.refetch()}>Try shared habits again</Button>}
+              </Card>}
+              {sharedHabits.hasNextPage && !sharedUnavailable && <Button className="self-start" variant="secondary"
+                disabled={sharedHabits.isFetching} onClick={() => void sharedHabits.fetchNextPage()}>
+                {sharedHabits.isFetchingNextPage ? "Loading more shared habits…" : "Load more shared habits"}
+              </Button>}
+            </>,
+          } : undefined} />
       )}
-
-      {user && !allEmpty && <section className="stack-md" aria-labelledby="garden-shared-heading">
-        <h2 id="garden-shared-heading" className="text-h2">Shared habits</h2>
-        {sharedError && <Card className="stack-md">
-          <div role="alert" className="stack-sm">
-            <h3 className="text-h3">{sharedUnauthorized ? "Sign in to see shared habits" : "Couldn't load shared habits"}</h3>
-            <p>{sharedUnauthorized ? "Your session has expired. Sign in again to continue." : "Check your connection and try again. Your saved habits are still there."}</p>
-          </div>
-          {sharedUnauthorized ? <Button className="self-start" onClick={() => void signOut()}>Sign in again</Button>
-            : <Button className="self-start" disabled={sharedHabits.isFetching} onClick={() => void sharedHabits.refetch()}>Try shared habits again</Button>}
-        </Card>}
-        {sharedHabits.isPending && !sharedError && <p aria-live="polite" className="text-body-sm text-secondary">Loading shared habits…</p>}
-        {!sharedUnavailable && sharedRows.length > 0 && <div className="shared-garden-grid">
-          {sharedRows.map((habit) => <SharedHabitCard key={habit.id} habit={habit} />)}
-        </div>}
-        {!sharedHabits.isPending && !sharedError && !sharedHabits.hasNextPage && sharedRows.length === 0 && <p className="text-body text-secondary">No shared habits yet. Choose “With friends” when creating a habit to grow together.</p>}
-        {sharedHabits.hasNextPage && !sharedUnavailable && <Button className="self-start" variant="secondary"
-          disabled={sharedHabits.isFetching} onClick={() => void sharedHabits.fetchNextPage()}>
-          {sharedHabits.isFetchingNextPage ? "Loading more shared habits…" : "Load more shared habits"}
-        </Button>}
-      </section>}
 
       {allEmpty && (
         <Card className="stack-md">

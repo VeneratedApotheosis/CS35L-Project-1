@@ -47,7 +47,7 @@
   overflow: hidden;
   color: var(--badge-art);
 }
-.badge-medal__icon { width: 52%; height: 52%; stroke-width: 2; }
+.badge-medal__icon { width: 52%; height: 52%; stroke-width: var(--icon-stroke); }
 .badge-medal[data-state="locked"] .badge-medal__icon,
 .badge-medal[data-state="in_progress"] .badge-medal__icon { opacity: 0.7; }
 
@@ -61,7 +61,7 @@
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
+  border: var(--line-thin) solid var(--color-border-strong);
   color: var(--color-text-secondary);
 }
 

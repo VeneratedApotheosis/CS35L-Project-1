@@ -52,7 +52,7 @@ afterEach(() => {
 })
 
 describe("create shared habit (#274)", () => {
-  it("defaults to Just me and keeps personal creation on /habits with a dashboard redirect", async () => {
+  it("defaults to Just me and keeps personal creation on /habits with a Garden redirect", async () => {
     setup(false)
     expect((screen.getByRole("radio", { name: "Just me" }) as HTMLInputElement).checked).toBe(true)
     expect(field("Start date").value).toBe("2026-11-19")
@@ -60,7 +60,7 @@ describe("create shared habit (#274)", () => {
     expect(screen.queryByLabelText("Max members")).toBeNull()
     review()
     create()
-    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/dashboard"))
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/"))
     const [url, request] = fetchMock.mock.calls[0]
     expect(url).toBe("http://api.test/habits")
     expect(JSON.parse(request.body)).not.toHaveProperty("join_by")
@@ -277,7 +277,7 @@ describe("create shared habit (#274)", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Just me" }))
     review()
     create()
-    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/dashboard"))
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/"))
     expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/habits")
   })
 

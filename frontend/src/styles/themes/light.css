@@ -42,6 +42,9 @@
   --color-shelf: var(--birch);
   --color-shelf-top: var(--birch-top);
   --color-shelf-edge: var(--birch-deep);
+  --color-shelf-shared: var(--cherry);
+  --color-shelf-shared-top: var(--cherry-top);
+  --color-shelf-shared-edge: var(--cherry-deep);
 
   --color-focus: var(--teal);
   --color-link: var(--teal-deep);

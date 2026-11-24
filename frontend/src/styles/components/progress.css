@@ -60,8 +60,8 @@
 
 /* Without the tint (forced colours), give each pill an outline so the steps still show. */
 @media (forced-colors: active) {
-  .habit-progress__track { border: 1px solid CanvasText; }
-  .habit-progress__step { border: 1px solid CanvasText; }
+  .habit-progress__track { border: var(--line-thin) solid CanvasText; }
+  .habit-progress__step { border: var(--line-thin) solid CanvasText; }
   .habit-progress__step--complete, .habit-progress__fill { background: Highlight; }
 }
 

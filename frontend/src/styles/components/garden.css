@@ -18,8 +18,8 @@
 }
 
 .garden-link:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: var(--space-1);
+  outline: var(--line-medium) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
   border-radius: var(--radius-sm);
 }
 
@@ -37,7 +37,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
-  gap: var(--space-8);
+  gap: var(--space-4);
 }
 
 .garden-finished {
@@ -86,18 +86,15 @@
   }
 }
 
-/* One habit's plant. Only its button and its panel take the pointer. */
+/* One habit's plant. Only its button takes the pointer. */
 .garden-plant {
   position: absolute;
   pointer-events: none;
 }
 .garden-plant[data-hot="true"],
-.garden-plant[data-holding="true"],
-.garden-plant[data-menu="true"] {
+.garden-plant[data-holding="true"] {
   z-index: 5;
 }
-/* The opened panel must paint above the separate hover-card text layer. */
-.garden-plant[data-menu="true"] { z-index: 7; }
 
 .garden-plant__art {
   position: absolute;
@@ -126,8 +123,8 @@
   user-select: none;
 }
 .garden-plant__hit:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
+  outline: var(--line-medium) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
 }
 
 /* The ring behind the plant: faint on hover, and filling round while the pointer is held. */
@@ -137,6 +134,8 @@
   initial-value: 0%;
 }
 .garden-plant__ring {
+  /* A progress ring is a gauge, not a line, so it is bolder than the line weights. */
+  --ring-width: 10px;
   position: absolute;
   left: 19%;
   top: 22%;
@@ -144,18 +143,19 @@
   aspect-ratio: 1;
   border-radius: 50%;
   opacity: 0;
-  background: conic-gradient(var(--color-primary) var(--garden-hold), transparent 0);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+  /* The fill that grows while held, over the faint full ring that stays under it. */
+  background:
+    conic-gradient(var(--color-primary) var(--garden-hold), transparent 0),
+    color-mix(in srgb, var(--color-primary) 20%, transparent);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width)), #000 calc(100% - var(--ring-width) + 1px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width)), #000 calc(100% - var(--ring-width) + 1px));
   transition: opacity 0.15s;
 }
 .garden-plant[data-hot="true"] .garden-plant__ring {
-  --garden-hold: 100%;
-  opacity: 0.2;
+  opacity: 1;
 }
 .garden-plant[data-holding="true"] .garden-plant__ring {
-  opacity: 1;
-  animation: garden-hold 1s linear forwards;
+  animation: garden-hold var(--hold-ms, 600ms) linear forwards;
 }
 @keyframes garden-hold {
   from { --garden-hold: 0%; }
@@ -163,15 +163,15 @@
 }
 
 /*
- * The card that opens behind a hovered plant: a soft, see-through square with the plant standing in
- * front of it. The surface is under the plant and the writing on top of it, so the plant is woven in.
+ * The card that opens behind a hovered plant: a soft, solid card (it covers the plants beside it) with
+ * the plant standing in front of it. The surface is under the plant and the writing on top of it, so the plant is woven in.
  */
 .garden-card__surface {
   position: absolute;
   z-index: 3;
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border: var(--line-thin) solid color-mix(in srgb, var(--color-border) 70%, transparent);
   border-radius: var(--card-radius);
-  background: color-mix(in srgb, var(--color-surface-elevated) 72%, transparent);
+  background: var(--color-surface-elevated);
   box-shadow: var(--shadow-card);
   pointer-events: none;
   animation: garden-card-in 0.16s ease-out;
@@ -193,13 +193,16 @@
   justify-content: space-between;
   padding: var(--card-pad);
 }
+/* The name and the streak pill share the top row; the time left is on one line under both. */
 .garden-card__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: var(--space-3);
 }
-.garden-card__title { min-width: 0; }
+.garden-card__title { display: contents; }
+.garden-card__name { grid-column: 1; }
+.garden-card__streak { grid-column: 2; grid-row: 1; }
 .garden-card__name {
   margin: 0;
   overflow: hidden;
@@ -209,7 +212,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.garden-card__sub { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.garden-card__sub {
+  grid-column: 1 / -1;
+  margin: var(--space-1) 0 0;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 /* The pill in the corner is as far from the card's edge as the padding, so its corner is the card's minus that. */
 .garden-card__streak {
   display: inline-flex;
@@ -227,92 +238,53 @@
 /* The bar's own title and count, larger, as in the card's design. */
 .garden-card .habit-progress__caption { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); }
 .garden-card .habit-progress__count { color: var(--color-link); font-size: var(--font-size-xl); }
-.garden-card__foot {
+
+/*
+ * What a click adds to the card: a column of buttons beside the plant's part, on the side the card
+ * grows toward (--card-w is the plant's part, set with the card's size). Only the text and the
+ * buttons take the pointer while it is open: the middle of the card is the plant's, so it can still be held or clicked.
+ */
+.garden-card[data-open="true"] { display: flex; }
+.garden-card[data-open="true"][data-side="left"] { flex-direction: row-reverse; }
+.garden-card[data-open="true"] .garden-card__content { flex: none; width: var(--card-w); }
+.garden-card[data-open="true"] .garden-card__header,
+.garden-card[data-open="true"] .garden-card__progress { pointer-events: auto; }
+/* The column: the facts at the top, in line with the card's name, and the buttons at the bottom, in line with its progress. */
+.garden-card__side {
   display: flex;
-  align-items: center;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
   justify-content: space-between;
-  gap: var(--space-2);
-  margin: var(--space-1) 0 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-/*
- * The peek panel that opens beside a clicked plant's hover card, centred on the card's height. The
- * hover card stays open, so the panel starts half the card's width (and a gap) from the plant's middle.
- */
-.garden-pop {
-  position: absolute;
-  top: calc(var(--card-top, 0px) + var(--card-height, 0px) / 2);
-  transform: translateY(-50%);
-  z-index: 1;
-  width: 22rem;
-}
-.garden-plant[data-side="right"] .garden-pop { left: calc(50% + var(--card-half, 172px) + var(--space-3)); }
-.garden-plant[data-side="left"] .garden-pop { right: calc(50% + var(--card-half, 172px) + var(--space-3)); }
-
-/*
- * Its corners are concentric: the buttons are 2.75rem tall, so their corners are 1.375rem, and the
- * panel's radius is that plus the padding between them.
- */
-.garden-peek {
-  --card-pad: 1.25rem;
-  --inner-radius: 1.375rem;
-  --card-radius: calc(var(--card-pad) + var(--inner-radius));
-  display: grid;
   gap: var(--space-4);
+  min-height: 0;
   padding: var(--card-pad);
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-  border-radius: var(--card-radius);
-  background: var(--color-surface-elevated);
-  box-shadow: var(--shadow-popover);
   pointer-events: auto;
 }
-.garden-peek__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
-.garden-peek__title { min-width: 0; }
-.garden-peek__name {
-  margin: 0;
-  overflow: hidden;
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.garden-peek__sub { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
-.garden-peek__rule { width: 100%; margin: 0; border: 0; border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent); }
-
-.garden-peek__progress { display: grid; gap: var(--space-2); }
-/* The bar's title is quiet, and its count is the loud one, in green. */
-.garden-peek .habit-progress__caption { color: var(--color-text-secondary); font-size: var(--font-size-base); }
-.garden-peek .habit-progress__count { color: var(--color-link); font-size: var(--font-size-xl); }
-.garden-peek__note { margin: 0; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
-
-.garden-peek__facts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-  margin: 0;
-}
-.garden-peek__facts dt {
+/* On the plant's side the column is as far from the card's edge as the padding, so the plant keeps the room it had. */
+.garden-card[data-side="right"] .garden-card__side { padding-inline-start: 0; }
+.garden-card[data-side="left"] .garden-card__side { padding-inline-end: 0; }
+.garden-card__facts { display: grid; gap: var(--space-2); margin: 0; }
+.garden-card__facts > div { display: grid; gap: var(--space-1); }
+.garden-card__facts dt {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
 }
-.garden-peek__facts dt svg { color: var(--color-link); }
-.garden-peek__facts dd { margin: var(--space-2) 0 0; font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
-
-.garden-peek__actions { display: grid; gap: var(--space-2); }
-.garden-peek__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-/* The big buttons are pills, and a plain outline for the second ones. */
-.garden-peek .button--md { min-height: 2.75rem; border-radius: var(--inner-radius); }
-.garden-peek .button--secondary { border: 1px solid var(--color-border-strong); background: transparent; }
-.garden-peek .button--secondary:hover:not(:disabled) { background: var(--color-surface-hover); }
-.garden-peek__delete { justify-self: end; color: var(--color-danger); }
+.garden-card__facts dt svg { color: var(--color-link); }
+.garden-card__facts dd { margin: 0; overflow: hidden; font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.garden-card__actions { display: grid; gap: var(--space-2); }
+/* The big buttons are pills, with a plain outline for the second ones. */
+.garden-card__actions .button--md { min-height: 2.5rem; padding-inline: var(--space-2); border-radius: var(--inner-radius); font-size: var(--font-size-md); }
+.garden-card__actions .button--sm { min-height: 2rem; }
+.garden-card__actions .button--secondary { border: var(--line-thin) solid var(--color-border-strong); background: transparent; }
+.garden-card__actions .button--secondary:hover:not(:disabled) { background: var(--color-surface-hover); }
+.garden-card__foot { display: flex; align-items: center; justify-content: center; gap: var(--space-3); }
+.garden-card__delete { color: var(--color-danger); }
 @supports (corner-shape: squircle) {
-  .garden-peek, .garden-peek .button--md { corner-shape: squircle; }
+  .garden-card__actions .button--md { corner-shape: squircle; }
 }
 
 /* The empty pot at the end that adds a habit. */
@@ -335,7 +307,7 @@
   border-radius: var(--radius-lg);
 }
 .garden-add__hit:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
-.garden-add__hit:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.garden-add__hit:focus-visible { outline: var(--line-medium) solid var(--color-focus); outline-offset: var(--focus-offset); }
 
 /* Touch users cannot discover a hover-only gesture. */
 .garden-touch-hint { display: none; }
@@ -349,28 +321,37 @@
   }
 }
 
-/* On a phone there is no room beside a plant: the panel is a card at the bottom of the screen. */
+/*
+ * On a phone or a touch screen there is no hover, and no room around a plant: the card is shown
+ * only once tapped, as a sheet at the bottom of the screen, with its own background.
+ */
 @media (max-width: 40rem), (hover: none), (pointer: coarse) {
-  .garden-card, .garden-card__surface { display: none; }
-  .garden-plant[data-menu="true"] { z-index: var(--z-modal); }
-  .garden-pop {
+  .garden-card__surface, .garden-card:not([data-open="true"]) { display: none; }
+  .garden-card[data-open="true"] {
     position: fixed;
-    top: auto;
-    transform: none;
-    right: var(--space-4) !important;
+    top: auto !important;
+    right: var(--space-4);
     bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4));
     left: var(--space-4) !important;
     z-index: var(--z-modal);
-    width: auto;
+    width: auto !important;
+    height: auto !important;
     max-height: max(0px, calc(100dvh - var(--mobile-nav-height) - env(safe-area-inset-bottom, 0px) - var(--space-8)));
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding-bottom: max(var(--card-pad), env(safe-area-inset-bottom));
+    border: var(--line-thin) solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    border-radius: var(--card-radius);
+    background: var(--color-surface-elevated);
+    box-shadow: var(--shadow-popover);
+    pointer-events: auto;
   }
+  .garden-card[data-open="true"] { flex-direction: column !important; }
+  .garden-card[data-open="true"] .garden-card__content { width: auto; height: auto; gap: var(--space-4); }
+  .garden-card[data-open="true"] .garden-card__side { padding: 0 var(--card-pad) var(--card-pad); }
 }
 
 @media (min-width: 52rem) and ((hover: none) or (pointer: coarse)) {
-  .garden-pop {
+  .garden-card[data-open="true"] {
     bottom: var(--space-4);
     max-height: calc(100dvh - var(--space-8));
   }
@@ -383,22 +364,45 @@
   .garden-card__surface, .garden-card { animation: none; }
 }
 
-.shared-garden-grid {
+/* Shared habits stand on red shelves, to tell them from the habits that are only yours. */
+.garden-wall[data-kind="shared"] {
+  --color-shelf: var(--color-shelf-shared);
+  --color-shelf-top: var(--color-shelf-shared-top);
+  --color-shelf-edge: var(--color-shelf-shared-edge);
+}
+
+/* Each part of the Garden is a title at the left (a softer colour than the page title), then its content. */
+.garden-section {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
-  gap: var(--space-6);
+  gap: var(--space-4);
+  padding-top: var(--space-6);
 }
-
-.shared-garden-card,
-.shared-garden-card > .card {
-  min-width: 0;
-  height: 100%;
-  overflow-wrap: anywhere;
+.garden-section__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
-
-.shared-garden-card__badge {
-  align-self: flex-start;
-  padding: var(--space-2) var(--space-3);
+.garden-section__title {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+}
+/* The count is in a circle (a pill for three digits), centred on the title's line. */
+.garden-section__meta {
+  display: inline-grid;
+  min-width: 2rem;
+  height: 2rem;
+  place-items: center;
+  padding-inline: var(--space-2);
   border-radius: var(--radius-pill);
-  background: var(--color-surface-secondary);
+  background: color-mix(in srgb, var(--color-text-secondary) 16%, transparent);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
 }
+.garden-section__action { margin-left: auto; align-self: center; }
+.garden-section__body { display: grid; gap: var(--space-4); min-width: 0; }

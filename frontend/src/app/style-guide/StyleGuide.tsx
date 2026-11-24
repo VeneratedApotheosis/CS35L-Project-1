@@ -130,6 +130,28 @@ function Section({
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 
+const lineWeights = [
+  { token: "--line-thin", use: "Borders and dividers" },
+  { token: "--line-medium", use: "Focus rings, and lines that must be seen" },
+  { token: "--line-thick", use: "Accents, such as a status stripe" },
+] as const
+
+function LineWeightExamples() {
+  return (
+    <div className="flex flex-col gap-4">
+      {lineWeights.map(({ token, use }) => (
+        <div key={token} className="grid items-center gap-4" style={{ gridTemplateColumns: "minmax(0, 12rem) minmax(0, 1fr)" }}>
+          <p className="text-body-sm">
+            <code>{token}</code>
+            <span className="block text-secondary">{use}</span>
+          </p>
+          <div style={{ borderTop: `var(${token}) solid var(--color-border-strong)` }} aria-hidden="true" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function ProgressExamples() {
   const [count, setCount] = useState(2)
 
@@ -200,7 +222,7 @@ export default function StyleGuide() {
 
   return (
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
-      <div className="mx-auto flex max-w-5xl flex-col gap-16 px-[var(--page-padding)] py-16">
+      <div className="mx-auto flex max-w-5xl flex-col gap-16 px-[var(--page-margin)] py-16">
         {/* Hero */}
         <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex flex-col gap-4">
@@ -510,6 +532,15 @@ export default function StyleGuide() {
           description="Try the confirmation with Tab and Escape, then log an activity and undo it within five seconds. Both components follow the theme switch and reduced-motion preference."
         >
           <FeedbackExamples />
+        </Section>
+
+        <Section
+          index="14"
+          eyebrow="Foundations"
+          title="Line weights"
+          description="Every border, divider and outline is one of three weights, so they can be changed in one place. Focus rings use the medium weight with one shared gap."
+        >
+          <LineWeightExamples />
         </Section>
 
         <footer className="flex items-center justify-between border-t border-[var(--color-border)] pt-6">

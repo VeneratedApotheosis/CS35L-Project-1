@@ -23,6 +23,10 @@
   --birch: #ecd3a6;
   --birch-top: #f4e3c0;
   --birch-deep: #c9a574;
+  /* The shelves of shared habits: the same wood stained a deep crimson, so they read as a different shelf. */
+  --cherry: #b3374a;
+  --cherry-top: #c9505f;
+  --cherry-deep: #84202f;
 
   /* Achievement badge medals. Flat fills: a rim and a lighter face for each tier. Locked medals use the theme's neutral surfaces. */
   --badge-bronze: #c98a5b;
