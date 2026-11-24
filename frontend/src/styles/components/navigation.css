@@ -224,8 +224,20 @@
 }
 
 @media (--not-phone) {
+  html:has(.app-shell > .navbar:not(.navbar--preview)) {
+    /* Desktop bar: one touch-target row, its vertical padding, and border. */
+    --desktop-nav-height: calc(var(--touch-target) + 2 * var(--space-4) + 1px);
+    scroll-padding-top: calc(var(--desktop-nav-height) + var(--space-4));
+  }
+
   .app-shell {
     padding-bottom: 0;
+  }
+
+  .app-shell > .navbar:not(.navbar--preview) {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
   }
 }
 
