@@ -1,0 +1,54 @@
+/* Only the log-day dialog needs a compact width to match its calendar. */
+.modal:has(.log-day-form) { max-width: 27rem; }
+.log-day-form { width: 100%; max-width: 23rem; margin-inline: auto; }
+
+.log-day-form__label-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.log-day-form__selected-date { color: var(--color-text-secondary); font-size: var(--font-size-md); }
+
+.log-date-calendar {
+  --rdp-accent-color: var(--color-primary);
+  --rdp-today-color: var(--color-link);
+  --rdp-nav_button-width: var(--touch-target);
+  --rdp-nav_button-height: var(--touch-target);
+  --rdp-nav-height: var(--touch-target);
+  width: min(100%, 23rem);
+  padding: var(--space-3);
+  border: var(--line-thin) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+}
+.log-date-calendar .rdp-months, .log-date-calendar .rdp-month { width: 100%; max-width: none; }
+.log-date-calendar .rdp-month_grid { width: 100%; table-layout: fixed; }
+.log-date-calendar .rdp-month_caption { justify-content: flex-start; font-size: var(--font-size-lg); }
+.log-date-calendar .rdp-weekday { color: var(--color-text-secondary); font-weight: var(--font-weight-bold); }
+.log-date-calendar .rdp-day { width: 14.285%; height: auto; }
+.log-date-calendar .rdp-day_button {
+  width: min(100%, var(--touch-target));
+  height: auto;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: var(--radius-sm);
+}
+.log-date-calendar .rdp-day_button:focus-visible,
+.log-date-calendar .rdp-button_previous:focus-visible,
+.log-date-calendar .rdp-button_next:focus-visible { outline: var(--line-medium) solid var(--color-focus); outline-offset: calc(-1 * var(--focus-offset)); }
+.log-date-calendar .rdp-selected .rdp-day_button { background: var(--color-primary); color: var(--color-primary-text); border-color: transparent; }
+.log-date-calendar .rdp-today:not(.rdp-selected) .rdp-day_button { border: var(--line-medium) solid var(--color-link); }
+.log-date-calendar .rdp-disabled { color: var(--color-text-muted); }
+.log-date-calendar .rdp-footer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -27,6 +27,16 @@ const declarations = (root: postcss.Root, selector: string, media?: string) => {
   return found;
 };
 describe("phone viewport and safe areas", () => {
+  it("keeps the log-day calendar compact without overriding responsive modal scrolling", () => {
+    const calendar = style("components/log-date-calendar");
+    expect(declarations(calendar, ".modal:has(.log-day-form)")["max-width"]).toBe("27rem");
+    expect(declarations(calendar, ".log-day-form")["max-width"]).toBe("23rem");
+    expect(declarations(calendar, ".log-day-form")["margin-inline"]).toBe("auto");
+    expect(declarations(calendar, ".log-date-calendar").width).toBe("min(100%, 23rem)");
+    expect(declarations(calendar, ".log-date-calendar .rdp-month_grid").width).toBe("100%");
+    expect(declarations(calendar, ".log-date-calendar .rdp-footer").position).toBe("absolute");
+    expect(declarations(style("components/feedback"), ".modal")["overflow-y"]).toBe("auto");
+  });
   it("declares one framework viewport with cover and device width", () => {
     const layout = readFileSync("src/app/layout.tsx", "utf8");
     expect(layout.match(/export const viewport\s*:/g)).toHaveLength(1);

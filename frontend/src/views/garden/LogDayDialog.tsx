@@ -6,6 +6,17 @@ import { Modal } from "@/components/Modal"
 import { ApiError } from "@/lib/api"
 import { formatDate } from "@/lib/goal"
 import type { HabitWithStats } from "@/lib/habits"
+import { DayPicker } from "react-day-picker"
+
+/** Convert date-only values without passing through UTC or the browser's current date. */
+function calendarDate(iso: string): Date {
+  const [year, month, day] = iso.split("-").map(Number)
+  return new Date(year, month - 1, day, 12)
+}
+
+function dateOnly(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+}
 
 export interface LogDayDialogProps {
   habit: HabitWithStats | null
@@ -58,11 +69,26 @@ export function LogDayDialog({ habit, today, onSave, onClose }: LogDayDialogProp
   return (
     <Modal open={habit !== null} onClose={close} title="Log another day"
       description={habit ? `Add an activity to “${habit.name}” on a day this period.` : undefined}>
-      <form className="form" onSubmit={submit} noValidate>
+      <form className="form log-day-form" onSubmit={submit} noValidate>
         <div className="field">
-          <label className="field__label" htmlFor="garden-log-date">Day</label>
-          <input id="garden-log-date" type="date" className="input" value={date} min={first} max={today}
-            disabled={saving} onChange={(event) => { setDate(event.target.value); setError("") }} />
+          <div className="log-day-form__label-row">
+            <span className="field__label" id="garden-log-date-label">Day</span>
+            <span className="log-day-form__selected-date">{date ? calendarDate(date).toLocaleDateString(undefined, {
+              year: "numeric", month: "long", day: "numeric",
+            }) : "No date selected"}</span>
+          </div>
+          {habit && first && today && <div role="group" aria-labelledby="garden-log-date-label"><DayPicker
+            className="log-date-calendar"
+            mode="single"
+            selected={date ? calendarDate(date) : undefined}
+            onSelect={(selected) => { setDate(selected ? dateOnly(selected) : ""); setError("") }}
+            defaultMonth={calendarDate(today)}
+            startMonth={calendarDate(first)}
+            endMonth={calendarDate(today)}
+            today={calendarDate(today)}
+            disabled={saving ? true : [{ before: calendarDate(first) }, { after: calendarDate(today) }]}
+            footer={date ? `Selected ${formatDate(date)}` : "Choose a day to log."}
+          /></div>}
         </div>
         {error && <p role="alert" className="form-error">{error}</p>}
         <div className="flex flex-wrap justify-end gap-3">

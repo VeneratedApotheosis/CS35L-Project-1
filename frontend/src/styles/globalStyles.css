@@ -1,5 +1,6 @@
 /* Imported once from src/app/layout.tsx. Font is loaded via next/font there. */
 @import "tailwindcss";
+@import "react-day-picker/style.css";
 
 @import "./tokens/colors.css";
 @import "./tokens/typography.css";
@@ -25,6 +26,7 @@
 @import "./components/badges.css";
 @import "./components/history.css";
 @import "./components/login.css";
+@import "./components/log-date-calendar.css";
 
 * {
   box-sizing: border-box;

@@ -496,14 +496,16 @@ describe("log another day", () => {
     return openDialog()
   }
   const pick = (dialog: HTMLElement, date: string) =>
-    fireEvent.change(within(dialog).getByLabelText("Day"), { target: { value: date } })
+    fireEvent.click(dialog.querySelector(`[data-day="${date}"] button`)!)
   const save = (dialog: HTMLElement) => fireEvent.submit(within(dialog).getByLabelText("Day").closest("form")!)
 
   it("only allows days from the period's start to today", () => {
     show([read])
-    const day = within(open()).getByLabelText("Day") as HTMLInputElement
-    expect(day.min).toBe("2026-11-14")
-    expect(day.max).toBe("2026-11-16")
+    const dialog = open()
+    expect((dialog.querySelector('[data-day="2026-11-13"] button') as HTMLButtonElement).disabled).toBe(true)
+    expect((dialog.querySelector('[data-day="2026-11-14"] button') as HTMLButtonElement).disabled).toBe(false)
+    expect((dialog.querySelector('[data-day="2026-11-16"] button') as HTMLButtonElement).disabled).toBe(false)
+    expect((dialog.querySelector('[data-day="2026-11-17"] button') as HTMLButtonElement).disabled).toBe(true)
   })
 
   it("refuses a day outside that range without calling the server", () => {
