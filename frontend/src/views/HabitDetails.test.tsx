@@ -203,7 +203,8 @@ describe("the cards at the top", () => {
     page()
     await screen.findByRole("heading", { name: "Read" })
     fireEvent.click(screen.getByRole("button", { name: "Log date" }))
-    fireEvent.change(await screen.findByLabelText("Day"), { target: { value: "2026-11-09" } })
+    const calendar = await screen.findByLabelText("Day")
+    fireEvent.click(calendar.querySelector('[data-day="2026-11-09"] button')!)
     fireEvent.click(within(document.querySelector("dialog[open]") as HTMLElement).getByRole("button", { name: "Log activity" }))
     await screen.findByText(/Activity logged for/)
     const post = fetchMock.mock.calls.find((call) => call[1]?.method === "POST")!

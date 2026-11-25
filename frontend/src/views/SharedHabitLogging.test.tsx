@@ -72,7 +72,7 @@ const removeButtons = () => screen.queryAllByRole("button", { name: /Remove one 
 const button = (name: string) => screen.getByRole("button", { name }) as HTMLButtonElement
 async function openLogDate() {
   fireEvent.click(button("Log date"))
-  return await screen.findByLabelText("Day") as HTMLInputElement
+  return await screen.findByLabelText("Day")
 }
 async function openDetails() {
   render(<QueryProvider><SharedHabitDetails id="shared-a" /></QueryProvider>)
@@ -127,8 +127,10 @@ describe("shared habit logging (#277, #337)", () => {
   it("offers the caller's current period up to their own today in the Log date dialog", async () => {
     await openDetails()
     const day = await openLogDate()
-    expect(day.min).toBe("2026-11-18")
-    expect(day.max).toBe("2026-11-20")
+    expect((day.querySelector('[data-day="2026-11-17"] button') as HTMLButtonElement).disabled).toBe(true)
+    expect((day.querySelector('[data-day="2026-11-18"] button') as HTMLButtonElement).disabled).toBe(false)
+    expect((day.querySelector('[data-day="2026-11-20"] button') as HTMLButtonElement).disabled).toBe(false)
+    expect((day.querySelector('[data-day="2026-11-21"] button') as HTMLButtonElement).disabled).toBe(true)
   })
 
   it("updates the caller row, group average and plant from POST while the detail refresh is pending", async () => {
@@ -191,7 +193,7 @@ describe("shared habit logging (#277, #337)", () => {
   it.each(["2026-11-17", "2026-11-21", ""])("rejects date %j outside the caller's current period up to today", async (date) => {
     await openDetails()
     const day = await openLogDate()
-    fireEvent.change(day, { target: { value: date } })
+    if (date) fireEvent.click(day.querySelector(`[data-day="${date}"] button`)!)
     fireEvent.click(screen.getByRole("button", { name: "Log activity" }))
     expect((await screen.findByRole("alert")).textContent).toContain("Choose a day from")
     expect(calls("POST")).toHaveLength(0)
@@ -200,7 +202,7 @@ describe("shared habit logging (#277, #337)", () => {
   it("allows a valid earlier date within the current period", async () => {
     await openDetails()
     const day = await openLogDate()
-    fireEvent.change(day, { target: { value: "2026-11-18" } })
+    fireEvent.click(day.querySelector('[data-day="2026-11-18"] button')!)
     fireEvent.click(screen.getByRole("button", { name: "Log activity" }))
     await screen.findByText("Activity logged for Nov 18, 2026.")
     expect(JSON.parse(calls("POST")[0][1].body)).toEqual({ occurred_on: "2026-11-18" })

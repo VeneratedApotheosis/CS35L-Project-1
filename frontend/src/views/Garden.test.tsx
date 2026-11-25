@@ -248,7 +248,7 @@ it("logs another day from the panel and offers Undo for that log", async () => {
   fireEvent.click(await plantNamed("Read"), { detail: 1 })
   fireEvent.click(within(screen.getByRole("dialog", { name: "Read" })).getByRole("button", { name: "Choose date" }))
   const dialog = openDialog()
-  fireEvent.change(within(dialog).getByLabelText("Day"), { target: { value: "2026-11-11" } })
+  fireEvent.click(dialog.querySelector('[data-day="2026-11-11"] button')!)
   fireEvent.submit(within(dialog).getByLabelText("Day").closest("form")!)
   await screen.findByText(/Activity logged for .*11/)
   const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST")
