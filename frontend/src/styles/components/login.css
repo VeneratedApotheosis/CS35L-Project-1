@@ -26,7 +26,7 @@
   align-items: center;
   gap: var(--space-3);
   margin: 0;
-  padding: var(--space-8) var(--page-padding) 0;
+  padding: var(--space-8) var(--page-margin) 0;
 }
 
 .login__logo {
@@ -37,7 +37,7 @@
   grid-area: content;
   align-self: center;
   max-width: 28rem;
-  padding: var(--space-8) var(--page-padding) var(--space-16);
+  padding: var(--space-8) var(--page-margin) var(--space-16);
 }
 
 .login__title {

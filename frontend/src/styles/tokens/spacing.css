@@ -12,15 +12,23 @@
   --space-16: 4rem;
 
   /* Layout values visible in the Figma Make styles */
+  /* On a window wider than this the page's content is centred in it. */
+  --content-width: 72rem;
+  /* The space a page keeps between its content and the window's edge when the window is no wider than the content width. */
+  --page-margin: clamp(1rem, 4vw, 3rem);
+  /* The vertical padding of a page. */
   --page-padding: clamp(1rem, 4vw, 3rem);
+  /*
+   * The space between the window's edge and a page's content, on each side: two thirds of what the
+   * page margin plus the centring of a 72rem column would leave. The percentage is of the width of the
+   * element it is used on, which for the page and the top bar is the whole window.
+   */
+  --page-side: calc((max(0px, 100% - var(--content-width)) / 2 + var(--page-margin)) * 2 / 3);
   --section-padding: clamp(3rem, 7vw, 6rem);
   --card-padding: clamp(1.5rem, 3vw, 2.5rem);
   --plant-card-touch-target: 2.75rem;
   --plant-card-art-width: 12rem;
   --plant-card-min-width: 14rem;
-  /* Page width measures; the full measure is no maximum. See docs/frontend/design.md, Page width. */
-  --content-width-medium: 72rem;
-  --content-width-wide: 90rem;
   --touch-target: 2.75rem;
   --mobile-nav-height: 5rem;
 

@@ -1,4 +1,4 @@
-import { ArrowUpRight, Flame } from "lucide-react"
+import { Flame, Users } from "lucide-react"
 import { ProgressBar } from "@/components/ProgressBar"
 import { formatDate } from "@/lib/goal"
 import type { HabitWithStats } from "@/lib/habits"
@@ -51,14 +51,16 @@ export interface HabitCardProps {
   today: string
   /** The streak in periods, once it has been fetched. */
   streak: number | undefined
+  /** For a shared habit: how many people are in it, in the pill where a personal habit has its streak. */
+  members?: number
 }
 
 /**
- * What shows beside a plant while the pointer is on it: the name and what is left, the streak, this
- * period's progress as pills, and a line on how far the goal is. The soft card behind it is drawn
- * by the parent, behind the plant; this is the writing on top.
+ * What shows on a plant's card while the pointer is on it: the name and what is left, the streak,
+ * this period's progress as pills. The soft card behind it is drawn by the parent, behind the plant;
+ * this is the writing on top. A click adds the buttons beside it (see GardenPlant).
  */
-export function HabitCard({ habit, today, streak }: HabitCardProps) {
+export function HabitCard({ habit, today, streak, members }: HabitCardProps) {
   const { count, target } = habit.stats.current_period
   const remaining = remainingLine(habit, today)
   return (
@@ -68,7 +70,13 @@ export function HabitCard({ habit, today, streak }: HabitCardProps) {
           <h3 className="garden-card__name" title={habit.name}>{habit.name}</h3>
           {remaining && <p className="garden-card__sub">{remaining}</p>}
         </div>
-        {streak !== undefined && streak > 0 && (
+        {members !== undefined && (
+          <span className="garden-card__streak">
+            <Users size={16} aria-hidden="true" />
+            {members} {members === 1 ? "member" : "members"}
+          </span>
+        )}
+        {members === undefined && streak !== undefined && streak > 0 && (
           <span className="garden-card__streak">
             <Flame size={16} aria-hidden="true" />
             {streak} {unitWord(habit)} streak
@@ -77,10 +85,6 @@ export function HabitCard({ habit, today, streak }: HabitCardProps) {
       </div>
       <div className="garden-card__progress">
         <ProgressBar label={`${habit.name}: current period`} caption={progressTitle(habit)} count={count} target={target} />
-        <p className="garden-card__foot">
-          <span>{encouragement(habit)}</span>
-          <ArrowUpRight size={16} aria-hidden="true" />
-        </p>
       </div>
     </div>
   )

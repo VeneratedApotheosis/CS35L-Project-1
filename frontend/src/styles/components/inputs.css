@@ -5,7 +5,7 @@
   width: 100%;
   min-height: var(--touch-target);
   padding: 0.75rem 0.9rem;
-  border: 1px solid var(--color-border);
+  border: var(--line-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
@@ -27,7 +27,7 @@
 .select:focus {
   border-color: var(--color-focus);
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 20%, transparent);
+  box-shadow: 0 0 0 var(--line-thick) color-mix(in srgb, var(--color-focus) 20%, transparent);
 }
 
 .input[aria-invalid="true"],

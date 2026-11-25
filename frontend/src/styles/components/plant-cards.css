@@ -94,8 +94,8 @@
 }
 
 .plant-card__open:focus-visible {
-  outline: var(--space-1) solid var(--color-focus);
-  outline-offset: var(--space-1);
+  outline: var(--line-medium) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
 }
 
 .plant-card__name {

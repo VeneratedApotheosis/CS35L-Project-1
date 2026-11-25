@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs"
 import postcss from "postcss"
 import { expect, it } from "vitest"
 
-it("matches the Garden gutter and fits the complete phone shelf", () => {
+it("keeps the login gutter and fits the complete phone shelf", () => {
   const phoneRule = (file: string, selector: string) => {
     const declarations: Record<string, string> = {}
     postcss.parse(readFileSync(`src/styles/components/${file}.css`, "utf8"))
@@ -16,9 +16,9 @@ it("matches the Garden gutter and fits the complete phone shelf", () => {
       })
     return declarations
   }
-  const garden = phoneRule("navigation", ".app-shell--full")
   const login = phoneRule("login", ".login")
-  expect(login["--login-gutter"]).toBe(garden["--page-gutter"])
+  // The login keeps its own, wider gutter: it is a full-bleed picture, not a page with the Garden's side space.
+  expect(login["--login-gutter"]).toBe("clamp(var(--space-8), 6vw, var(--space-12))")
   expect(login["grid-template-rows"]).toBe("auto minmax(auto, 1fr) auto")
   const wallRegion = phoneRule("login", ".wall")
   expect(wallRegion["align-self"]).toBe("stretch")

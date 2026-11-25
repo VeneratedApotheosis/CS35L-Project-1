@@ -5,7 +5,7 @@ import { QueryProvider } from "@/lib/QueryProvider"
 import type { HabitWithStats } from "@/lib/habits"
 import { GardenShelves, type GardenShelvesProps } from "./GardenShelves"
 import { CLICK_MAX_MS, HOLD_MS, progressLine } from "./GardenPlant"
-import { HOVER_CARD_WIDTH } from "./gardenLayout"
+import { ACTIONS_WIDTH, HOVER_CARD_WIDTH } from "./gardenLayout"
 import { encouragement, progressTitle, remainingLine } from "./HabitCard"
 
 const auth = vi.hoisted(() => {
@@ -85,15 +85,15 @@ describe("the shelves", () => {
     expect(document.querySelector(".garden-card")).toBeNull()
   })
 
-  it("puts at most three pots on a shelf, and starts another shelf for more", () => {
+  it("puts at most four pots on a shelf, and starts another shelf for more", () => {
     const shelves = (count: number) => {
       cleanup()
       const names = Array.from({ length: count }, (_, index) => habit("x".repeat(index + 1), `Habit ${index}`))
       show(names)
       return document.querySelectorAll("[data-shelf]").length
     }
-    expect(shelves(2)).toBe(1) // two plants and the add pot
-    expect(shelves(3)).toBe(2) // the add pot is the fourth
+    expect(shelves(3)).toBe(1) // three plants and the add pot
+    expect(shelves(4)).toBe(2) // the add pot is the fifth
     expect(shelves(8)).toBe(3) // nine pots
   })
 
@@ -122,13 +122,13 @@ describe("hover", () => {
     expect(card.textContent).toContain("5 days left this week")
     expect(card.textContent).toContain("Weekly progress")
     expect(card.textContent).toContain("2/3")
-    expect(card.textContent).toContain("One more to reach your goal!")
+    expect(card.textContent).not.toContain("to reach your goal")
     expect(card.textContent).not.toContain("Hold the plant")
     const bar = within(card).getByRole("progressbar")
     expect(bar.getAttribute("aria-valuenow")).toBe("2")
     expect(bar.querySelectorAll(".habit-progress__step")).toHaveLength(3)
     expect(bar.querySelectorAll(".habit-progress__step--complete")).toHaveLength(2)
-    // The see-through square is behind the plant: its own element, ahead of the plant in the page.
+    // The card's square is behind the plant: its own element, ahead of the plant in the page.
     const surface = document.querySelector(".garden-card__surface")!
     expect(surface.compareDocumentPosition(document.querySelector(".garden-plant")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     fireEvent.pointerLeave(plant(/^Read,/), { pointerType: "mouse" })
@@ -284,7 +284,7 @@ describe("hold", () => {
 })
 
 describe("touch interactions", () => {
-  it("explains tap and hold and shows the hover information in the tapped panel", async () => {
+  it("explains tap and hold and shows the hover information in the tapped card", async () => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify({ ...read, stats: { ...read.stats, streak: 2 } }), { status: 200, headers: { "Content-Type": "application/json" } }))
     show([read])
     expect(screen.getByText("Tap a plant for details. Touch and hold to log today.")).toBeTruthy()
@@ -295,9 +295,9 @@ describe("touch interactions", () => {
     fireEvent.click(button, { detail: 1 })
     const panel = screen.getByRole("dialog", { name: "Read" })
     expect(panel.textContent).toContain("5 days left this week")
-    expect(panel.textContent).toContain("One more to reach your goal!")
+    expect(panel.textContent).not.toContain("to reach your goal")
     expect(within(panel).getByRole("progressbar").getAttribute("aria-valuenow")).toBe("2")
-    expect(await within(panel).findByText("2 weeks")).toBeTruthy()
+    expect(await within(panel).findByText("2 week streak")).toBeTruthy()
     fireEvent.click(within(panel).getByRole("button", { name: "Close" }))
     expect(screen.queryByRole("dialog", { name: "Read" })).toBeNull()
   })
@@ -342,29 +342,47 @@ describe("touch interactions", () => {
   })
 })
 
-describe("the panel beside the plant", () => {
+describe("the open card", () => {
   const open = () => {
     fireEvent.click(plant(/^Read,/), { detail: 1 })
     return screen.getByRole("dialog", { name: "Read" })
   }
 
-  it("opens on a click, beside the plant and not as a page-wide modal, with the overview and the quick actions", () => {
+  it("is the hover card grown on a click, with the overview and the quick actions, and not a page-wide modal", () => {
     show([read])
     const panel = open()
-    expect(panel.closest(".garden-plant")).toBeTruthy()
+    expect(panel.classList.contains("garden-card")).toBe(true)
+    expect(panel.getAttribute("data-open")).toBe("true")
     expect(panel.closest("dialog")).toBeNull()
-    expect(panel.closest(".garden-plant")?.getAttribute("data-side")).toBeTruthy()
-    expect(panel.textContent).toContain("3 times every week for 8 weeks")
+    expect(panel.textContent).toContain("5 days left this week")
+    expect(within(panel).getByRole("heading", { name: "Read" })).toBeTruthy()
     expect(within(panel).getByRole("progressbar").getAttribute("aria-valuenow")).toBe("2")
-    expect(panel.textContent).toContain("One more to reach your goal!")
-    expect(panel.textContent).toContain("Health")
-    expect(panel.textContent).toContain("Streak")
-    expect(panel.textContent).toContain("Started")
-    expect(panel.textContent).toContain("Nov 1")
+    expect(panel.textContent).not.toContain("to reach your goal")
     expect(within(panel).getByRole("link", { name: "View details" }).getAttribute("href")).toBe("/habit?id=a")
     fireEvent.click(within(panel).getByRole("button", { name: "Log today" }))
     expect(onLogToday).toHaveBeenCalledWith("a")
     expect(screen.queryByRole("dialog", { name: "Read" })).toBeNull()
+  })
+
+  it("has no buttons on hover alone, and grows sideways to hold them once clicked, with the plant's part where it was", () => {
+    show([read])
+    fireEvent.pointerEnter(plant(/^Read,/), { pointerType: "mouse" })
+    const card = document.querySelector<HTMLElement>(".garden-card")!
+    const surface = document.querySelector<HTMLElement>(".garden-card__surface")!
+    expect(within(card).queryByRole("button")).toBeNull()
+    expect(card.getAttribute("role")).toBeNull()
+    expect(card.style.width).toBe(`${HOVER_CARD_WIDTH}px`)
+    const left = parseFloat(card.style.left)
+    const height = card.style.height
+    open()
+    expect(card.style.width).toBe(`${HOVER_CARD_WIDTH + ACTIONS_WIDTH}px`)
+    expect(card.style.height).toBe(height)
+    expect(surface.style.width).toBe(card.style.width)
+    expect(surface.style.left).toBe(card.style.left)
+    // Toward the right the left edge stays, toward the left it moves out by the buttons' column.
+    const grewLeft = card.getAttribute("data-side") === "left"
+    expect(parseFloat(card.style.left)).toBe(grewLeft ? left - ACTIONS_WIDTH : left)
+    expect(card.querySelector(".garden-card__content")).toBeTruthy()
   })
 
   it("closes on a press anywhere outside it, and on Escape", () => {
@@ -379,7 +397,7 @@ describe("the panel beside the plant", () => {
 
   it("stays open for a press inside it", () => {
     show([read])
-    fireEvent.pointerDown(within(open()).getByText("Health"))
+    fireEvent.pointerDown(within(open()).getByText("Weekly progress"))
     expect(screen.getByRole("dialog", { name: "Read" })).toBeTruthy()
   })
 
@@ -396,21 +414,51 @@ describe("the panel beside the plant", () => {
     expect(screen.getByRole("dialog", { name: "Walk" })).toBeTruthy()
   })
 
-  it("keeps the hover card open, even once the pointer has gone, and sets itself beside the card, not over it", () => {
+  it("stays open, with its buttons, even once the pointer has gone", () => {
     show([read])
     fireEvent.pointerEnter(plant(/^Read,/), { pointerType: "mouse" })
     const panel = open()
     fireEvent.pointerLeave(plant(/^Read,/), { pointerType: "mouse" })
-    expect(document.querySelector(".garden-card")).toBeTruthy()
+    expect(document.querySelector(".garden-card")).toBe(panel)
     expect(document.querySelector(".garden-card__surface")).toBeTruthy()
-    // The panel starts half the card's width from the plant's middle, centred on the card's height.
-    const wrapper = panel.closest<HTMLElement>(".garden-plant")!
-    expect(wrapper.style.getPropertyValue("--card-half")).toBe(`${HOVER_CARD_WIDTH / 2}px`)
-    expect(wrapper.style.getPropertyValue("--card-top")).toMatch(/^-?\d+(\.\d+)?px$/)
-    expect(wrapper.style.getPropertyValue("--card-height")).toMatch(/^\d+(\.\d+)?px$/)
+    expect(within(panel).getByRole("button", { name: "Log today" })).toBeTruthy()
   })
 
-  it("takes the card away with the panel once the pointer is gone, and closes with its close button", () => {
+  it("fills the column's top with what the card does not say, and the buttons are below", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ ...read, stats: { ...read.stats, streak: 2, consistency: { successful: 1, completed: 2, rate: 0.5 } } }), { status: 200, headers: { "Content-Type": "application/json" } }))
+    show([read])
+    const panel = open()
+    const facts = panel.querySelector<HTMLElement>(".garden-card__facts")!
+    expect(facts.textContent).toContain("Week 2 of 8")
+    expect(facts.textContent).not.toContain("Healthy")
+    expect(facts.textContent).toContain("Nov 1")
+    expect(await within(facts).findByText("50%")).toBeTruthy()
+    expect(facts.compareDocumentPosition(within(panel).getByRole("button", { name: "Log today" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it("closes when the pointer comes onto another plant, but not onto its own", () => {
+    show([read, habit("bb", "Walk")])
+    open()
+    fireEvent.pointerEnter(plant(/^Read,/), { pointerType: "mouse" })
+    expect(screen.getByRole("dialog", { name: "Read" })).toBeTruthy()
+    fireEvent.pointerEnter(plant(/^Walk,/), { pointerType: "mouse" })
+    expect(screen.queryByRole("dialog", { name: "Read" })).toBeNull()
+  })
+
+  it("stays open when a touch lands on another plant: that is a tap, which moves it itself", () => {
+    show([read, habit("bb", "Walk")])
+    open()
+    fireEvent.pointerEnter(plant(/^Walk,/), { pointerType: "touch" })
+    expect(screen.getByRole("dialog", { name: "Read" })).toBeTruthy()
+  })
+
+  it("puts focus on its first button, so the keyboard can use it at once", () => {
+    show([read])
+    const panel = open()
+    expect(document.activeElement).toBe(within(panel).getByRole("button", { name: "Log today" }))
+  })
+
+  it("goes away once the pointer is gone and it is closed, and closes with its close button", () => {
     show([read])
     fireEvent.pointerEnter(plant(/^Read,/), { pointerType: "mouse" })
     const panel = open()

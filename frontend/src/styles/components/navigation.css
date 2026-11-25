@@ -1,30 +1,17 @@
 /*
- * Page width. A page picks one measure through AppShell (see pageWidth there), and the page content
- * and the top bar both read the same two variables, so they always line up.
- * medium (default): reading and forms.  wide: card grids.  full: the Garden's shelves.
+ * Page width. Every page and the top bar have the same space on each side (--page-side, see
+ * tokens/spacing.css), so the content is the same width on every page and the top bar always lines up
+ * with the page below it. AppShell (see pageWidth there) only picks the vertical padding: wide pages
+ * (card grids) have less of it, and the Garden has more at the top.
  */
 .app-shell {
-  --page-max-width: var(--content-width-medium);
-  --page-gutter: var(--page-padding);
   min-height: 100vh;
   padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
-.app-shell--wide {
-  --page-max-width: var(--content-width-wide);
-  --page-gutter: clamp(var(--space-2), 1vw, var(--space-4));
-}
-
-.app-shell--full {
-  --page-max-width: none;
-  --page-gutter: clamp(var(--space-3), 2vw, var(--space-8));
-}
-
 .app-shell__content {
-  max-width: var(--page-max-width);
-  margin-inline: auto;
   padding: var(--page-padding);
-  padding-inline: var(--page-gutter);
+  padding-inline: var(--page-side);
   overflow-wrap: anywhere;
 }
 
@@ -52,15 +39,13 @@
   position: fixed;
   inset: auto 0 0;
   z-index: var(--z-dropdown);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--line-thin) solid var(--color-border);
   padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
   background: var(--color-surface);
   color: var(--color-text);
 }
 
 .navbar__inner {
-  max-width: var(--page-max-width, var(--content-width-medium));
-  margin-inline: auto;
   min-height: var(--space-16);
   align-content: center;
 }
@@ -152,8 +137,8 @@
 .navbar__link:focus-visible,
 .navbar__brand:focus-visible,
 .app-shell__skip:focus-visible {
-  outline: var(--space-1) solid var(--color-focus);
-  outline-offset: var(--space-1);
+  outline: var(--line-medium) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
 }
 
 .navbar--preview .navbar__bar {
@@ -163,7 +148,7 @@
 
 .navbar-preview {
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: var(--line-thin) solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-background);
 }
@@ -181,13 +166,13 @@
   .navbar__bar {
     position: static;
     border-top: 0;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: var(--line-thin) solid var(--color-border);
     padding-block: var(--space-4);
     padding-inline: 0;
   }
 
   .navbar__inner {
-    padding-inline: var(--page-gutter, var(--page-padding));
+    padding-inline: var(--page-side);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -271,24 +256,16 @@
   .app-shell { min-height: 100dvh; }
   .app-shell__content {
     padding-top: calc(var(--page-padding) + env(safe-area-inset-top, 0px));
-    padding-left: max(var(--page-gutter), env(safe-area-inset-left, 0px));
-    padding-right: max(var(--page-gutter), env(safe-area-inset-right, 0px));
+    padding-left: max(var(--page-side), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--page-side), env(safe-area-inset-right, 0px));
   }
   .navbar__bar {
     padding-left: max(var(--space-2), env(safe-area-inset-left, 0px));
     padding-right: max(var(--space-2), env(safe-area-inset-right, 0px));
   }
-  .app-shell--wide {
-    --page-gutter: var(--space-3);
-  }
-
   .app-shell--wide .app-shell__content {
     padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
     padding-bottom: var(--space-12);
-  }
-
-  .app-shell--full {
-    --page-gutter: clamp(var(--space-8), 6vw, var(--space-12));
   }
 
   .app-shell--full .app-shell__content {

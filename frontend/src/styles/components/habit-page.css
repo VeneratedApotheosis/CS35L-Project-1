@@ -13,7 +13,7 @@
   --card-radius: calc(var(--card-pad) + var(--inner-radius));
   margin: 0;
   padding: var(--card-pad);
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border: var(--line-thin) solid color-mix(in srgb, var(--color-border) 70%, transparent);
   border-radius: var(--card-radius);
   background: var(--color-surface-elevated);
   box-shadow: var(--shadow-card);
@@ -71,12 +71,12 @@
 .habit-members__title, .habit-invite__title { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); }
 .habit-members__scroll { max-width: 100%; overflow-x: auto; }
 .habit-members__table { width: 100%; border-collapse: collapse; text-align: start; font-size: var(--font-size-md); }
-.habit-members__table th, .habit-members__table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); text-align: start; overflow-wrap: anywhere; }
+.habit-members__table th, .habit-members__table td { padding: var(--space-2) var(--space-3); border-bottom: var(--line-thin) solid var(--color-border); text-align: start; overflow-wrap: anywhere; }
 .habit-members__table thead th { color: var(--color-text-secondary); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
 .habit-members__table tbody tr:last-child > * { border-bottom: 0; }
 .habit-members__tag { color: var(--color-text-secondary); font-weight: var(--font-weight-regular); }
 .habit-members__list { display: none; margin: 0; padding: 0; list-style: none; }
-.habit-members__list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding-block: var(--space-3); border-bottom: 1px solid var(--color-border); }
+.habit-members__list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding-block: var(--space-3); border-bottom: var(--line-thin) solid var(--color-border); }
 .habit-members__list li:last-child { border-bottom: 0; }
 .habit-members__name { font-weight: var(--font-weight-bold); overflow-wrap: anywhere; }
 .habit-members__health { color: var(--color-link); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
@@ -141,7 +141,7 @@
 .habit-period__metrics > div { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; padding-inline: var(--space-3); }
 .habit-period__metrics > div:first-child { padding-inline-start: 0; }
 .habit-period__metrics > div:last-child { padding-inline-end: 0; }
-.habit-period__metrics > div + div { border-inline-start: 1px solid var(--color-border); }
+.habit-period__metrics > div + div { border-inline-start: var(--line-thin) solid var(--color-border); }
 .habit-period__metrics dt { color: var(--color-text-secondary); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
 .habit-period__metrics dd { display: grid; gap: 0.125rem; margin: 0; }
 .habit-period__value { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; line-height: 1.1; }
@@ -202,10 +202,10 @@ td[data-band] .habit-day[data-logged="false"] { background: color-mix(in srgb, v
 .habit-day[data-logged="true"] { background: var(--color-primary); color: var(--color-primary-text); }
 /* Days before the habit starts and from its end have no fill, only an outline. */
 .habit-day[data-outside="true"] { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text) 20%, transparent); color: var(--color-text-muted); }
-.habit-day[data-today="true"] { outline: 2px solid var(--color-link); outline-offset: 1px; }
+.habit-day[data-today="true"] { outline: var(--line-medium) solid var(--color-link); outline-offset: var(--line-thin); }
 button.habit-day { cursor: pointer; }
 button.habit-day:hover { filter: brightness(0.94); }
-button.habit-day:focus-visible { outline: 2px solid var(--color-link); outline-offset: 2px; }
+button.habit-day:focus-visible { outline: var(--line-medium) solid var(--color-link); outline-offset: var(--focus-offset); }
 .habit-day__count {
   position: absolute;
   inset-inline-end: -0.125rem;
@@ -233,12 +233,12 @@ button.habit-day:focus-visible { outline: 2px solid var(--color-link); outline-o
 .habit-overall__figures > div { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; padding-inline: var(--space-3); }
 .habit-overall__figures > div:first-child { padding-inline-start: 0; }
 .habit-overall__figures > div:last-child { padding-inline-end: 0; }
-.habit-overall__figures > div + div { border-inline-start: 1px solid var(--color-border); }
+.habit-overall__figures > div + div { border-inline-start: var(--line-thin) solid var(--color-border); }
 .habit-overall__figures dt { color: var(--color-text-secondary); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
 .habit-overall__figures dd { display: grid; gap: 0.125rem; margin: 0; }
 .habit-overall__value { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums; line-height: 1.1; }
 .habit-overall__note { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
-.habit-overall__members { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
+.habit-overall__members { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin: 0; padding-top: var(--space-3); border-top: var(--line-thin) solid var(--color-border); color: var(--color-text-secondary); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
 .habit-overall__members strong { color: var(--color-text); font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
 .habit-log { --card-pad: 1.5rem; display: grid; gap: var(--space-3); align-content: start; }
 .habit-log__title { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); }
@@ -251,13 +251,13 @@ button.habit-day:focus-visible { outline: 2px solid var(--color-link); outline-o
 @container (max-width: 26rem) {
   .habit-overall__figures { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
   .habit-overall__figures > div, .habit-overall__figures > div:first-child, .habit-overall__figures > div:last-child { padding-inline: 0; }
-  .habit-overall__figures > div + div { padding-top: var(--space-3); border-inline-start: 0; border-top: 1px solid var(--color-border); }
+  .habit-overall__figures > div + div { padding-top: var(--space-3); border-inline-start: 0; border-top: var(--line-thin) solid var(--color-border); }
 }
 
 @container (max-width: 26rem) {
   .habit-period__metrics { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
   .habit-period__metrics > div, .habit-period__metrics > div:first-child, .habit-period__metrics > div:last-child { padding-inline: 0; }
-  .habit-period__metrics > div + div { padding-top: var(--space-3); border-inline-start: 0; border-top: 1px solid var(--color-border); }
+  .habit-period__metrics > div + div { padding-top: var(--space-3); border-inline-start: 0; border-top: var(--line-thin) solid var(--color-border); }
 }
 
 @media (--phone) {

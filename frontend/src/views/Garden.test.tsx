@@ -154,7 +154,7 @@ describe("Garden", () => {
     await waitFor(() => expect(fetchMock).not.toHaveBeenCalled())
   })
 
-  it("redirects to the dashboard after saving and refreshes its cached habits", async () => {
+  it("goes to the Garden after saving and refreshes its cached habits", async () => {
     let saved = false
     fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
       if (url.endsWith("/me")) return json({ id: auth.user?.id, timezone: "UTC" })
@@ -174,7 +174,7 @@ describe("Garden", () => {
     fireEvent.change(screen.getByLabelText("Number of periods"), { target: { value: "4" } })
     fireEvent.click(screen.getByRole("button", { name: "Review habit" }))
     fireEvent.click(screen.getByRole("button", { name: "Create habit" }))
-    await waitFor(() => expect(auth.replace).toHaveBeenCalledWith("/dashboard"))
+    await waitFor(() => expect(auth.replace).toHaveBeenCalledWith("/"))
     view.rerender(<QueryProvider><DashboardPage /></QueryProvider>)
     expect(screen.getByRole("heading", { name: "Dashboard" })).toBeTruthy()
     await screen.findByRole("link", { name: "Practice" })

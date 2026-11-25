@@ -1,33 +1,28 @@
 import { describe, expect, it } from "vitest"
 import { SHELF_MARGIN, STAGGER } from "../login/wall/layouts"
-import { CARD_GAP, GARDEN_MAX_COLS, GARDEN_PITCH, GARDEN_SCALE, HOVER_CARD_WIDTH, gardenCols, gardenExtra, gardenLayout, gardenScale, peekSide } from "./gardenLayout"
+import { GARDEN_MAX_COLS, GARDEN_PITCH, GARDEN_SCALE, gardenCols, gardenExtra, gardenLayout, gardenScale, peekSide } from "./gardenLayout"
 
 describe("how many pots fit across", () => {
   it("never scales the pots: a narrower wall just holds fewer", () => {
-    expect(gardenCols(1700)).toBe(3)
-    expect(gardenCols(1250)).toBe(3)
-    expect(gardenCols(1000)).toBe(2)
-    expect(gardenCols(700)).toBe(1)
-    for (const width of [700, 1000, 1250, 1700]) {
+    expect(gardenCols(1700)).toBe(4)
+    expect(gardenCols(1250)).toBe(4)
+    expect(gardenCols(1000)).toBe(3)
+    expect(gardenCols(700)).toBe(2)
+    expect(gardenCols(400)).toBe(1)
+    for (const width of [400, 700, 1000, 1250, 1700]) {
       const cols = gardenCols(width)
       expect(GARDEN_SCALE * (cols * GARDEN_PITCH + 2 * SHELF_MARGIN + 2 * STAGGER)).toBeLessThanOrEqual(width)
     }
   })
 
-  it("keeps the pots only as far apart as two open cards need, with the gap between them", () => {
-    const gap = GARDEN_SCALE * GARDEN_PITCH - HOVER_CARD_WIDTH
-    expect(gap).toBeGreaterThanOrEqual(CARD_GAP)
-    expect(gap).toBeLessThan(CARD_GAP + GARDEN_SCALE)
-  })
-
-  it("is at least one and never more than three", () => {
-    expect(GARDEN_MAX_COLS).toBe(3)
+  it("is at least one and never more than four", () => {
+    expect(GARDEN_MAX_COLS).toBe(4)
     expect(gardenCols(50)).toBe(1)
-    expect(gardenCols(100_000)).toBe(3)
+    expect(gardenCols(100_000)).toBe(4)
   })
 
   it("is the most when the wall has not been measured", () => {
-    expect(gardenCols(0)).toBe(3)
+    expect(gardenCols(0)).toBe(4)
   })
 })
 
@@ -95,11 +90,11 @@ describe("the shelves", () => {
 describe("the space between the shelves and the edge of the screen", () => {
   const used = (cols: number) => GARDEN_SCALE * (cols * GARDEN_PITCH + 2 * SHELF_MARGIN + 2 * STAGGER)
 
-  it("is halved: each board is longer at both ends by half of the space that was beside it", () => {
+  it("is cut to a third: each board is longer at both ends by a third of the space that was beside it", () => {
     const width = 1600
     const before = (width - used(2)) / 2
     const lengthened = GARDEN_SCALE * (2 * GARDEN_PITCH + 2 * (SHELF_MARGIN + gardenExtra(width, 2)) + 2 * STAGGER)
-    expect((width - lengthened) / 2).toBeCloseTo(before / 2)
+    expect((width - lengthened) / 2).toBeCloseTo(before / 3)
   })
 
   it("is nothing when the wall is not measured or has no room to spare", () => {
@@ -117,15 +112,15 @@ describe("the space between the shelves and the edge of the screen", () => {
   })
 })
 
-describe("which side the peek panel opens on", () => {
+describe("which side the open card grows toward", () => {
   it("is out toward the nearer edge of the wall when there is room", () => {
     expect(peekSide(600, 1600)).toBe("left")
     expect(peekSide(1000, 1600)).toBe("right")
   })
 
   it("is the other side where the nearer edge has no room", () => {
-    expect(peekSide(300, 1600)).toBe("right")
-    expect(peekSide(1400, 1600)).toBe("left")
+    expect(peekSide(150, 1600)).toBe("right")
+    expect(peekSide(1450, 1600)).toBe("left")
   })
 
   it("is the side with room on a wall too narrow for either", () => {

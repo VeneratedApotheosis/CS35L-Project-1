@@ -75,32 +75,38 @@ beforeEach(() => {
 afterEach(() => { cleanup(); client.clear(); vi.unstubAllGlobals(); vi.clearAllMocks() })
 
 describe("shared Garden cards (#279)", () => {
-  it("shows group stage/health and member count, but uses the caller's integer period count", async () => {
+  it("stands a shared habit on a red shelf: the plant is the group's, the period is the caller's own", async () => {
     setup()
-    const card = await screen.findByRole("article", { name: "Together shared-a" })
-    expect(within(card).getByText("Shared · 3 members")).toBeTruthy()
-    expect(within(card).getByText("Pothos · Stage 4 · Wilted")).toBeTruthy()
-    expect(within(card).getByTestId("plant-art").getAttribute("data-stage")).toBe("4")
-    expect(within(card).getByRole("progressbar", { name: "Together shared-a: your current period" }).getAttribute("aria-valuenow")).toBe("1")
-    expect(within(card).getByText("1/3")).toBeTruthy()
-    expect(within(card).queryByText("2.5/3")).toBeNull()
-    expect(within(card).getByRole("link", { name: "Together shared-a" }).getAttribute("href")).toBe("/shared-habit?id=shared-a")
-    expect(within(card).getByRole("link", { name: "Open shared habit Together shared-a" }).getAttribute("href")).toBe("/shared-habit?id=shared-a")
-    expect(within(card).queryByRole("button", { name: /Log|Delete/ })).toBeNull()
+    const plant = await screen.findByRole("button", { name: "Together shared-a, 1 of 3 this period, wilted" })
+    expect(plant.closest(".garden-wall")?.getAttribute("data-kind")).toBe("shared")
+    expect(screen.getByRole("button", { name: /^Personal reading,/ }).closest(".garden-wall")?.getAttribute("data-kind")).toBeNull()
+    expect(within(plant.closest(".garden-wall")!.parentElement!).getAllByTestId("plant-art")[0].getAttribute("data-stage")).toBe("4")
     expect(fetchMock.mock.calls.find(([url]) => url.includes("/shared-habits?"))?.[1].headers.Authorization).toBe("Bearer caller-token")
     expect(fetchMock.mock.calls.some(([url]) => /\/shared-habits\/shared-a$/.test(url))).toBe(false)
   })
 
-  it("keeps personal shelves before shared cards and orders shared cards oldest first with a stable id tie-break", async () => {
+  it("opens its card with the members, the period and only View details and Close", async () => {
+    setup()
+    fireEvent.click(await screen.findByRole("button", { name: /^Together shared-a,/ }), { detail: 1 })
+    const card = screen.getByRole("dialog", { name: "Together shared-a" })
+    expect(card.textContent).toContain("3 members")
+    expect(card.textContent).toContain("3 of 5")
+    expect(within(card).getByRole("link", { name: "View details" }).getAttribute("href")).toBe("/shared-habit?id=shared-a")
+    expect(within(card).queryByRole("button", { name: /Log|Delete|Choose/ })).toBeNull()
+    expect(within(card).getByRole("button", { name: "Close" })).toBeTruthy()
+    expect(fetchMock.mock.calls.some(([url]) => /\/habits\/shared-a$/.test(url))).toBe(false)
+  })
+
+  it("keeps personal shelves before the shared shelves and orders shared habits oldest first with a stable id tie-break", async () => {
     sharedPage = page([
       shared("new", { created_at: "2026-11-20" }),
       shared("b", { created_at: "2026-11-18" }), shared("a", { created_at: "2026-11-18" }),
     ])
     setup()
-    await screen.findByRole("article", { name: "Together new" })
-    const cards = screen.getAllByRole("article")
-    expect(cards.map((card) => within(card).getByRole("heading").textContent)).toEqual(["Together a", "Together b", "Together new"])
-    const personalSection = screen.getByRole("region", { name: "Your habits" })
+    await screen.findByRole("button", { name: /^Together new,/ })
+    const names = screen.getAllByRole("button", { name: /^Together / }).map((button) => button.getAttribute("aria-label")!.split(",")[0])
+    expect(names).toEqual(["Together a", "Together b", "Together new"])
+    const personalSection = screen.getByRole("region", { name: "My habits" })
     const sharedSection = screen.getByRole("region", { name: "Shared habits" })
     expect(personalSection.compareDocumentPosition(sharedSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
@@ -108,7 +114,7 @@ describe("shared Garden cards (#279)", () => {
   it("shows shared-only accounts without falsely saying No habits yet", async () => {
     personalRows = []
     setup()
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
     expect(screen.queryByRole("heading", { name: "No habits yet" })).toBeNull()
   })
 
@@ -125,10 +131,10 @@ describe("shared Garden cards (#279)", () => {
     sharedResponse = () => new Promise<Response>((done) => { resolve = done })
     setup()
     await screen.findByRole("button", { name: /^Personal reading,/ })
-    expect(screen.getByText("Loading shared habits…")).toBeTruthy()
+    expect(screen.queryByRole("region", { name: "Shared habits" })).toBeNull()
     expect(screen.queryByRole("heading", { name: "No habits yet" })).toBeNull()
     resolve(json(sharedPage))
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
   })
 
   it("retries shared-list failures independently of personal habits", async () => {
@@ -138,24 +144,24 @@ describe("shared Garden cards (#279)", () => {
     expect(screen.getByRole("button", { name: /^Personal reading,/ })).toBeTruthy()
     sharedFailed = 0
     fireEvent.click(screen.getByRole("button", { name: "Try shared habits again" }))
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
   })
 
   it("keeps shared habits visible when the personal list fails", async () => {
     personalFailed = true
     setup()
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
     expect(screen.getByRole("heading", { name: "Couldn't load your habits" })).toBeTruthy()
   })
 
   it("pages shared habits using the backend offset and limit without losing prior cards", async () => {
     sharedPage = page([shared("old")], 2, 0, 1)
     setup()
-    await screen.findByRole("article", { name: "Together old" })
+    await screen.findByRole("button", { name: /^Together old,/ })
     sharedPage = page([shared("new", { created_at: "2026-11-20" })], 2, 1, 1)
     fireEvent.click(screen.getByRole("button", { name: "Load more shared habits" }))
-    await screen.findByRole("article", { name: "Together new" })
-    expect(screen.getAllByRole("article")).toHaveLength(2)
+    await screen.findByRole("button", { name: /^Together new,/ })
+    expect(screen.getAllByRole("button", { name: /^Together / })).toHaveLength(2)
     expect(fetchMock.mock.calls.some(([url]) => url.endsWith("/shared-habits?limit=50&offset=1"))).toBe(true)
     expect(screen.queryByRole("button", { name: "Load more shared habits" })).toBeNull()
   })
@@ -168,27 +174,27 @@ describe("shared Garden cards (#279)", () => {
     expect(screen.queryByRole("heading", { name: "No habits yet" })).toBeNull()
     sharedPage = page([shared()], 2, 1, 1)
     fireEvent.click(more)
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
   })
 
   it("retains existing cards after a failed next page and permits retry", async () => {
     sharedPage = page([shared()], 2, 0, 1)
     setup()
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
     sharedFailed = 500
     fireEvent.click(screen.getByRole("button", { name: "Load more shared habits" }))
     await screen.findByRole("heading", { name: "Couldn't load shared habits" })
-    expect(screen.getByRole("article", { name: "Together shared-a" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: /^Together shared-a,/ })).toBeTruthy()
   })
 
   it("removes prior-account cards on account change and makes no requests when signed out", async () => {
     const view = setup()
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
     auth.user = { id: "outsider" }
     sharedPage = page([])
     personalRows = []
     view.rerender(<QueryProvider><Garden /></QueryProvider>)
-    expect(screen.queryByRole("article", { name: "Together shared-a" })).toBeNull()
+    expect(screen.queryByRole("button", { name: /^Together shared-a,/ })).toBeNull()
     await screen.findByRole("heading", { name: "No habits yet" })
     fetchMock.mockClear()
     auth.user = null
@@ -198,30 +204,32 @@ describe("shared Garden cards (#279)", () => {
 
   it("hides cached shared cards if a refreshed request loses authorization", async () => {
     render(<QueryClientProvider client={client}><Garden /></QueryClientProvider>)
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
     sharedFailed = 401
     await act(() => client.invalidateQueries({ queryKey: sharedHabitKeys.all("caller") }))
     await screen.findByRole("heading", { name: "Sign in to see shared habits" })
-    expect(screen.queryByRole("article", { name: "Together shared-a" })).toBeNull()
+    expect(screen.queryByRole("button", { name: /^Together shared-a,/ })).toBeNull()
     fireEvent.click(screen.getByRole("button", { name: "Sign in again" }))
     expect(auth.signOut).toHaveBeenCalledTimes(1)
   })
 
-  it.each(["not_started", "expired"])("uses the caller's %s period bar without using the group average", async (state) => {
-    sharedPage = page([shared("shared-a", { member_count: 1, own_stats: { ...ownStats, state }, stats: { ...shared().stats, state } })])
+  it.each(["not_started", "expired"])("uses the caller's %s period on the card without using the group average", async (state) => {
+    sharedPage = page([shared("shared-a", { member_count: 1, own_stats: { ...ownStats, state }, stats: { ...shared().stats, state: "active" } })])
     setup()
-    const card = await screen.findByRole("article", { name: "Together shared-a" })
-    expect(within(card).getByText("Shared · 1 member")).toBeTruthy()
+    fireEvent.click(await screen.findByRole("button", { name: /^Together shared-a,/ }), { detail: 1 })
+    const card = screen.getByRole("dialog", { name: "Together shared-a" })
+    expect(card.textContent).toContain("1 member")
+    expect(card.textContent).toContain(state === "not_started" ? "Starts Nov 18, 2026" : "Finished")
+    expect(card.textContent).toContain(state === "not_started" ? "Not started" : "Week 1 of 4")
     expect(within(card).getByRole("progressbar").getAttribute("aria-valuenow")).toBe("1")
-    expect(within(card).getByText(state === "not_started" ? "Your first period" : "Your final period")).toBeTruthy()
-    expect(within(card).getByText(state === "not_started" ? "Starts Nov 18, 2026" : "Finished")).toBeTruthy()
   })
 
   it.each(["create", "join"])("refreshes an already-visited Garden after shared %s", async (action) => {
     sharedPage = page([])
     const wrap = (child: React.ReactNode) => <QueryClientProvider client={client}>{child}</QueryClientProvider>
     const view = render(wrap(<Garden />))
-    await screen.findByText(/No shared habits yet/)
+    await waitFor(() => expect(screen.queryByRole("heading", { name: "Couldn't load your habits" })).toBeNull())
+    expect(screen.queryByRole("heading", { name: "Shared habits" })).toBeNull()
     if (action === "create") {
       view.rerender(wrap(<CreateHabit />))
       fireEvent.click(screen.getByRole("radio", { name: "With friends" }))
@@ -238,7 +246,7 @@ describe("shared Garden cards (#279)", () => {
     }
     expect(client.getQueryState(sharedHabitKeys.list("caller"))?.isInvalidated).toBe(true)
     view.rerender(wrap(<Garden />))
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
   })
 
   it("refreshes the Garden's own period bar after activity is saved on the shared page", async () => {
@@ -265,12 +273,12 @@ describe("shared Garden cards (#279)", () => {
     })
     const wrap = (child: React.ReactNode) => <QueryClientProvider client={client}>{child}</QueryClientProvider>
     const view = render(wrap(<Garden />))
-    await screen.findByRole("article", { name: "Together shared-a" })
+    await screen.findByRole("button", { name: /^Together shared-a,/ })
     view.rerender(wrap(<SharedHabitDetails id="shared-a" />))
     fireEvent.click(await screen.findByRole("button", { name: "Log today" }))
     await screen.findByText("Activity logged for today.")
     expect(client.getQueryState(sharedHabitKeys.list("caller"))?.isInvalidated).toBe(true)
     view.rerender(wrap(<Garden />))
-    await waitFor(() => expect(screen.getByRole("progressbar", { name: "Together shared-a: your current period" }).getAttribute("aria-valuenow")).toBe("2"))
+    await waitFor(() => expect(screen.getByRole("button", { name: "Together shared-a, 2 of 3 this period, wilted" })).toBeTruthy())
   })
 })

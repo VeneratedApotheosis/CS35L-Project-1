@@ -262,7 +262,7 @@ export default function CreateHabit() {
         await queryClient.invalidateQueries({ queryKey: habitKeys.all(user.id) })
       }
       // Stay in the submitting state: the page is being replaced.
-      router.replace("/dashboard")
+      router.replace("/")
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         // Signed out or token expired. Same redirect as ProtectedRoute.
@@ -628,7 +628,7 @@ export default function CreateHabit() {
             )}
           </Card>
           <Link className="button button--primary button--md self-start" href={sharedHabitHref(createdShared.id)}>View shared habit</Link>
-          <Button onClick={() => router.replace("/dashboard")}>Go to dashboard</Button>
+          <Button onClick={() => router.replace("/")}>Go to garden</Button>
         </div>
       ) : (
         <div className="form" style={{ maxWidth: "42rem" }}>

@@ -99,6 +99,7 @@ Defined in `tokens/spacing.css` and `tokens/effects.css`.
 - **Radius:** `--radius-sm` 0.5rem, `-md` 1rem, `-lg` 2rem, `-xl` 3.5rem, `-pill` fully round. Use bigger radii for bigger containers: pills for buttons and chips, `-md` for inputs, `-lg` for cards, `-xl` for hero panels. Do not use one radius for everything.
 - **Shadows:** `--shadow-card`, `--shadow-popover`, `--shadow-button`, all warm brown tinted rather than grey. Use them only to lift things that float or can be pressed.
 - **Layers:** use the `--z-*` tokens, never raw z-index numbers.
+- **Line weights:** `--line-thin` 1px for borders and dividers, `--line-medium` 2px for focus rings and lines that must be seen, `--line-thick` 4px for accents (a status stripe, an input's focus glow), `--focus-offset` 2px for the gap to a focus ring, and `--icon-stroke` 2 for icon strokes. Never write a raw width on a border or outline (a test fails on it). Gauges such as the progress rings are drawn in their own units and are not lines.
 - **Transitions:** `--transition-fast` 120ms for hover and press, `-normal` 160ms, `-slow` 240ms.
 
 ## 6. Illustration: plants and pots
@@ -124,13 +125,9 @@ Plant types the app offers: **pothos**, **peace lily**, **pilea**, **snake plant
 
 `AppShell` is shared by routes in `app/(signed-in)/`, behind the layout's auth guard. It supplies centered content, a skip link and space for the mobile bar and safe area. `NavBar` marks the current route with `aria-current`, a selected background without an outline or underline. Hover gently lifts available links; reduced-motion settings disable the animation. Keyboard focus has a separate visible outline. My Garden (`/`), the basic Dashboard (`/dashboard`), Settings (`/settings`), and Add Habit (`/create`) are available; Badges is disabled until its page exists. Navigation switches to a top bar at 52rem; compact labels (Garden and Add) give the mobile items more room, with full accessible names. The style guide includes contained desktop and phone previews.
 
-**Page width.** A page's width is one of three measures, and the top bar uses the same one, so the bar's content always lines up with the page content below it. `pageWidth()` in `components/AppShell.tsx` picks the measure from the route and puts it on the shell as a class. The shell sets `--page-max-width` and `--page-gutter`, and both `.app-shell__content` and `.navbar__inner` read them (`styles/components/navigation.css`). The two measure tokens are in `styles/tokens/spacing.css`. A new route is medium unless it is listed in `pageWidth()`. Pages do not set their own `max-width` or page padding.
+**Page width and margin.** Every page, and the top bar, has the same space on each side of its content, `--page-side` (`styles/tokens/spacing.css`), so the content is the same width, and the top bar lines up with the page below it, on the Garden, Habit details, Dashboard, Settings and every other page, at any window size. The space is two thirds of what a 72rem column (`--content-width`) would leave: the centring beside the column on a wide window, plus the page margin (`--page-margin`, `clamp(1rem, 4vw, 3rem)`). A page never sets its own side space or `max-width`. `AppShell` (`pageWidth()`) only picks the vertical padding from the route: wide pages (Habit details, shared habit) have less above and below so the cards fit a laptop screen, and the Garden has more above. `--page-padding` is the default vertical padding.
 
-| Measure | Max width | Side padding | Routes | Why |
-| --- | --- | --- | --- | --- |
-| Medium (default) | `--content-width-medium`, 72rem | `--page-padding` | Create Habit, Dashboard, Badges, History, Settings, join page | Forms and reading. Lines of text and inputs stay a comfortable length at 1920px. |
-| Wide | `--content-width-wide`, 90rem | 0.5 to 1rem, and less above and below | Habit details, shared habit | Grids of cards that must fit a laptop screen. |
-| Full | none | 0.75 to 2rem, then more on a phone | Garden | The shelves are fixed size and the boards run into the space left on both sides. |
+Below 52rem (the phone breakpoint, below) the top bar is a bottom bar, and the bar's content only follows the margin from 52rem, where it moves to the top.
 
 **Phone breakpoint.** The primary phone layout is below **52rem** (832 CSS pixels with the standard 16px initial font size); at 52rem and above the laptop layout applies. This aligns with the existing navigation, form and habit-grid transition, and keeps phone navigation and content in the same mode. Intermediate widths formerly between the separate thresholds now use the phone layouts.
 
@@ -138,15 +135,15 @@ The single value lives in `frontend/src/styles/breakpoints.json`. In authored st
 
 The phone boundary does not replace queries for a card's own container width, multi-column plant-card sizing (44rem and 72rem), the larger hold track (62rem), pointer/hover capabilities, reduced motion, or accessibility modes. The Garden retains its touch-specific behavior on wider devices.
 
-**Viewport and safe areas.** The root Next.js viewport export sets device width, initial scale 1 and `viewport-fit=cover`. On phones, the app shell applies the top inset once to page content, uses the larger of its normal gutter and each side inset, and reserves the fixed navigation height plus bottom inset below content. The bottom bar applies the bottom inset to its own controls and uses side insets in landscape. The wide and full page measures override the top padding with their own spacing plus the same inset, rather than adding another inset. Login has its own top, side and bottom safe-area spacing because it does not use the app shell. Insets use zero fallbacks. Desktop spacing remains unchanged.
+**Viewport and safe areas.** The root Next.js viewport export sets device width, initial scale 1 and `viewport-fit=cover`. On phones, the app shell applies the top inset once to page content, uses the larger of its normal side space (`--page-side`) and each side inset, and reserves the fixed navigation height plus bottom inset below content. The bottom bar applies the bottom inset to its own controls and uses side insets in landscape. The wide and full page measures override the top padding with their own spacing plus the same inset, rather than adding another inset. Login has its own top, side and bottom safe-area spacing because it does not use the app shell. Insets use zero fallbacks. Desktop spacing remains unchanged.
 
 On phones the body and app shell use `100dvh` over a `100vh` fallback so browser toolbar changes can alter the minimum height while content can still grow and scroll. Desktop body and app-shell sizing keeps `100vh`; login retains its existing `100dvh` sizing with a `100vh` fallback. Dynamic viewport units do not reliably track the on-screen keyboard in every browser; dialogs, toasts and bottom navigation have separate follow-up work (#379), and keyboard behavior needs physical-device testing.
 
 **Phone touch targets.** Interactive buttons, form controls, standalone dashboard links and navigation use the existing `--touch-target` minimum (2.75rem, 44px at the default font size). Radio labels provide the larger target without changing the native radio or focus behavior. Calendar days with actions fit all seven columns within the card, with spacing for focus outlines; they may be smaller than 44px on narrow phones. Ordinary prose links should retain their text flow rather than forcing a fixed-size inline box. Desktop control sizes remain unchanged.
 
-**Alignment.** Page content is left aligned in a centered column with a maximum width (see Page width). Only empty states are center aligned, because they hold a single message. The login screen is the exception to the column: its words are left aligned in the left third, beside a picture (see [login-wall.md](login-wall.md)).
+**Alignment.** Page content is left aligned in a centered column (see Page width and margin). Only empty states are center aligned, because they hold a single message. The login screen is the exception to the column: its words are left aligned in the left third, beside a picture (see [login-wall.md](login-wall.md)).
 
-**Garden.** Plants on shelves, like the login wall but 1.5 times as big and with no card behind them: a pot and its plant per habit with nothing else showing, a see-through card with the name, streak and progress pills on hover, a peek panel beside the plant on click, and hold to log. The progress bar is rounded pills everywhere (one per activity for a goal of ten or fewer, one smooth bar for more). Finished habits are on shelves beneath. The behavior is in [screens.md](screens.md#2-garden-home). The sketch below is the old card grid.
+**Garden.** Plants on shelves, like the login wall but 1.5 times as big and with no card behind them: a pot and its plant per habit with nothing else showing, a solid card with the name, streak and progress pills on hover, the same card growing sideways to hold the buttons on click, and hold to log. The progress bar is rounded pills everywhere (one per activity for a goal of ten or fewer, one smooth bar for more). Finished habits are on shelves beneath. The behavior is in [screens.md](screens.md#2-garden-home). The sketch below is the old card grid.
 
 ```
 +--------------------------------------------------+
@@ -240,7 +237,7 @@ Still to build: Modal, toast (for the undo after logging).
 Every screen meets these before it is merged.
 
 - **Responsive** from 360px wide up. No horizontal scrolling.
-- **Keyboard:** every action is reachable and has a visible focus ring. Gestures (press and hold) have a button equivalent.
+- **Keyboard:** every action is reachable and has a visible focus ring (`--line-medium` with `--focus-offset`, one rule everywhere). Gestures (press and hold) have a button equivalent.
 - **Contrast:** text meets WCAG AA in both themes.
 - **Not by color alone:** status uses an icon or text too.
 - **Reduced motion** is honored.

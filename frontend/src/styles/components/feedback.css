@@ -4,7 +4,7 @@
   margin: auto;
   overflow-y: auto;
   padding: var(--space-8);
-  border: 1px solid var(--color-border);
+  border: var(--line-thin) solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   color: var(--color-text);
@@ -52,7 +52,7 @@
   width: 100%;
   pointer-events: auto;
   padding: var(--space-4);
-  border: 1px solid var(--color-border);
+  border: var(--line-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
