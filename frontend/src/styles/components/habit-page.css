@@ -261,7 +261,7 @@ button.habit-day:focus-visible { outline: var(--line-medium) solid var(--color-l
 }
 
 @media (--phone) {
-  .habit-period, .habit-calendar, .habit-overall, .habit-log { --card-pad: 1.25rem; }
+  .habit-period, .habit-calendar, .habit-overall, .habit-log { --card-pad: var(--phone-card-pad); }
   .habit-plant-card__art > svg { width: min(90%, 20rem); }
   .habit-head__delete { align-self: flex-start; }
 }

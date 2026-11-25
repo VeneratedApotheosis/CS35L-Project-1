@@ -120,7 +120,6 @@
 
 @media (--phone) {
   .login {
-    --login-gutter: clamp(var(--space-8), 6vw, var(--space-12));
     /* Use extra height below the welcome group instead of below the shelf. */
     --login-content-lift: clamp(0px, (100dvh - 41.6875rem) * 0.66, 5.5rem);
     grid-template-columns: minmax(0, 1fr);
@@ -132,8 +131,8 @@
   }
   .login__brand {
     padding-top: calc(var(--space-8) + env(safe-area-inset-top, 0px));
-    padding-left: max(var(--login-gutter), env(safe-area-inset-left, 0px));
-    padding-right: max(var(--login-gutter), env(safe-area-inset-right, 0px));
+    padding-left: max(var(--phone-side), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--phone-side), env(safe-area-inset-right, 0px));
     padding-bottom: var(--space-2);
   }
   .wall {
@@ -146,15 +145,15 @@
   }
   .wall__svg {
     top: calc(50% + var(--login-content-lift) / 2);
-    max-width: calc(100% - 2 * var(--login-gutter));
+    max-width: calc(100% - 2 * var(--phone-side));
     height: auto;
   }
   .login__content {
     align-self: start;
     max-width: none;
     padding-top: var(--space-4);
-    padding-left: max(var(--login-gutter), env(safe-area-inset-left, 0px));
-    padding-right: max(var(--login-gutter), env(safe-area-inset-right, 0px));
+    padding-left: max(var(--phone-side), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--phone-side), env(safe-area-inset-right, 0px));
     padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom, 0px) + var(--login-content-lift));
   }
   .login__title {

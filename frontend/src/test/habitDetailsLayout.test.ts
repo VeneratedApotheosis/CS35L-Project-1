@@ -16,7 +16,7 @@ describe("Habit details phone card layout", () => {
         }
       });
       expect(base).toContain(selector === ".habit-period" ? "flex" : "grid");
-      expect(phone["--card-pad"]).toBe("1.25rem");
+      expect(phone["--card-pad"]).toBe("var(--phone-card-pad)");
       if (selector === ".habit-calendar" && phone.display !== undefined) {
         expect(phone.display).toBe("grid");
         expect(phone["grid-template-columns"]).toBe("minmax(0, 1fr)");

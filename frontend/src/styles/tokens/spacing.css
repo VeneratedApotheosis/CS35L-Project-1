@@ -30,7 +30,26 @@
   --plant-card-art-width: 12rem;
   --plant-card-min-width: 14rem;
   --touch-target: 2.75rem;
-  --mobile-nav-height: 5rem;
+
+  /*
+   * Phone spacing (below 52rem, the (--phone) breakpoint). Only (--phone) rules read these; desktop
+   * keeps the tokens above. The side space is fixed and every phone page and the login share it. Add
+   * the safe-area inset with max(var(--phone-side), env(safe-area-inset-left, 0px)).
+   */
+  --phone-side: 1rem;
+  --phone-page-top: 1rem;
+  /* The Garden has more room above its first title. */
+  --phone-page-top-garden: 3rem;
+  --phone-page-bottom: 3rem;
+  /* The bottom navigation bar, and the space between it and a toast or the Garden's sheet. */
+  --phone-nav-height: 5rem;
+  --phone-nav-gap: 1rem;
+  --phone-section-gap: 1.5rem;
+  --phone-block-gap: 1rem;
+  --phone-card-pad: 1.25rem;
+  --phone-card-gap: 1rem;
+  /* The room the Garden's sheet keeps above it. */
+  --phone-sheet-top: 2rem;
 
   --radius-sm: 0.5rem;
   --radius-md: 1rem;
