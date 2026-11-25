@@ -330,13 +330,13 @@
   .garden-card[data-open="true"] {
     position: fixed;
     top: auto !important;
-    right: var(--space-4);
-    bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4));
-    left: var(--space-4) !important;
+    right: max(var(--phone-side), env(safe-area-inset-right, 0px));
+    bottom: calc(var(--phone-nav-height) + env(safe-area-inset-bottom, 0px) + var(--phone-nav-gap));
+    left: max(var(--phone-side), env(safe-area-inset-left, 0px)) !important;
     z-index: var(--z-modal);
     width: auto !important;
     height: auto !important;
-    max-height: max(0px, calc(100dvh - var(--mobile-nav-height) - env(safe-area-inset-bottom, 0px) - var(--space-8)));
+    max-height: max(0px, calc(100dvh - var(--phone-nav-height) - env(safe-area-inset-bottom, 0px) - var(--phone-sheet-top)));
     overflow-y: auto;
     overscroll-behavior: contain;
     border: var(--line-thin) solid color-mix(in srgb, var(--color-border) 70%, transparent);
@@ -348,7 +348,7 @@
   .garden-card[data-open="true"] { flex-direction: column !important; }
   /* A long name wraps in the sheet instead of being cut off (a touch screen has no hover to read it). */
   .garden-card__name { white-space: normal; overflow-wrap: anywhere; }
-  .garden-card[data-open="true"] .garden-card__content { width: auto; height: auto; gap: var(--space-4); }
+  .garden-card[data-open="true"] .garden-card__content { width: auto; height: auto; gap: var(--phone-card-gap); }
   .garden-card[data-open="true"] .garden-card__side { padding: 0 var(--card-pad) var(--card-pad); }
   /* Fingers need the touch target the desktop sizes above are smaller than. */
   .garden-card[data-open="true"] .garden-card__actions .button { min-height: var(--touch-target); }
@@ -410,3 +410,11 @@
 }
 .garden-section__action { margin-left: auto; align-self: center; }
 .garden-section__body { display: grid; gap: var(--space-4); min-width: 0; }
+
+/* Phone: the Garden's spacing comes from the --phone-* tokens (tokens/spacing.css). */
+@media (--phone) {
+  .garden-card__surface, .garden-card { --card-pad: var(--phone-card-pad); }
+  .garden-list, .garden-shelves, .garden-finished, .garden-section, .garden-section__body { gap: var(--phone-block-gap); }
+  .garden-section { padding-top: var(--phone-section-gap); }
+  .garden-card__side { gap: var(--phone-card-gap); }
+}

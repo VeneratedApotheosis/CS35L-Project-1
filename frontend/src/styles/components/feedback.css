@@ -34,7 +34,7 @@
 .toast-stack {
   position: fixed;
   z-index: var(--z-tooltip);
-  bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4));
+  bottom: calc(var(--phone-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4));
   left: 50%;
   translate: -50% 0;
   width: min(32rem, calc(100% - var(--space-8)));
@@ -122,7 +122,7 @@
   }
   .modal .input { min-width: 0; max-width: 100%; }
   .toast-stack {
-    --toast-bottom: max(calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4)), calc(var(--keyboard-inset, 0px) + var(--space-4)));
+    --toast-bottom: max(calc(var(--phone-nav-height) + env(safe-area-inset-bottom, 0px) + var(--phone-nav-gap)), calc(var(--keyboard-inset, 0px) + var(--space-4)));
     bottom: var(--toast-bottom);
     max-height: max(0px, calc(100dvh - var(--toast-bottom) - max(var(--space-4), env(safe-area-inset-top, 0px))));
     overflow-y: auto;

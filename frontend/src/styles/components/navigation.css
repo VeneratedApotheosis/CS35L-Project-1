@@ -6,7 +6,7 @@
  */
 .app-shell {
   min-height: 100vh;
-  padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--phone-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
 .app-shell__content {
@@ -255,21 +255,16 @@
   .navbar__link:hover:not([aria-disabled]), .navbar__add:hover:not(:disabled) { transform: none; }
   .app-shell { min-height: 100dvh; }
   .app-shell__content {
-    padding-top: calc(var(--page-padding) + env(safe-area-inset-top, 0px));
-    padding-left: max(var(--page-side), env(safe-area-inset-left, 0px));
-    padding-right: max(var(--page-side), env(safe-area-inset-right, 0px));
+    padding-top: calc(var(--phone-page-top) + env(safe-area-inset-top, 0px));
+    padding-bottom: var(--phone-page-bottom);
+    padding-left: max(var(--phone-side), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--phone-side), env(safe-area-inset-right, 0px));
   }
   .navbar__bar {
     padding-left: max(var(--space-2), env(safe-area-inset-left, 0px));
     padding-right: max(var(--space-2), env(safe-area-inset-right, 0px));
   }
-  .app-shell--wide .app-shell__content {
-    padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
-    padding-bottom: var(--space-12);
-  }
-
   .app-shell--full .app-shell__content {
-    padding-top: calc(clamp(var(--space-12), 8vw, var(--space-16)) + env(safe-area-inset-top, 0px));
-    padding-bottom: var(--space-16);
+    padding-top: calc(var(--phone-page-top-garden) + env(safe-area-inset-top, 0px));
   }
 }

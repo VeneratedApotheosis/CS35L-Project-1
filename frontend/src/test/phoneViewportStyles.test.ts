@@ -60,7 +60,7 @@ describe("phone viewport and safe areas", () => {
   it("reserves the bottom inset and applies top and sides in the phone rule", () => {
     const css = style("components/navigation");
     expect(declarations(css, ".app-shell")["padding-bottom"]).toBe(
-      "calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px))",
+      "calc(var(--phone-nav-height) + env(safe-area-inset-bottom, 0px))",
     );
     expect(
       declarations(css, ".app-shell", "(--not-phone)")["padding-bottom"],
@@ -81,13 +81,15 @@ describe("phone viewport and safe areas", () => {
     expect(
       declarations(css, ".app-shell__content")["padding-top"],
     ).toBeUndefined();
-    for (const variant of [
-      ".app-shell--wide .app-shell__content",
-      ".app-shell--full .app-shell__content",
-    ]) {
-      const top = declarations(css, variant, "(--phone)")["padding-top"];
-      expect(top.match(/safe-area-inset-top/g)).toHaveLength(1);
-    }
+    expect(phone["padding-top"].match(/safe-area-inset-top/g)).toHaveLength(1);
+    // Only the Garden's top padding differs on a phone, and it still adds the inset once.
+    const full = declarations(css, ".app-shell--full .app-shell__content", "(--phone)");
+    expect(full["padding-top"]).toBe(
+      "calc(var(--phone-page-top-garden) + env(safe-area-inset-top, 0px))",
+    );
+    expect(
+      declarations(css, ".app-shell--wide .app-shell__content", "(--phone)"),
+    ).toEqual({});
   });
   it("uses the existing phone boundary independently of pointer capability", () => {
     setTestViewport({
