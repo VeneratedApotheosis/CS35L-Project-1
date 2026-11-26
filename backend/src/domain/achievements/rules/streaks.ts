@@ -8,6 +8,7 @@ import {
   type BadgeFacts,
   type HabitFacts,
 } from "../facts.js";
+import { mostAtOnce } from "../timeline.js";
 
 // Section 4 of docs/badges-ideas.md. A streak is consecutive met periods on
 // one habit (8.6). Rules use the best streak a habit ever had, so a streak
@@ -93,13 +94,17 @@ export const streakBadges: Badge[] = [
       ),
   },
   {
-    // Needs the streaks of several habits on the same past day. Built with
-    // the day-by-day replay (docs/badges-plan.md, step 6).
+    // The streak each habit had on the same past day (timeline.ts).
     ...base,
     id: "unbroken",
     name: "Unbroken",
     description: "Have 3 habits with a streak of 4 or more at once.",
     tier: "silver",
+    evaluate: (facts) =>
+      countTo(
+        mostAtOnce(facts, (moment) => moment.streak >= 4),
+        3,
+      ),
   },
   {
     ...base,
@@ -107,6 +112,11 @@ export const streakBadges: Badge[] = [
     name: "Triple Threat Streak",
     description: "Have streaks of 8 or more on 3 habits at once.",
     tier: "gold",
+    evaluate: (facts) =>
+      countTo(
+        mostAtOnce(facts, (moment) => moment.streak >= 8),
+        3,
+      ),
   },
   {
     ...base,
